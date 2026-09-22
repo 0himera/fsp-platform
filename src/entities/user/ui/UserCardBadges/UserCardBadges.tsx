@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Badge } from "@/shared/ui";
 import type { SportRank } from "../../model/types";
 import styles from "./UserCardBadges.module.css";
 
@@ -13,10 +14,12 @@ export const UserCardBadges: React.FC<UserCardBadgesProps> = ({
 }) => {
   return (
     <div className={styles.rankRow}>
-      <span className={`${styles.badge} ${styles.rankBadge}`}>{rank}</span>
-      <span className={`${styles.badge} ${styles.regionalBadge}`}>
+      <Badge variant="secondary" className={styles.rankBadge}>
+        {rank}
+      </Badge>
+      <Badge variant="outline" className={styles.regionalBadge}>
         #{regionalRank} в рейтинге РД
-      </span>
+      </Badge>
     </div>
   );
 };

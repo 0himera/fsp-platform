@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Avatar, AvatarFallback } from "@/shared/ui";
 import { RatingBadge } from "../RatingBadge";
 import styles from "./UserCardHeader.module.css";
 
@@ -24,7 +25,9 @@ export const UserCardHeader: React.FC<UserCardHeaderProps> = ({
   return (
     <header className={styles.header}>
       <div className={styles.avatarWrapper}>
-        <div className={styles.avatar}>{initials}</div>
+        <Avatar className={styles.avatar}>
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
         <div className={styles.nameBlock}>
           <h3 className={styles.fullName}>{fullName}</h3>
           <p className={styles.metaInfo}>

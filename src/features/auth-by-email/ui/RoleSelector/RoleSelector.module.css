@@ -1,19 +1,16 @@
 .container {
-  display: flex;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+}
+
+.tabsList {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 38px;
   border-radius: 12px;
-  padding: 3px;
-  gap: 4px;
 }
 
-.roleButton {
-  flex: 1;
-  border-radius: 9px !important;
-}
-
-.active {
-  background: #27272a !important;
-  color: #fafafa !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+.tabTrigger {
+  border-radius: 9px;
+  font-size: 13px;
 }

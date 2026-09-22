@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Card } from "@/shared/ui";
 import type { AthleteProfile } from "../../model/types";
 import { UserCardHeader } from "../UserCardHeader";
 import { UserCardBadges } from "../UserCardBadges";
@@ -11,7 +12,7 @@ interface UserCardProps {
 
 export const UserCard: React.FC<UserCardProps> = ({ athlete }) => {
   return (
-    <article className={styles.card}>
+    <Card className={styles.card}>
       <UserCardHeader
         fullName={athlete.fullName}
         organization={athlete.organization}
@@ -23,6 +24,6 @@ export const UserCard: React.FC<UserCardProps> = ({ athlete }) => {
         regionalRank={athlete.regionalRank}
       />
       <UserCardDisciplines disciplines={athlete.disciplines} />
-    </article>
+    </Card>
   );
 };
