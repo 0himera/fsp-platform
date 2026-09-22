@@ -2,16 +2,16 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: 12px;
 }
 
 .title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: #71717a;
   margin: 0 0 2px 0;
 }
 
@@ -19,13 +19,13 @@
   display: flex;
   align-items: center;
   font-size: 13px;
-  color: #cbd5e1;
+  color: #d4d4d8;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: #38bdf8;
+  background: #71717a;
   margin-right: 8px;
 }

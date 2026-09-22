@@ -2,23 +2,23 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  background: rgba(14, 165, 233, 0.12);
-  border: 1px solid rgba(14, 165, 233, 0.3);
-  padding: 6px 10px;
-  border-radius: 8px;
+  background: #1c1c1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 12px;
 }
 
 .ratingLabel {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #38bdf8;
-  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #71717a;
+  font-weight: 500;
 }
 
 .ratingValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fafafa;
   line-height: 1.2;
 }
