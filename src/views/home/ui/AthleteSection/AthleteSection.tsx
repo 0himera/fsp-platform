@@ -24,3 +24,5 @@ export const AthleteSection: React.FC = () => {
     </section>
   );
 };
+
+export default AthleteSection;

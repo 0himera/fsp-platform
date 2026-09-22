@@ -1,4 +1,5 @@
 import * as React from "react";
+import { RatingBadge } from "../RatingBadge";
 import styles from "./UserCardHeader.module.css";
 
 interface UserCardHeaderProps {
@@ -31,11 +32,7 @@ export const UserCardHeader: React.FC<UserCardHeaderProps> = ({
           </p>
         </div>
       </div>
-
-      <div className={styles.ratingBadge}>
-        <span className={styles.ratingLabel}>Рейтинг ФСП</span>
-        <span className={styles.ratingValue}>{rating}</span>
-      </div>
+      <RatingBadge rating={rating} />
     </header>
   );
 };

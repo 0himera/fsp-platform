@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { SportDiscipline } from "../model/types";
+import type { SportDiscipline } from "../../model/types";
 import styles from "./UserCardDisciplines.module.css";
 
 interface UserCardDisciplinesProps {

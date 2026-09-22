@@ -1,7 +1,7 @@
 import * as React from "react";
-import { HeroSection } from "./HeroSection";
-import { AthleteSection } from "./AthleteSection";
-import { AuthSection } from "./AuthSection";
+import { HeroSection } from "../HeroSection";
+import { AthleteSection } from "../AthleteSection";
+import { AuthSection } from "../AuthSection";
 import styles from "./HomePage.module.css";
 
 export const HomePage: React.FC = () => {
@@ -17,3 +17,5 @@ export const HomePage: React.FC = () => {
     </main>
   );
 };
+
+export default HomePage;

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Button } from "@/shared/ui";
-import { HeaderBrand } from "./HeaderBrand";
-import { HeaderNav } from "./HeaderNav";
+import { HeaderBrand } from "../HeaderBrand";
+import { HeaderNav } from "../HeaderNav";
 import styles from "./Header.module.css";
 
 export const Header: React.FC = () => {

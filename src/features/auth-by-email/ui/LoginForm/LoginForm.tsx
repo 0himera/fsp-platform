@@ -3,8 +3,8 @@
 import * as React from "react";
 import { Button, Input } from "@/shared/ui";
 import type { UserRole } from "@/entities/user";
-import { useLoginMutation } from "../api/authApi";
-import { RoleSelector } from "./RoleSelector";
+import { useLoginMutation } from "../../api/authApi";
+import { RoleSelector } from "../RoleSelector";
 import styles from "./LoginForm.module.css";
 
 export const LoginForm: React.FC = () => {
@@ -32,7 +32,7 @@ export const LoginForm: React.FC = () => {
           required
           placeholder="sportsman@fsp-rd.ru"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           className={styles.inputOverride}
         />
       </div>

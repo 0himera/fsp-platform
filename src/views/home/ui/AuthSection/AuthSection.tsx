@@ -17,3 +17,5 @@ export const AuthSection: React.FC = () => {
     </section>
   );
 };
+
+export default AuthSection;

@@ -1,0 +1,1 @@
+export { UserCardDisciplines } from "./UserCardDisciplines";
