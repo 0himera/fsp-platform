@@ -1,0 +1,1 @@
+export { AthleteDetailView } from "./AthleteDetailView";
