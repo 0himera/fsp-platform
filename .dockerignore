@@ -2,7 +2,11 @@
 .agents
 .codex
 .env
+.env*.local
 design
 README.md
 **/*.test
 **/coverage.out
+**/node_modules
+**/.next
+**/.turbo

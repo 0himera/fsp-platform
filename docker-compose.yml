@@ -1,17 +1,14 @@
 services:
   mailpit:
     image: axllent/mailpit:v1.27
-    ports:
-      - "127.0.0.1:8025:8025"
-      - "127.0.0.1:1025:1025"
+    ports: ["127.0.0.1:8025:8025", "127.0.0.1:1025:1025"]
   db:
     image: postgres:17-alpine
     environment:
       POSTGRES_DB: arena
       POSTGRES_USER: arena
       POSTGRES_PASSWORD: arena
-    ports:
-      - "5432:5432"
+    ports: ["5432:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -35,13 +32,24 @@ services:
       SMTP_PORT: "1025"
       SMTP_FROM: "Арена ФСП РД <noreply@arena.local>"
       PUBLIC_BASE_URL: http://localhost:8080
-    ports:
-      - "8080:8080"
+    ports: ["8080:8080"]
     depends_on:
       db:
         condition: service_healthy
       mailpit:
         condition: service_started
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      BACKEND_INTERNAL_URL: http://app:8080
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    ports: ["3000:3000"]
+    depends_on:
+      - app
 
 volumes:
   postgres_data:
