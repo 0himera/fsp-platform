@@ -3,6 +3,8 @@ import { HeroSection } from "../HeroSection";
 import { AthleteSection } from "../AthleteSection";
 import { AuthSection } from "../AuthSection";
 import { CompetitionsSection } from "../CompetitionsSection";
+import { RankingSection } from "../RankingSection";
+import { DocsSection } from "../DocsSection";
 import styles from "./HomePage.module.css";
 
 export const HomePage: React.FC = () => {
@@ -15,10 +17,13 @@ export const HomePage: React.FC = () => {
           <AuthSection />
         </div>
         <CompetitionsSection />
+        <RankingSection />
+        <DocsSection />
       </div>
     </main>
   );
 };
 
 export default HomePage;
+
 

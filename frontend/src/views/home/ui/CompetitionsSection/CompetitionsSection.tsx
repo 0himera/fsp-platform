@@ -19,7 +19,8 @@ export const CompetitionsSection: React.FC = () => {
   const openCompetitions = competitions?.filter((c) => c.status !== "draft") || [];
 
   return (
-    <section className={styles.section}>
+    <section id="competitions" className={styles.section}>
+
       <div className={styles.header}>
         <h2 className={styles.heading}>Соревнования Республики Дагестан</h2>
         <p className={styles.description}>

@@ -3,7 +3,9 @@
   flex-direction: column;
   gap: 1.5rem;
   margin-top: 2rem;
+  scroll-margin-top: 5rem;
 }
+
 
 .header {
   display: flex;
