@@ -5,8 +5,6 @@ export {
   useMeQuery,
   getMe,
   useAthleteQuery,
-  useUpdateProfileMutation,
-  useUpdateRankMutation,
   userKeys,
 } from "./api/userApi";
 export { toAthleteProfile } from "./model/types";
@@ -20,5 +18,3 @@ export type {
   Athlete,
   MeResponse,
 } from "./model/types";
-
-

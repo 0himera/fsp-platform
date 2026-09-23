@@ -4,12 +4,5 @@ export {
   useCompetitionsQuery,
   getCompetitionDetail,
   useCompetitionDetailQuery,
-  useRegisterCompetitionMutation,
-  useUnregisterCompetitionMutation,
   useMyRegistrationsQuery,
-  useCreateCompetitionMutation,
-  useUpdateCompetitionMutation,
-  useCreateTeamMutation,
-  useDeleteTeamMutation,
-  usePublishResultsMutation,
 } from "./api/competitionApi";
