@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const RulesVersion = "arena-1"
+const RulesVersion = "arena-2"
 
 var ErrNotFound = errors.New("athlete not found")
 
@@ -32,6 +32,7 @@ type Result struct {
 	Competition   string    `json:"competition"`
 	Discipline    string    `json:"discipline"`
 	Level         string    `json:"level"`
+	Stage         string    `json:"stage"`
 	EndsAt        time.Time `json:"ends_at"`
 	Place         int       `json:"place"`
 	Finishers     int       `json:"finishers"`
@@ -99,6 +100,8 @@ func placeFactor(place int) float64 {
 }
 
 func Score(result Result, asOf time.Time) Result {
+	result.Points = 0
+	result.Included = false
 	result.Base = levelBase[result.Level]
 	result.PlaceFactor = placeFactor(result.Place)
 	if result.Finishers < 2 || result.Place < 1 || result.Place > result.Finishers {
@@ -108,6 +111,9 @@ func Score(result Result, asOf time.Time) Result {
 	result.Relative = float64(result.Finishers-result.Place) / float64(result.Finishers-1)
 	days := math.Max(0, asOf.Sub(result.EndsAt).Hours()/24)
 	result.Decay = Decay(days)
+	if result.Stage == "qualification" {
+		return result
+	}
 	result.Points = round(result.Base * result.PlaceFactor * result.SizeFactor * result.Relative * result.Decay)
 	return result
 }
@@ -193,7 +199,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 		return nil, err
 	}
 	rows, err = s.DB.Query(ctx, `WITH counts AS (SELECT competition_id, count(*)::integer AS n FROM results GROUP BY competition_id)
-		SELECT COALESCE(r.athlete_id,tm.athlete_id),c.id,c.title,c.discipline_code,c.level_code,c.ends_at,r.place,counts.n
+		SELECT COALESCE(r.athlete_id,tm.athlete_id),c.id,c.title,c.discipline_code,c.level_code,c.stage,c.ends_at,r.place,counts.n
 		FROM results r JOIN competitions c ON c.id=r.competition_id
 		JOIN counts ON counts.competition_id=c.id
 		LEFT JOIN team_members tm ON tm.team_id=r.team_id
@@ -204,7 +210,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 	for rows.Next() {
 		var id int64
 		var result Result
-		if err := rows.Scan(&id, &result.CompetitionID, &result.Competition, &result.Discipline, &result.Level, &result.EndsAt, &result.Place, &result.Finishers); err != nil {
+		if err := rows.Scan(&id, &result.CompetitionID, &result.Competition, &result.Discipline, &result.Level, &result.Stage, &result.EndsAt, &result.Place, &result.Finishers); err != nil {
 			rows.Close()
 			return nil, err
 		}

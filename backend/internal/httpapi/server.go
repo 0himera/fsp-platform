@@ -159,6 +159,8 @@ func handleError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusConflict, "Регистрация закрыта или действие недоступно")
 	case errors.Is(err, competitions.ErrConflict):
 		writeError(w, http.StatusConflict, "Вы уже зарегистрированы или участник включён в команду")
+	case errors.Is(err, competitions.ErrNotQualified):
+		writeError(w, http.StatusForbidden, "В финал проходят только участники отбора в пределах проходного места")
 	case errors.Is(err, competitions.ErrInvalid):
 		writeError(w, http.StatusBadRequest, "Проверьте данные соревнования и протокола")
 	case errors.Is(err, auth.ErrInvalidCredentials):

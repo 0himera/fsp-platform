@@ -11,6 +11,7 @@ const levels = {
 };
 const ranks = { none: 'Без разряда', III: 'III разряд', II: 'II разряд', I: 'I разряд', KMS: 'КМС', MS: 'МС', MSMK: 'МСМК', ZMS: 'ЗМС' };
 const statuses = { draft: 'Черновик', open: 'Регистрация открыта', running: 'Идёт соревнование', completed: 'Завершено' };
+const stages = { standalone: 'Отдельный зачёт', qualification: 'Отбор', final: 'Финал' };
 
 function h(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -90,7 +91,7 @@ function layout(content, title) {
 
 function competitionCard(c) {
   return `<article class="card competition" data-search="${h((c.title + ' ' + discipline(c.discipline_code)).toLowerCase())}">
-    <div class="card-head"><span class="tag ${h(c.status)}">${h(statuses[c.status] || c.status)}</span><span class="subtle">${h(c.format === 'team' ? 'Команды' : 'Личный зачёт')}</span></div>
+    <div class="card-head"><span class="tag ${h(c.status)}">${h(statuses[c.status] || c.status)}</span><span class="subtle">${h(stages[c.stage] || stages.standalone)} · ${h(c.format === 'team' ? 'Команды' : 'Личный зачёт')}</span></div>
     <h2><a href="/competitions/${c.id}" data-link>${h(c.title)}</a></h2>
     <p class="subtle">${h(discipline(c.discipline_code))}</p>
     <div class="meta"><span>${h(fmtDate(c.starts_at))}</span><span>${h(c.location || 'Онлайн')}</span><span>${c.registrations_count} заявок</span></div>
@@ -116,7 +117,7 @@ function rankingPage() {
   return `<p class="intro-text">Рейтинг учитывает четыре лучших результата и подтверждённый разряд. Каждый балл можно проверить в профиле спортсмена.</p>
     <div class="toolbar"><input id="ranking-search" type="search" placeholder="Найти спортсмена" aria-label="Найти спортсмена"><span class="subtle">${state.rankings.length} спортсменов</span></div>
     <div class="card table-scroll"><table><thead><tr><th>№</th><th>Спортсмен</th><th>Разряд</th><th class="number">Соревнования</th><th class="number">Разряд</th><th class="number">Итого</th></tr></thead><tbody id="ranking-rows">${rows || '<tr><td colspan="6">Пока нет спортсменов.</td></tr>'}</tbody></table></div>
-    <details class="card rules"><summary>Как рассчитывается рейтинг</summary><p>Баллы результата = уровень × коэффициент места × поправка на число финишировавших × относительное место × давность. Последнее место и зачёт с одним участником дают 0. Учитываются четыре лучших результата.</p><p>Очки плавно снижаются до нуля за три года. Бонус за разряд снижается по времени с последнего результативного выступления и обнуляется через два года.</p></details>`;
+    <details class="card rules"><summary>Как рассчитывается рейтинг</summary><p>Баллы результата = уровень × коэффициент места × поправка на число финишировавших × относительное место × давность. Отбор не даёт рейтинговых очков; финал считается по этой формуле. Последнее место и зачёт с одним участником дают 0. Учитываются четыре лучших результата.</p><p>Очки плавно снижаются до нуля за три года. Бонус за разряд снижается по времени с последнего результативного выступления и обнуляется через два года.</p></details>`;
 }
 
 function resultList(results, format) {
@@ -150,20 +151,23 @@ function resultsForm(detail) {
   if (!entries.length) return '<p class="subtle">Для публикации протокола нужны зарегистрированные участники или команды.</p>';
   const existing = new Map(detail.results.map(r => [r.team_id || r.athlete_id, r]));
   return `<details class="card form-panel"><summary>${detail.results.length ? 'Исправить протокол' : 'Опубликовать результаты'}</summary>
-    <form data-form="results" data-id="${c.id}"><p class="subtle">Укажите места финишировавших. Пустое место означает, что участник не завершил зачёт. Публикация завершит соревнование и обновит рейтинг.</p>
+    <form data-form="results" data-id="${c.id}"><p class="subtle">Укажите места финишировавших. Пустое место означает, что участник не завершил зачёт. Публикация завершит соревнование.${c.stage === 'qualification' ? ' Результаты отбора сохранятся без рейтинговых очков.' : ' Рейтинг пересчитается.'}</p>
     ${entries.map((entry, i) => `<div class="result-input"><strong>${h(entry.name)}</strong><label>Место<input type="number" min="1" max="${entries.length}" name="place_${entry.id}" value="${existing.get(entry.id)?.place ?? (detail.results.length ? '' : i + 1)}"></label><label>Результат<input type="text" maxlength="200" name="score_${entry.id}" value="${h(existing.get(entry.id)?.score_text || '')}" placeholder="Баллы, задачи…"></label></div>`).join('')}
     <button class="button primary" type="submit">Опубликовать протокол</button></form></details>`;
 }
 
 function competitionForm(existing = null) {
   const now = Date.now();
-  const c = existing || { title: '', level_code: 'regional', discipline_code: state.disciplines[0]?.code || 'algorithmic', format: 'individual', starts_at: new Date(now - 3600000).toISOString(), ends_at: new Date(now + 5 * 3600000).toISOString(), registration_deadline: new Date(now + 3 * 3600000).toISOString(), location: '', description: '', status: 'open' };
+  const c = existing || { title: '', level_code: 'regional', discipline_code: state.disciplines[0]?.code || 'algorithmic', format: 'individual', stage: 'standalone', starts_at: new Date(now - 3600000).toISOString(), ends_at: new Date(now + 5 * 3600000).toISOString(), registration_deadline: new Date(now + 3 * 3600000).toISOString(), location: '', description: '', status: 'open' };
   return `<details class="card form-panel" ${existing ? '' : 'open'}><summary>${existing ? 'Редактировать соревнование' : 'Создать соревнование'}</summary>
     <form data-form="competition" data-id="${existing?.id || ''}"><div class="form-grid">
       <label class="wide">Название<input name="title" value="${h(c.title)}" minlength="3" maxlength="160" required></label>
       <label>Уровень<select name="level_code">${Object.entries(levels).map(([key, label]) => `<option value="${key}" ${c.level_code === key ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label>
       <label>Дисциплина<select name="discipline_code">${state.disciplines.map(d => `<option value="${h(d.code)}" ${c.discipline_code === d.code ? 'selected' : ''}>${h(d.name)}</option>`).join('')}</select></label>
       <label>Формат<select name="format"><option value="individual" ${c.format === 'individual' ? 'selected' : ''}>Личный</option><option value="team" ${c.format === 'team' ? 'selected' : ''}>Командный</option></select></label>
+      <label>Этап<select name="stage">${Object.entries(stages).map(([key, label]) => `<option value="${key}" ${c.stage === key ? 'selected' : ''}>${h(label)}</option>`).join('')}</select></label>
+      <label>Отбор для финала<select name="qualifying_competition_id"><option value="">Не выбран</option>${state.competitions.filter(item => item.stage === 'qualification' && item.id !== c.id).map(item => `<option value="${item.id}" ${c.qualifying_competition_id === item.id ? 'selected' : ''}>${h(item.title)}</option>`).join('')}</select></label>
+      <label>Проходное место в финал<input type="number" name="qualifying_place_limit" min="1" max="10000" value="${c.qualifying_place_limit || ''}" placeholder="Например, 200"></label>
       <label>Статус<select name="status">${['draft', 'open', 'running'].map(key => `<option value="${key}" ${c.status === key ? 'selected' : ''}>${statuses[key]}</option>`).join('')}</select></label>
       <label>Начало<input type="datetime-local" name="starts_at" value="${localDate(c.starts_at)}" required></label>
       <label>Завершение<input type="datetime-local" name="ends_at" value="${localDate(c.ends_at)}" required></label>
@@ -176,12 +180,18 @@ function competitionForm(existing = null) {
 function competitionDetailPage(detail) {
   const c = detail.competition;
   const user = state.me?.user;
+  const qualifier = state.competitions.find(item => item.id === c.qualifying_competition_id);
+  const finals = state.competitions.filter(item => item.qualifying_competition_id === c.id);
   const canRegister = user?.role === 'athlete' && c.status === 'open' && new Date(c.registration_deadline) > new Date();
   const registerAction = !user ? `<a class="button primary" href="/login" data-link>Войти для заявки</a>` : canRegister && !detail.registered ? `<button class="button primary" data-action="register" data-id="${c.id}">Подать заявку</button>` : canRegister && detail.registered ? `<button class="button secondary" data-action="unregister" data-id="${c.id}">Отменить заявку</button>` : '';
   return `<p class="back"><a href="/" data-link>← Все соревнования</a></p>
-    <div class="card detail-head"><div class="card-head"><span class="tag ${h(c.status)}">${h(statuses[c.status])}</span><span class="subtle">${h(levels[c.level_code])}</span></div>
+    <div class="card detail-head"><div class="card-head"><span class="tag ${h(c.status)}">${h(statuses[c.status])}</span><span class="subtle">${h(stages[c.stage] || stages.standalone)} · ${h(levels[c.level_code])}</span></div>
       <h2>${h(c.title)}</h2><p>${h(c.description || 'Описание будет добавлено организатором.')}</p>
-      <div class="meta"><span>${h(fmtDateTime(c.starts_at))}</span><span>${h(c.location || 'Онлайн')}</span><span>${h(discipline(c.discipline_code))}</span><span>${c.format === 'team' ? 'Командный зачёт' : 'Личный зачёт'}</span></div>
+      <div class="meta"><span>Начало: ${h(fmtDateTime(c.starts_at))}</span><span>Заявки до: ${h(fmtDateTime(c.registration_deadline))}</span><span>${h(c.location || 'Онлайн')}</span><span>${h(discipline(c.discipline_code))}</span><span>${c.format === 'team' ? 'Командный зачёт' : 'Личный зачёт'}</span></div>
+      ${qualifier ? `<p><a href="/competitions/${qualifier.id}" data-link>← Протокол отбора: ${h(qualifier.title)}</a></p>` : ''}
+      ${c.stage === 'final' ? `<p class="subtle">В финал проходят участники отбора до ${c.qualifying_place_limit}-го места.</p>` : ''}
+      ${finals.map(item => `<p><a href="/competitions/${item.id}" data-link>Финал: ${h(item.title)} →</a></p>`).join('')}
+      ${c.stage === 'qualification' ? '<p class="subtle">Отбор определяет участников финала и не начисляет рейтинговых очков.</p>' : ''}
       <div class="actions">${registerAction}${detail.registered ? '<span class="success">Вы зарегистрированы</span>' : ''}</div>
     </div>
     <section><h2>Результаты</h2>${resultList(detail.results, c.format)}</section>
@@ -191,9 +201,9 @@ function competitionDetailPage(detail) {
 }
 
 function athletePage(a, own = false) {
-  const resultCards = a.results.map(result => `<div class="card result"><div><strong>${h(result.competition)}</strong><p class="subtle">${h(fmtDate(result.ends_at))} · ${h(discipline(result.discipline))} · ${result.place}-е из ${result.finishers}</p>
+  const resultCards = a.results.map(result => `<div class="card result"><div><strong>${h(result.competition)}</strong><p class="subtle">${h(fmtDate(result.ends_at))} · ${h(stages[result.stage] || stages.standalone)} · ${h(discipline(result.discipline))} · ${result.place}-е из ${result.finishers}</p>
     <small>${h(levels[result.level])} · место ×${h(fmtPoints(result.place_factor))} · масштаб ×${h(fmtPoints(result.size_factor))} · относительное место ×${h(fmtPoints(result.relative_factor))} · давность ×${h(fmtPoints(result.decay))}</small></div>
-    <div class="result-points"><strong>${h(fmtPoints(result.points))}</strong><small>${result.included ? 'В топ-4' : 'Не входит'}</small></div></div>`).join('');
+    <div class="result-points"><strong>${h(fmtPoints(result.points))}</strong><small>${result.stage === 'qualification' ? 'Отбор · без очков' : result.included ? 'В топ-4' : 'Не входит'}</small></div></div>`).join('');
   return `<div class="card athlete-head"><div><span class="tag">${h(ranks[a.rank_code] || a.rank_code)}</span><h2>${h(a.full_name)}</h2><p class="subtle">${h([a.city, a.organization].filter(Boolean).join(' · ') || 'Данные профиля')}</p><p class="subtle">${h(a.disciplines.map(discipline).join(', ') || 'Дисциплины пока не указаны')}</p></div>
     <div class="big-score"><strong>${h(fmtPoints(a.rating))}</strong><span>баллов · № ${a.rating_place}</span></div></div>
     <div class="score-grid"><div class="card"><span>Лучшие результаты</span><strong>${h(fmtPoints(a.result_points))}</strong></div><div class="card"><span>Разряд</span><strong>+${h(fmtPoints(a.rank_points))}</strong></div><div class="card"><span>Активность</span><strong>${Math.round(a.activity_factor * 100)}%</strong></div></div>
@@ -360,7 +370,11 @@ document.addEventListener('submit', async event => {
         break;
       }
       case 'competition': {
-        const payload = Object.fromEntries(['title', 'level_code', 'discipline_code', 'format', 'location', 'description', 'status'].map(key => [key, data.get(key)]));
+        const payload = Object.fromEntries(['title', 'level_code', 'discipline_code', 'format', 'stage', 'location', 'description', 'status'].map(key => [key, data.get(key)]));
+        payload.qualifying_competition_id = payload.stage === 'final' ? Number(data.get('qualifying_competition_id')) || null : null;
+        if (payload.stage === 'final' && !payload.qualifying_competition_id) throw new Error('Выберите отбор для финала');
+        payload.qualifying_place_limit = payload.stage === 'final' ? Number(data.get('qualifying_place_limit')) || null : null;
+        if (payload.stage === 'final' && !payload.qualifying_place_limit) throw new Error('Укажите проходное место в финал');
         for (const key of ['starts_at', 'ends_at', 'registration_deadline']) payload[key] = new Date(data.get(key)).toISOString();
         const existing = form.dataset.id;
         const result = await api(existing ? `/api/competitions/${existing}` : '/api/competitions', { method: existing ? 'PUT' : 'POST', body: JSON.stringify(payload) });

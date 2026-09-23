@@ -71,7 +71,7 @@ func TestSeedAndMainFlow(t *testing.T) {
 		if err := db.QueryRow(ctx, `SELECT (SELECT count(*) FROM athletes), (SELECT count(*) FROM competitions), (SELECT count(*) FROM results), (SELECT count(*) FROM teams)`).Scan(&athletes, &events, &results, &teams); err != nil {
 			t.Fatal(err)
 		}
-		if athletes != 24 || events != 15 || results != 94 || teams != 6 {
+		if athletes != 524 || events != 19 || results != 794 || teams != 6 {
 			t.Fatalf("seed pass %d changed counts: athletes=%d events=%d results=%d teams=%d", i+1, athletes, events, results, teams)
 		}
 	}
@@ -106,10 +106,55 @@ func TestSeedAndMainFlow(t *testing.T) {
 	if teamPoints <= 0 || resultFor("athlete13@arena.local", teamTitle).Points != teamPoints || resultFor("athlete21@arena.local", teamTitle).Points != teamPoints {
 		t.Fatal("team members did not receive equal points")
 	}
+	qualifying := resultFor("mock001@arena.invalid", "Всероссийский кубок · Отбор / Демо")
+	final := resultFor("mock001@arena.invalid", "Всероссийский кубок · Финал / Демо")
+	if qualifying.Place != 1 || qualifying.Points != 0 || qualifying.Included || final.Place != 1 || final.Finishers != 200 || final.Points <= 0 {
+		t.Fatalf("qualifier and final rating: qualifier=%+v final=%+v", qualifying, final)
+	}
+	if result := resultFor("mock250@arena.invalid", "Всероссийский кубок · Отбор / Демо"); result.Points != 0 || result.Place != 250 {
+		t.Fatalf("non-finalist qualifier result: %+v", result)
+	}
 
 	var organizerID int64
 	if err := db.QueryRow(ctx, `SELECT id FROM users WHERE email=$1`, organizerEmail).Scan(&organizerID); err != nil {
 		t.Fatal(err)
+	}
+	service := competitions.Service{DB: db}
+	now := time.Now().UTC()
+	var qualifierID, eligibleID, ineligibleID int64
+	if err := db.QueryRow(ctx, `SELECT id FROM competitions WHERE title='Всероссийский кубок · Отбор / Демо'`).Scan(&qualifierID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(ctx, `SELECT id FROM users WHERE email='mock200@arena.invalid'`).Scan(&eligibleID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(ctx, `SELECT id FROM users WHERE email='mock201@arena.invalid'`).Scan(&ineligibleID); err != nil {
+		t.Fatal(err)
+	}
+	limit := 200
+	openFinal, err := service.Create(ctx, competitions.Input{
+		Title: "Проверка допуска в финал", LevelCode: "rf_championship", DisciplineCode: "algorithmic", Format: "individual", Stage: "final", QualifyingID: &qualifierID, QualifyingPlaceLimit: &limit,
+		StartsAt: now.Add(10 * 24 * time.Hour), EndsAt: now.Add(10*24*time.Hour + 6*time.Hour), RegistrationDeadline: now.Add(8 * 24 * time.Hour), Status: "open",
+	}, organizerID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := service.Register(ctx, openFinal.ID, eligibleID); err != nil {
+		t.Fatalf("finalist denied: %v", err)
+	}
+	if err := service.Register(ctx, openFinal.ID, ineligibleID); !errors.Is(err, competitions.ErrNotQualified) {
+		t.Fatalf("non-finalist admitted: %v", err)
+	}
+	stricterLimit := 100
+	if _, err := service.Update(ctx, openFinal.ID, competitions.Input{
+		Title: openFinal.Title, LevelCode: openFinal.LevelCode, DisciplineCode: openFinal.DisciplineCode, Format: openFinal.Format,
+		Stage: "final", QualifyingID: &qualifierID, QualifyingPlaceLimit: &stricterLimit,
+		StartsAt: openFinal.StartsAt, EndsAt: openFinal.EndsAt, RegistrationDeadline: openFinal.RegistrationDeadline, Status: "open",
+	}); !errors.Is(err, competitions.ErrClosed) {
+		t.Fatalf("final cutoff changed after registration: %v", err)
+	}
+	if err := service.PublishResults(ctx, qualifierID, organizerID, []competitions.Result{{AthleteID: eligibleID, Place: 1}}); !errors.Is(err, competitions.ErrClosed) {
+		t.Fatalf("qualifier rewritten after final registration: %v", err)
 	}
 	account := auth.Service{DB: db}
 	first, _, err := account.Register(ctx, "flow-first@arena.local", "integration-demo-password", "Первый спортсмен", "ДГУ", "Махачкала")
@@ -120,8 +165,6 @@ func TestSeedAndMainFlow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	now := time.Now().UTC()
-	service := competitions.Service{DB: db}
 	event, err := service.Create(ctx, competitions.Input{Title: "Интеграционный личный зачёт", LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", StartsAt: now.Add(-time.Hour), EndsAt: now.Add(time.Hour), RegistrationDeadline: now.Add(30 * time.Minute), Status: "open"}, organizerID)
 	if err != nil {
 		t.Fatal(err)

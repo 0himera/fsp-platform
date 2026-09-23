@@ -17,12 +17,16 @@ func FuzzScoreInvariants(f *testing.F) {
 	f.Fuzz(func(t *testing.T, levelIndex uint8, size, position, age uint16) {
 		n := 1 + int(size%128)
 		place := 1 + int(position%uint16(n+3))
-		result := Result{Level: levels[int(levelIndex)%len(levels)], Finishers: n, Place: place, EndsAt: asOf.AddDate(0, 0, -int(age%1400))}
+		stage := "standalone"
+		if levelIndex >= 128 {
+			stage = "qualification"
+		}
+		result := Result{Level: levels[int(levelIndex)%len(levels)], Stage: stage, Finishers: n, Place: place, EndsAt: asOf.AddDate(0, 0, -int(age%1400))}
 		score := Score(result, asOf)
 		if math.IsNaN(score.Points) || math.IsInf(score.Points, 0) || score.Points < 0 || score.Points > score.Base {
 			t.Fatalf("score out of range: %+v", score)
 		}
-		if (n < 2 || place >= n) && score.Points != 0 {
+		if (n < 2 || place >= n || stage == "qualification") && score.Points != 0 {
 			t.Fatalf("single or last finisher scored: %+v", score)
 		}
 		if place >= n || n < 2 {
@@ -65,7 +69,11 @@ func FuzzCalculateBestFour(f *testing.F) {
 		for i := 1; i+2 < len(data); i += 3 {
 			n := 2 + int(data[i]%31)
 			place := 1 + int(data[i+1])%n
-			result := Result{CompetitionID: int64(i), Level: levels[int(data[i+2])%len(levels)], Finishers: n, Place: place, EndsAt: asOf.AddDate(0, 0, -int(data[i+2])*5)}
+			stage := "final"
+			if data[i+2]%3 == 0 {
+				stage = "qualification"
+			}
+			result := Result{CompetitionID: int64(i), Level: levels[int(data[i+2])%len(levels)], Stage: stage, Finishers: n, Place: place, EndsAt: asOf.AddDate(0, 0, -int(data[i+2])*5)}
 			athlete.Results = append(athlete.Results, result)
 			points = append(points, Score(result, asOf).Points)
 		}

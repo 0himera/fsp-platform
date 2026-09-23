@@ -50,3 +50,21 @@ func TestDecayAndBestFour(t *testing.T) {
 		t.Fatal("fifth result must not count")
 	}
 }
+
+func TestQualificationIsVisibleButDoesNotScore(t *testing.T) {
+	now := time.Date(2026, 9, 23, 0, 0, 0, 0, time.UTC)
+	athlete := Calculate(Athlete{RankCode: "KMS", Results: []Result{
+		{Stage: "qualification", Level: "rf_championship", Place: 1, Finishers: 200, EndsAt: now},
+		{Stage: "final", Level: "rf_championship", Place: 10, Finishers: 200, EndsAt: now},
+	}}, now)
+	if len(athlete.Results) != 2 || athlete.Results[1].Stage != "qualification" || athlete.Results[1].Points != 0 || athlete.Results[1].Included {
+		t.Fatalf("qualification must remain visible without points: %+v", athlete.Results)
+	}
+	if athlete.Results[0].Stage != "final" || athlete.Results[0].Points <= 0 || athlete.RankPoints != 80 {
+		t.Fatalf("final must score and support activity bonus: %+v", athlete)
+	}
+	qualifierOnly := Calculate(Athlete{RankCode: "KMS", Results: []Result{{Stage: "qualification", Level: "rf_championship", Place: 1, Finishers: 200, EndsAt: now}}}, now)
+	if qualifierOnly.Total != 0 || qualifierOnly.Activity != 0 {
+		t.Fatalf("qualification alone must not activate rank bonus: %+v", qualifierOnly)
+	}
+}

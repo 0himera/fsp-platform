@@ -203,5 +203,9 @@ func Seed(ctx context.Context, db *pgxpool.Pool, organizerEmail string) error {
 			}
 		}
 	}
-	return nil
+	bulkIDs, err := seedSyntheticAthletes(ctx, db)
+	if err != nil {
+		return err
+	}
+	return seedLargeEvents(ctx, db, organizerID, bulkIDs, create)
 }
