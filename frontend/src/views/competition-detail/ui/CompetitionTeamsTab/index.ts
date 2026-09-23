@@ -1,0 +1,1 @@
+export { CompetitionTeamsTab } from "./CompetitionTeamsTab";

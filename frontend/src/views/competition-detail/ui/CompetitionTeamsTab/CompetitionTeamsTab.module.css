@@ -1,0 +1,40 @@
+.card {
+  border: 1px solid var(--color-border);
+}
+
+.teamsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.teamItem {
+  padding: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.teamHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.teamName {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+}

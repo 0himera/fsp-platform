@@ -1,0 +1,1 @@
+export { CompetitionDetailView } from "./CompetitionDetailView";

@@ -1,0 +1,20 @@
+.card {
+  border: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.athletesSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.athleteBtn {
+  font-size: 0.75rem;
+}
