@@ -147,6 +147,11 @@ function teamForm(detail) {
 
 function resultsForm(detail) {
   const c = detail.competition;
+  if (c.status === 'draft') return '<p class="subtle">Откройте соревнование, прежде чем публиковать результаты.</p>';
+  if (new Date(c.ends_at) > new Date()) {
+    const started = new Date(c.starts_at) <= new Date();
+    return `<p class="subtle">Итоговый протокол можно опубликовать после завершения соревнования.${started ? ' Если соревнование закончилось раньше плана, укажите фактическое время завершения.' : ''}</p>${started ? `<button class="button secondary" data-action="finish-competition" data-id="${c.id}">Завершить досрочно</button>` : ''}`;
+  }
   const entries = c.format === 'team' ? detail.teams.map(t => ({ id: t.id, name: t.name })) : detail.registrations.map(r => ({ id: r.athlete_id, name: r.full_name }));
   if (!entries.length) return '<p class="subtle">Для публикации протокола нужны зарегистрированные участники или команды.</p>';
   const existing = new Map(detail.results.map(r => [r.team_id || r.athlete_id, r]));
@@ -253,7 +258,27 @@ function authPage(register = false) {
     <label>Пароль<input type="password" name="password" required minlength="8" autocomplete="${register ? 'new-password' : 'current-password'}"></label>
     ${register ? '<label>Город<input name="city"></label><label>Организация<input name="organization"></label>' : ''}
     <button class="button primary" type="submit">${register ? 'Зарегистрироваться' : 'Войти'}</button></form>
-    <p class="subtle">${register ? 'Уже есть аккаунт? <a href="/login" data-link>Войти</a>' : 'Нет аккаунта? <a href="/register" data-link>Зарегистрироваться</a>'}</p></div>`;
+    <p class="subtle">${register ? 'На почту придёт ссылка для подтверждения адреса. Уже есть аккаунт? <a href="/login" data-link>Войти</a>' : 'Нет аккаунта? <a href="/register" data-link>Зарегистрироваться</a>'}</p>
+    ${register ? '' : '<p class="subtle"><a href="/forgot-password" data-link>Забыли пароль?</a> · <a href="/resend-verification" data-link>Не пришло письмо?</a></p>'}</div>`;
+}
+
+function emailRequestPage(purpose) {
+  const resend = purpose === 'resend-verification';
+  const email = new URLSearchParams(location.search).get('email') || '';
+  return `<div class="card auth-card"><h2>${resend ? 'Повторить письмо' : 'Восстановить пароль'}</h2>
+    <p class="subtle">${resend ? 'Отправим новую ссылку для подтверждения почты.' : 'Отправим ссылку для смены пароля, если такой аккаунт существует.'}</p>
+    <form data-form="${purpose}"><label>Электронная почта<input type="email" name="email" value="${h(email)}" required autocomplete="email"></label>
+    <button class="button primary" type="submit">Отправить письмо</button></form>
+    <p class="subtle"><a href="/login" data-link>Вернуться ко входу</a></p></div>`;
+}
+
+function emailActionPage(reset = false) {
+  const token = new URLSearchParams(location.search).get('token') || '';
+  if (!token) return '<div class="empty">В ссылке нет кода. Запросите новое письмо.</div>';
+  return `<div class="card auth-card"><h2>${reset ? 'Новый пароль' : 'Подтвердить почту'}</h2>
+    <form data-form="${reset ? 'reset-password' : 'verify-email'}"><input type="hidden" name="token" value="${h(token)}">
+    ${reset ? '<label>Новый пароль<input type="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password"></label><label>Повторите пароль<input type="password" name="password_confirm" required minlength="8" maxlength="128" autocomplete="new-password"></label>' : '<p class="subtle">Нажмите кнопку, чтобы подтвердить адрес и войти в аккаунт.</p>'}
+    <button class="button primary" type="submit">${reset ? 'Сохранить пароль' : 'Подтвердить адрес'}</button></form></div>`;
 }
 
 let renderId = 0;
@@ -268,6 +293,16 @@ async function render() {
     else if (path === '/admin') { title = 'Кабинет организатора'; content = adminPage(); }
     else if (path === '/login') { title = 'Вход'; content = authPage(false); }
     else if (path === '/register') { title = 'Регистрация'; content = authPage(true); }
+    else if (path === '/check-email') {
+      const params = new URLSearchParams(location.search);
+      const sent = params.get('sent') !== '0';
+      title = 'Проверьте почту';
+      content = `<div class="card auth-card"><h2>${sent ? 'Проверьте почту' : 'Аккаунт создан'}</h2><p>${sent ? 'Мы отправили письмо со ссылкой для подтверждения адреса.' : 'Письмо пока не удалось отправить. Запросите его повторно через минуту; регистрироваться заново не нужно.'}</p><p class="subtle">${sent ? 'Проверьте также папку «Спам». ' : ''}Ссылка действует 24 часа.</p><a href="/resend-verification?email=${encodeURIComponent(params.get('email') || '')}" data-link>Отправить письмо ещё раз</a></div>`;
+    }
+    else if (path === '/resend-verification') { title = 'Повторное письмо'; content = emailRequestPage('resend-verification'); }
+    else if (path === '/forgot-password') { title = 'Восстановление пароля'; content = emailRequestPage('forgot-password'); }
+    else if (path === '/verify-email') { title = 'Подтверждение почты'; content = emailActionPage(false); }
+    else if (path === '/reset-password') { title = 'Новый пароль'; content = emailActionPage(true); }
     else if (path === '/profile') {
       if (!state.me?.athlete) { go('/login'); return; }
       title = 'Мой профиль'; content = athletePage(state.me.athlete, true);
@@ -320,6 +355,16 @@ document.addEventListener('click', async event => {
     if (action === 'register') { await api(`/api/competitions/${id}/register`, { method: 'POST' }); await afterChange('Заявка подана'); }
     if (action === 'unregister') { await api(`/api/competitions/${id}/register`, { method: 'DELETE' }); await afterChange('Заявка отменена'); }
     if (action === 'delete-team') { await api(`/api/competitions/${state.detail.competition.id}/teams/${id}`, { method: 'DELETE' }); await afterChange('Команда удалена'); }
+    if (action === 'finish-competition') {
+      const c = state.detail.competition;
+      const now = new Date();
+      const payload = Object.fromEntries(['title', 'level_code', 'discipline_code', 'format', 'stage', 'starts_at', 'location', 'description', 'qualifying_competition_id', 'qualifying_place_limit'].map(key => [key, c[key]]));
+      payload.ends_at = now.toISOString();
+      payload.registration_deadline = new Date(Math.min(new Date(c.registration_deadline).getTime(), now.getTime())).toISOString();
+      payload.status = 'running';
+      await api(`/api/competitions/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+      await afterChange('Соревнование завершено. Теперь можно опубликовать результаты');
+    }
   } catch (error) { notify(error.message, true); }
   finally { button.disabled = false; }
 });
@@ -345,8 +390,26 @@ document.addEventListener('submit', async event => {
         break;
       }
       case 'register': {
-        await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email: data.get('email'), password: data.get('password'), full_name: data.get('full_name'), city: data.get('city'), organization: data.get('organization') }) });
-        await afterChange('Аккаунт создан', '/profile');
+        const result = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ email: data.get('email'), password: data.get('password'), full_name: data.get('full_name'), city: data.get('city'), organization: data.get('organization') }) });
+        await afterChange(result.mail_sent ? 'Письмо отправлено' : 'Аккаунт создан, но письмо не отправлено', `/check-email?email=${encodeURIComponent(data.get('email'))}&sent=${result.mail_sent ? '1' : '0'}`);
+        break;
+      }
+      case 'verify-email': {
+        await api('/api/auth/verify-email', { method: 'POST', body: JSON.stringify({ token: data.get('token') }) });
+        await afterChange('Почта подтверждена', '/profile');
+        break;
+      }
+      case 'resend-verification':
+      case 'forgot-password': {
+        const endpoint = form.dataset.form === 'forgot-password' ? 'forgot-password' : 'resend-verification';
+        await api(`/api/auth/${endpoint}`, { method: 'POST', body: JSON.stringify({ email: data.get('email') }) });
+        notify('Если адрес подходит, письмо отправлено. Проверьте почту.');
+        break;
+      }
+      case 'reset-password': {
+        if (data.get('password') !== data.get('password_confirm')) throw new Error('Пароли не совпадают');
+        await api('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ token: data.get('token'), password: data.get('password') }) });
+        await afterChange('Пароль изменён. Войдите с новым паролем', '/login');
         break;
       }
       case 'profile': {

@@ -157,11 +157,11 @@ func TestSeedAndMainFlow(t *testing.T) {
 		t.Fatalf("qualifier rewritten after final registration: %v", err)
 	}
 	account := auth.Service{DB: db}
-	first, _, err := account.Register(ctx, "flow-first@arena.local", "integration-demo-password", "Первый спортсмен", "ДГУ", "Махачкала")
+	first, _, err := account.RegisterVerified(ctx, "flow-first@arena.local", "integration-demo-password", "Первый спортсмен", "ДГУ", "Махачкала")
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, _, err := account.Register(ctx, "flow-second@arena.local", "integration-demo-password", "Второй спортсмен", "ДГТУ", "Дербент")
+	second, _, err := account.RegisterVerified(ctx, "flow-second@arena.local", "integration-demo-password", "Второй спортсмен", "ДГТУ", "Дербент")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,12 +195,23 @@ func TestSeedAndMainFlow(t *testing.T) {
 			t.Fatalf("rating did not follow protocol: winner=%+v loser=%+v", winner, loser)
 		}
 	}
-	if err := service.PublishResults(ctx, event.ID, organizerID, []competitions.Result{{AthleteID: first.ID, Place: 1}, {AthleteID: second.ID, Place: 2}}); err != nil {
+	protocol := []competitions.Result{{AthleteID: first.ID, Place: 1}, {AthleteID: second.ID, Place: 2}}
+	if err := service.PublishResults(ctx, event.ID, organizerID, protocol); !errors.Is(err, competitions.ErrNotFinished) {
+		t.Fatalf("results accepted before competition ended: %v", err)
+	}
+	ended, err := service.Update(ctx, event.ID, competitions.Input{
+		Title: event.Title, LevelCode: event.LevelCode, DisciplineCode: event.DisciplineCode, Format: event.Format,
+		Stage: event.Stage, StartsAt: event.StartsAt, EndsAt: now.Add(-time.Minute), RegistrationDeadline: now.Add(-2 * time.Minute), Status: "running",
+	})
+	if err != nil {
+		t.Fatalf("mark competition as ended: %v", err)
+	}
+	if err := service.PublishResults(ctx, event.ID, organizerID, protocol); err != nil {
 		t.Fatal(err)
 	}
 	checkRating(first.ID, second.ID)
 	stored, err := service.Get(ctx, event.ID)
-	if err != nil || stored.Status != "completed" || stored.ResultsCount != 2 {
+	if err != nil || stored.Status != "completed" || stored.ResultsCount != 2 || !stored.EndsAt.Equal(ended.EndsAt) {
 		t.Fatalf("published event: %+v, %v", stored, err)
 	}
 	if err := service.PublishResults(ctx, event.ID, organizerID, []competitions.Result{{AthleteID: first.ID, Place: 2}, {AthleteID: second.ID, Place: 1}}); err != nil {

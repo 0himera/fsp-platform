@@ -19,6 +19,9 @@ import (
 )
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrEmailUnverified = errors.New("email not verified")
+var ErrInvalidToken = errors.New("invalid or expired token")
+var ErrTooSoon = errors.New("request sent too recently")
 
 type User struct {
 	ID       int64  `json:"id"`
@@ -52,7 +55,16 @@ func verifyPassword(encoded, password string) bool {
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
 
-func (s Service) Register(ctx context.Context, email, password, fullName, organization, city string) (User, string, error) {
+func (s Service) RegisterPending(ctx context.Context, email, password, fullName, organization, city string) (User, string, error) {
+	return s.register(ctx, email, password, fullName, organization, city, false)
+}
+
+// RegisterVerified is for trusted local demo data, never for public requests.
+func (s Service) RegisterVerified(ctx context.Context, email, password, fullName, organization, city string) (User, string, error) {
+	return s.register(ctx, email, password, fullName, organization, city, true)
+}
+
+func (s Service) register(ctx context.Context, email, password, fullName, organization, city string, verified bool) (User, string, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	fullName = strings.TrimSpace(fullName)
 	hash, err := hashPassword(password)
@@ -65,13 +77,18 @@ func (s Service) Register(ctx context.Context, email, password, fullName, organi
 	}
 	defer tx.Rollback(ctx)
 	user := User{Email: email, Role: "athlete", FullName: fullName}
-	if err := tx.QueryRow(ctx, `INSERT INTO users (email,password_hash,role) VALUES ($1,$2,'athlete') RETURNING id`, email, hash).Scan(&user.ID); err != nil {
+	if err := tx.QueryRow(ctx, `INSERT INTO users (email,password_hash,role,email_verified_at) VALUES ($1,$2,'athlete',CASE WHEN $3 THEN now() ELSE NULL END) RETURNING id`, email, hash, verified).Scan(&user.ID); err != nil {
 		return User{}, "", err
 	}
 	if _, err := tx.Exec(ctx, `INSERT INTO athletes (user_id,full_name,organization,city) VALUES ($1,$2,$3,$4)`, user.ID, fullName, strings.TrimSpace(organization), strings.TrimSpace(city)); err != nil {
 		return User{}, "", err
 	}
-	token, err := createSession(ctx, tx, user.ID)
+	var token string
+	if verified {
+		token, err = createSession(ctx, tx, user.ID)
+	} else {
+		token, err = issueToken(ctx, tx, user.ID, "verify_email", 24*time.Hour)
+	}
 	if err != nil {
 		return User{}, "", err
 	}
@@ -84,12 +101,16 @@ func (s Service) Register(ctx context.Context, email, password, fullName, organi
 func (s Service) Login(ctx context.Context, email, password string) (User, string, error) {
 	var user User
 	var hash string
-	err := s.DB.QueryRow(ctx, `SELECT u.id,u.email,u.role,COALESCE(a.full_name,''),u.password_hash FROM users u LEFT JOIN athletes a ON a.user_id=u.id WHERE lower(u.email)=lower($1)`, strings.TrimSpace(email)).Scan(&user.ID, &user.Email, &user.Role, &user.FullName, &hash)
+	var verifiedAt *time.Time
+	err := s.DB.QueryRow(ctx, `SELECT u.id,u.email,u.role,COALESCE(a.full_name,''),u.password_hash,u.email_verified_at FROM users u LEFT JOIN athletes a ON a.user_id=u.id WHERE lower(u.email)=lower($1)`, strings.TrimSpace(email)).Scan(&user.ID, &user.Email, &user.Role, &user.FullName, &hash, &verifiedAt)
 	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !verifyPassword(hash, password)) {
 		return User{}, "", ErrInvalidCredentials
 	}
 	if err != nil {
 		return User{}, "", err
+	}
+	if verifiedAt == nil {
+		return User{}, "", ErrEmailUnverified
 	}
 	token, err := createSession(ctx, s.DB, user.ID)
 	return user, token, err
@@ -114,7 +135,7 @@ func (s Service) Session(ctx context.Context, token string) (User, error) {
 		return user, pgx.ErrNoRows
 	}
 	hash := sha256.Sum256([]byte(token))
-	err := s.DB.QueryRow(ctx, `SELECT u.id,u.email,u.role,COALESCE(a.full_name,'') FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN athletes a ON a.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>now()`, hash[:]).Scan(&user.ID, &user.Email, &user.Role, &user.FullName)
+	err := s.DB.QueryRow(ctx, `SELECT u.id,u.email,u.role,COALESCE(a.full_name,'') FROM sessions s JOIN users u ON u.id=s.user_id LEFT JOIN athletes a ON a.user_id=u.id WHERE s.token_hash=$1 AND s.expires_at>now() AND u.email_verified_at IS NOT NULL`, hash[:]).Scan(&user.ID, &user.Email, &user.Role, &user.FullName)
 	return user, err
 }
 
@@ -138,6 +159,6 @@ func (s Service) EnsureOrganizer(ctx context.Context, email, password string) er
 	if err != nil {
 		return err
 	}
-	_, err = s.DB.Exec(ctx, `INSERT INTO users (email,password_hash,role) VALUES ($1,$2,'organizer') ON CONFLICT DO NOTHING`, strings.ToLower(strings.TrimSpace(email)), hash)
+	_, err = s.DB.Exec(ctx, `INSERT INTO users (email,password_hash,role,email_verified_at) VALUES ($1,$2,'organizer',now()) ON CONFLICT DO NOTHING`, strings.ToLower(strings.TrimSpace(email)), hash)
 	return err
 }

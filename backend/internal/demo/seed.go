@@ -62,7 +62,7 @@ func Seed(ctx context.Context, db *pgxpool.Pool, organizerEmail string) error {
 		fresh := false
 		err := db.QueryRow(ctx, `SELECT id FROM users WHERE email=$1`, email).Scan(&ids[i])
 		if errors.Is(err, pgx.ErrNoRows) {
-			user, _, err := (auth.Service{DB: db}).Register(ctx, email, "demo-athlete-2026", data.name, data.organization, data.city)
+			user, _, err := (auth.Service{DB: db}).RegisterVerified(ctx, email, "demo-athlete-2026", data.name, data.organization, data.city)
 			if err != nil {
 				return err
 			}

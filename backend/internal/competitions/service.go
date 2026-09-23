@@ -18,6 +18,7 @@ var (
 	ErrConflict     = errors.New("already registered or assigned")
 	ErrInvalid      = errors.New("invalid competition data")
 	ErrNotQualified = errors.New("athlete did not qualify for final")
+	ErrNotFinished  = errors.New("competition has not finished")
 )
 
 type Competition struct {
@@ -413,17 +414,20 @@ func (s Service) PublishResults(ctx context.Context, competitionID, organizerID 
 		return err
 	}
 	defer tx.Rollback(ctx)
-	var format, stage string
-	var startsAt time.Time
-	err = tx.QueryRow(ctx, `SELECT format,stage,starts_at FROM competitions WHERE id=$1 FOR UPDATE`, competitionID).Scan(&format, &stage, &startsAt)
+	var format, stage, status string
+	var endsAt time.Time
+	err = tx.QueryRow(ctx, `SELECT format,stage,status,ends_at FROM competitions WHERE id=$1 FOR UPDATE`, competitionID).Scan(&format, &stage, &status, &endsAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
 	if err != nil {
 		return err
 	}
-	if startsAt.After(time.Now()) {
+	if status == "draft" {
 		return ErrClosed
+	}
+	if endsAt.After(time.Now()) {
+		return ErrNotFinished
 	}
 	if stage == "qualification" {
 		var finalHasRegistrations bool
@@ -478,7 +482,7 @@ func (s Service) PublishResults(ctx context.Context, competitionID, organizerID 
 	if _, err := tx.Exec(ctx, `INSERT INTO result_publications (competition_id,published_by,protocol) VALUES ($1,$2,$3)`, competitionID, organizerID, protocol); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, `UPDATE competitions SET status='completed',ends_at=LEAST(ends_at,now()),registration_deadline=LEAST(registration_deadline,now()),updated_at=now() WHERE id=$1`, competitionID); err != nil {
+	if _, err := tx.Exec(ctx, `UPDATE competitions SET status='completed',updated_at=now() WHERE id=$1`, competitionID); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

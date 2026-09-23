@@ -1,4 +1,9 @@
 services:
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:1025:1025"
   db:
     image: postgres:17-alpine
     environment:
@@ -26,11 +31,17 @@ services:
       SEED_ORGANIZER_EMAIL: organizer@arena.local
       SEED_ORGANIZER_PASSWORD: change-me-for-local-demo
       DEMO_SEED: "1"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: "Арена ФСП РД <noreply@arena.local>"
+      PUBLIC_BASE_URL: http://localhost:8080
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
 volumes:
   postgres_data:

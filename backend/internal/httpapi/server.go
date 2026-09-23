@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -29,10 +30,16 @@ type Server struct {
 	Competitions competitions.Service
 	Rating       rating.Service
 	FrontendDir  string
+	Mailer       interface {
+		Send(context.Context, string, string, string) error
+	}
+	PublicURL string
 }
 
-func New(db *pgxpool.Pool, frontendDir string) *Server {
-	return &Server{DB: db, Auth: auth.Service{DB: db}, Athletes: athletes.Service{DB: db}, Competitions: competitions.Service{DB: db}, Rating: rating.Service{DB: db}, FrontendDir: frontendDir}
+func New(db *pgxpool.Pool, frontendDir string, mailer interface {
+	Send(context.Context, string, string, string) error
+}, publicURL string) *Server {
+	return &Server{DB: db, Auth: auth.Service{DB: db}, Athletes: athletes.Service{DB: db}, Competitions: competitions.Service{DB: db}, Rating: rating.Service{DB: db}, FrontendDir: frontendDir, Mailer: mailer, PublicURL: strings.TrimRight(publicURL, "/")}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -40,6 +47,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/health", s.health)
 	mux.HandleFunc("POST /api/auth/register", s.register)
 	mux.HandleFunc("POST /api/auth/login", s.login)
+	mux.HandleFunc("POST /api/auth/verify-email", s.verifyEmail)
+	mux.HandleFunc("POST /api/auth/resend-verification", s.resendVerification)
+	mux.HandleFunc("POST /api/auth/forgot-password", s.forgotPassword)
+	mux.HandleFunc("POST /api/auth/reset-password", s.resetPassword)
 	mux.HandleFunc("POST /api/auth/logout", s.logout)
 	mux.HandleFunc("GET /api/me", s.me)
 	mux.HandleFunc("PATCH /api/me", s.updateMe)
@@ -157,6 +168,8 @@ func handleError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "Не найдено")
 	case errors.Is(err, competitions.ErrClosed):
 		writeError(w, http.StatusConflict, "Регистрация закрыта или действие недоступно")
+	case errors.Is(err, competitions.ErrNotFinished):
+		writeError(w, http.StatusConflict, "Соревнование ещё не завершилось")
 	case errors.Is(err, competitions.ErrConflict):
 		writeError(w, http.StatusConflict, "Вы уже зарегистрированы или участник включён в команду")
 	case errors.Is(err, competitions.ErrNotQualified):
@@ -165,6 +178,10 @@ func handleError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusBadRequest, "Проверьте данные соревнования и протокола")
 	case errors.Is(err, auth.ErrInvalidCredentials):
 		writeError(w, http.StatusUnauthorized, "Неверная почта или пароль")
+	case errors.Is(err, auth.ErrEmailUnverified):
+		writeError(w, http.StatusForbidden, "Подтвердите адрес почты перед входом")
+	case errors.Is(err, auth.ErrInvalidToken):
+		writeError(w, http.StatusBadRequest, "Ссылка недействительна или срок её действия истёк")
 	case errors.As(err, &pgErr) && pgErr.Code == "23505":
 		writeError(w, http.StatusConflict, "Такая запись уже существует")
 	case errors.As(err, &pgErr) && (pgErr.Code == "23503" || pgErr.Code == "23514" || pgErr.Code == "23502"):
@@ -192,8 +209,8 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(s.FrontendDir, "index.html"))
 }
 
-func setSessionCookie(w http.ResponseWriter, r *http.Request, token string) {
-	http.SetCookie(w, &http.Cookie{Name: "arena_session", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: r.TLS != nil, MaxAge: int((30 * 24 * time.Hour).Seconds())})
+func (s *Server) setSessionCookie(w http.ResponseWriter, r *http.Request, token string) {
+	http.SetCookie(w, &http.Cookie{Name: "arena_session", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: r.TLS != nil || strings.HasPrefix(s.PublicURL, "https://"), MaxAge: int((30 * 24 * time.Hour).Seconds())})
 }
 
 func clearSessionCookie(w http.ResponseWriter, r *http.Request) {

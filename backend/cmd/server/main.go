@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/0himera/fsp-platform/internal/auth"
 	"github.com/0himera/fsp-platform/internal/demo"
 	"github.com/0himera/fsp-platform/internal/httpapi"
+	"github.com/0himera/fsp-platform/internal/mailer"
 	"github.com/0himera/fsp-platform/internal/platform"
 )
 
@@ -51,7 +53,22 @@ func main() {
 		}
 	}
 	addr := env("HTTP_ADDR", ":8080")
-	server := &http.Server{Addr: addr, Handler: httpapi.New(db, env("FRONTEND_DIR", "../frontend")).Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
+	var sender interface {
+		Send(context.Context, string, string, string) error
+	}
+	if host := os.Getenv("SMTP_HOST"); host != "" {
+		configured := mailer.SMTP{Host: host, Port: 587, From: env("SMTP_FROM", "Арена ФСП РД <noreply@arena.local>"), Username: os.Getenv("SMTP_USERNAME"), Password: os.Getenv("SMTP_PASSWORD")}
+		if port := os.Getenv("SMTP_PORT"); port != "" {
+			parsed, err := strconv.Atoi(port)
+			if err != nil || parsed < 1 || parsed > 65535 {
+				slog.Error("invalid SMTP_PORT")
+				os.Exit(1)
+			}
+			configured.Port = parsed
+		}
+		sender = configured
+	}
+	server := &http.Server{Addr: addr, Handler: httpapi.New(db, env("FRONTEND_DIR", "../frontend"), sender, env("PUBLIC_BASE_URL", "http://localhost:8080")).Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
