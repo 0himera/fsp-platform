@@ -1,56 +1,93 @@
-import { useQuery } from "@tanstack/react-query";
-import type { AthleteProfile } from "../model/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api";
+import type { Athlete, MeResponse } from "@/shared/api";
+import { toAthleteProfile, type AthleteProfile } from "../model/types";
 
 export const userKeys = {
   all: ["users"] as const,
-  profile: (id: string) => [...userKeys.all, "profile", id] as const,
-  rating: () => [...userKeys.all, "rating"] as const,
+  me: () => [...userKeys.all, "me"] as const,
+  profile: (id: string | number) => [...userKeys.all, "profile", String(id)] as const,
+  registrations: () => [...userKeys.all, "registrations"] as const,
 };
 
-const mockAthlete: AthleteProfile = {
-  id: "ath-01",
-  fullName: "Магомедов Шамиль Рашидович",
-  email: "shamil.magomedov@fsp-rd.ru",
-  role: "athlete",
-  organization: "Дагестанский государственный технический университет (ДГТУ)",
-  city: "Махачкала",
-  disciplines: [
-    "Программирование продуктовое",
-    "Программирование алгоритмическое",
-  ],
-  rank: "I спортивный разряд",
-  rating: 1840,
-  regionalRank: 3,
-  competitions: [
-    {
-      id: "comp-1",
-      name: "Кубок Республики Дагестан 2025",
-      level: "Региональный",
-      discipline: "Программирование продуктовое",
-      date: "2025-11-14",
-      place: 1,
-      pointsEarned: 450,
-    },
-    {
-      id: "comp-2",
-      name: "Чемпионат СКФО по спортивному программированию",
-      level: "Межрегиональный",
-      discipline: "Программирование алгоритмическое",
-      date: "2025-05-20",
-      place: 2,
-      pointsEarned: 380,
-    },
-  ],
-};
-
-export async function getAthleteProfile(userId: string): Promise<AthleteProfile> {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return { ...mockAthlete, id: userId };
+export async function getMe(): Promise<MeResponse | null> {
+  try {
+    return await apiClient.get<MeResponse>("/api/me");
+  } catch {
+    return null;
+  }
 }
 
-export function useAthleteProfile(userId: string = "ath-01") {
+export function useMeQuery() {
   return useQuery({
-    queryKey: userKeys.profile(userId),
-    queryFn: () => getAthleteProfile(userId),
+    queryKey: userKeys.me(),
+    queryFn: getMe,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
   });
 }
+
+export async function getAthlete(id: string | number): Promise<Athlete> {
+  return apiClient.get<Athlete>(`/api/athletes/${id}`);
+}
+
+export function useAthleteQuery(id: string | number) {
+  return useQuery({
+    queryKey: userKeys.profile(id),
+    queryFn: () => getAthlete(id),
+    enabled: Boolean(id),
+  });
+}
+
+export async function getAthleteProfile(userId?: string): Promise<AthleteProfile> {
+  if (userId && !isNaN(Number(userId))) {
+    const athlete = await getAthlete(userId);
+    return toAthleteProfile(athlete);
+  }
+
+  // If no user specified or non-numeric id, try getting current user's profile
+  const me = await getMe();
+  if (me?.athlete) {
+    return toAthleteProfile(me.athlete, me.user.email);
+  }
+
+  // Fallback to top-1 athlete from rankings
+  const rankings = await apiClient.get<{ athletes: Athlete[] }>("/api/rankings");
+  if (rankings.athletes && rankings.athletes.length > 0) {
+    return toAthleteProfile(rankings.athletes[0]);
+  }
+
+  throw new Error("Спортсмен не найден");
+}
+
+export function useAthleteProfile(userId?: string) {
+  return useQuery({
+    queryKey: userId ? userKeys.profile(userId) : userKeys.profile("default"),
+    queryFn: () => getAthleteProfile(userId),
+    staleTime: 1000 * 60,
+  });
+}
+
+export interface UpdateProfileInput {
+  full_name: string;
+  organization: string;
+  city: string;
+  disciplines: string[];
+}
+
+export function useUpdateProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) =>
+      apiClient.request<MeResponse>("/api/me", {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(userKeys.me(), data);
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+

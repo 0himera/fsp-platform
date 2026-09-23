@@ -2,9 +2,9 @@ import { APP_CONFIG } from "../config";
 import { ApiError, type RequestOptions } from "./types";
 
 function buildUrl(endpoint: string, params?: RequestOptions["params"]): string {
-  let url = endpoint.startsWith("http")
-    ? endpoint
-    : `${APP_CONFIG.apiBaseUrl.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+  const base = APP_CONFIG.apiBaseUrl.replace(/\/$/, "");
+  const path = endpoint.replace(/^\//, "");
+  let url = endpoint.startsWith("http") ? endpoint : base ? `${base}/${path}` : `/${path}`;
 
   if (params) {
     const searchParams = new URLSearchParams();
@@ -38,6 +38,7 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
   new Headers(headers).forEach((value, key) => mergedHeaders.set(key, value));
 
   const response = await fetch(url, {
+    credentials: restOptions.credentials || "include",
     ...restOptions,
     headers: mergedHeaders,
   });
@@ -50,8 +51,17 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
     } catch {
       errorPayload = responseText;
     }
-    throw new ApiError(`API failed with ${response.status}`, response.status, errorPayload);
+
+    let errorMessage = `Ошибка ${response.status}`;
+    if (typeof errorPayload === "object" && errorPayload !== null && "error" in errorPayload) {
+      errorMessage = String((errorPayload as Record<string, unknown>).error);
+    } else if (typeof errorPayload === "string" && errorPayload.trim()) {
+      errorMessage = errorPayload;
+    }
+
+    throw new ApiError(errorMessage, response.status, errorPayload);
   }
 
   return response.status === 204 ? (null as unknown as T) : response.json();
 }
+

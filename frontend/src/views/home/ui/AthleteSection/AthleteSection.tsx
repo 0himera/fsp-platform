@@ -1,18 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { UserCard, useAthleteProfile } from "@/entities/user";
+import { UserCard, useAthleteProfile, useMeQuery } from "@/entities/user";
 import styles from "./AthleteSection.module.css";
 
+
 export const AthleteSection: React.FC = () => {
+  const { data: me } = useMeQuery();
   const { data: athlete, isLoading } = useAthleteProfile();
+
+  const isOwnProfile = Boolean(me?.athlete);
 
   return (
     <section className={styles.section}>
       <div>
-        <h2 className={styles.heading}>Профиль спортсмена (Демо)</h2>
+        <h2 className={styles.heading}>
+          {isOwnProfile ? "Ваш профиль спортсмена" : "Лидер рейтинга Дагестана (Топ-1)"}
+        </h2>
         <p className={styles.description}>
-          Карточка спортсмена с привязкой разряда, дисциплины и баллов рейтинга
+          {isOwnProfile
+            ? "Ваши актуальные баллы, разряд и история участия в соревнованиях"
+            : "Актуальные баллы из единой базы Федерации спортивного программирования РД"}
         </p>
       </div>
 

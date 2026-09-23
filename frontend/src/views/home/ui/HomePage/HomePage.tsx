@@ -2,6 +2,7 @@ import * as React from "react";
 import { HeroSection } from "../HeroSection";
 import { AthleteSection } from "../AthleteSection";
 import { AuthSection } from "../AuthSection";
+import { CompetitionsSection } from "../CompetitionsSection";
 import styles from "./HomePage.module.css";
 
 export const HomePage: React.FC = () => {
@@ -13,9 +14,11 @@ export const HomePage: React.FC = () => {
           <AthleteSection />
           <AuthSection />
         </div>
+        <CompetitionsSection />
       </div>
     </main>
   );
 };
 
 export default HomePage;
+

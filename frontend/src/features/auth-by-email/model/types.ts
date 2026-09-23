@@ -1,15 +1,20 @@
-import type { UserRole } from "@/entities/user";
+import type { User, UserRole } from "@/shared/api";
 
 export interface LoginFormValues {
   email: string;
-  role: UserRole;
+  password?: string;
+  role?: UserRole;
+}
+
+export interface RegisterFormValues {
+  email: string;
+  password: string;
+  full_name: string;
+  organization?: string;
+  city?: string;
 }
 
 export interface AuthSession {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
+  user: User;
 }
+

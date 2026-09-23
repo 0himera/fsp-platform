@@ -1,17 +1,24 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api";
 import { userKeys } from "@/entities/user";
-import type { LoginFormValues, AuthSession } from "../model/types";
+import type { LoginFormValues, RegisterFormValues, AuthSession } from "../model/types";
 
 async function loginRequest(values: LoginFormValues): Promise<AuthSession> {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return {
-    token: "mock-jwt-token-fsp-2026",
-    user: {
-      id: values.role === "organizer" ? "org-01" : "ath-01",
-      email: values.email,
-      role: values.role,
-    },
-  };
+  let password = values.password;
+  if (!password) {
+    if (values.role === "organizer" || values.email.toLowerCase().includes("organizer")) {
+      password = "change-me-for-local-demo";
+    } else {
+      password = "demo-athlete-2026";
+    }
+  }
+
+  const response = await apiClient.post<AuthSession>("/api/auth/login", {
+    email: values.email.trim(),
+    password,
+  });
+
+  return response;
 }
 
 export function useLoginMutation() {
@@ -20,8 +27,29 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: loginRequest,
     onSuccess: (data) => {
+      queryClient.setQueryData(userKeys.me(), { user: data.user });
       queryClient.invalidateQueries({ queryKey: userKeys.all });
       return data;
     },
   });
 }
+
+export function useLogoutMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => apiClient.post("/api/auth/logout"),
+    onSuccess: () => {
+      queryClient.setQueryData(userKeys.me(), null);
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export function useRegisterMutation() {
+  return useMutation({
+    mutationFn: (values: RegisterFormValues) =>
+      apiClient.post<{ check_email: boolean; mail_sent: boolean }>("/api/auth/register", values),
+  });
+}
+
