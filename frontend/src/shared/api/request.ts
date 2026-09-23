@@ -25,18 +25,21 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
   const { params, token, headers, ...restOptions } = options;
   const url = buildUrl(endpoint, params);
 
-  const defaultHeaders: Record<string, string> = {
+  const defaultHeaders = new Headers({
     "Content-Type": "application/json",
     Accept: "application/json",
-  };
+  });
 
   if (token) {
-    defaultHeaders["Authorization"] = `Bearer ${token}`;
+    defaultHeaders.set("Authorization", `Bearer ${token}`);
   }
+
+  const mergedHeaders = new Headers(defaultHeaders);
+  new Headers(headers).forEach((value, key) => mergedHeaders.set(key, value));
 
   const response = await fetch(url, {
     ...restOptions,
-    headers: { ...defaultHeaders, ...headers },
+    headers: mergedHeaders,
   });
 
   if (!response.ok) {
