@@ -1,0 +1,38 @@
+[
+  {
+    "id": 8,
+    "title": "Региональный дебют · Информационная безопасность / Демо",
+    "level_code": "regional",
+    "discipline_code": "security",
+    "format": "individual",
+    "starts_at": "2026-09-13T05:44:00+03:00",
+    "ends_at": "2026-09-13T08:44:00+03:00",
+    "registration_deadline": "2026-09-11T05:44:00+03:00",
+    "location": "Кизляр",
+    "description": "Малая сетка: последнее место не даёт рейтинговых баллов.",
+    "status": "completed",
+    "stage": "standalone",
+    "qualifying_competition_id": null,
+    "qualifying_place_limit": null,
+    "registrations_count": 6,
+    "results_count": 6
+  },
+  {
+    "id": 9,
+    "title": "Продуктовый хакатон Республики · Команды / Демо",
+    "level_code": "rd_championship",
+    "discipline_code": "product",
+    "format": "team",
+    "starts_at": "2026-09-03T05:44:00+03:00",
+    "ends_at": "2026-09-03T13:44:00+03:00",
+    "registration_deadline": "2026-09-02T05:44:00+03:00",
+    "location": "Дербент",
+    "description": "Демонстрационный командный протокол: каждый участник итогового состава получает одинаковые очки.",
+    "status": "completed",
+    "stage": "standalone",
+    "qualifying_competition_id": null,
+    "qualifying_place_limit": null,
+    "registrations_count": 6,
+    "results_count": 2
+  }
+]

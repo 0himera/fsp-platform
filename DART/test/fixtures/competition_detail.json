@@ -1,0 +1,54 @@
+{
+  "competition": {
+    "id": 8,
+    "title": "Региональный дебют · Информационная безопасность / Демо",
+    "level_code": "regional",
+    "discipline_code": "security",
+    "format": "individual",
+    "starts_at": "2026-09-13T05:44:00+03:00",
+    "ends_at": "2026-09-13T08:44:00+03:00",
+    "registration_deadline": "2026-09-11T05:44:00+03:00",
+    "location": "Кизляр",
+    "description": "Малая сетка: последнее место не даёт рейтинговых баллов.",
+    "status": "completed",
+    "stage": "standalone",
+    "qualifying_competition_id": null,
+    "qualifying_place_limit": null,
+    "registrations_count": 6,
+    "results_count": 6
+  },
+  "registered": false,
+  "registrations": [
+    {
+      "athlete_id": 18,
+      "full_name": "Арсен Муртазалиев",
+      "organization": "ДГУ",
+      "city": "Дербент",
+      "created_at": "2026-09-23T05:44:50.503899+03:00"
+    },
+    {
+      "athlete_id": 24,
+      "full_name": "Камиль Абдулаев",
+      "organization": "ДГУ",
+      "city": "Каспийск",
+      "created_at": "2026-09-23T05:44:50.520002+03:00"
+    }
+  ],
+  "results": [
+    {
+      "id": 83,
+      "athlete_id": 18,
+      "place": 1,
+      "score_text": "6 задач",
+      "name": "Арсен Муртазалиев"
+    },
+    {
+      "id": 84,
+      "athlete_id": 24,
+      "place": 2,
+      "score_text": "5 задач",
+      "name": "Камиль Абдулаев"
+    }
+  ],
+  "teams": []
+}

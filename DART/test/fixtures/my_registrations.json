@@ -1,0 +1,38 @@
+[
+  {
+    "id": 14,
+    "title": "Всероссийский онлайн-турнир · Алгоритмы / Демо",
+    "level_code": "all_russian",
+    "discipline_code": "algorithmic",
+    "format": "individual",
+    "starts_at": "2026-10-23T05:44:00+03:00",
+    "ends_at": "2026-10-23T11:44:00+03:00",
+    "registration_deadline": "2026-10-21T05:44:00+03:00",
+    "location": "Онлайн",
+    "description": "Всероссийский старт с открытой регистрацией.",
+    "status": "open",
+    "stage": "standalone",
+    "qualifying_competition_id": null,
+    "qualifying_place_limit": null,
+    "registrations_count": 12,
+    "results_count": 0
+  },
+  {
+    "id": 13,
+    "title": "Осенний кубок ДГУ · Продуктовое программирование / Демо",
+    "level_code": "regional",
+    "discipline_code": "product",
+    "format": "individual",
+    "starts_at": "2026-10-03T05:44:00+03:00",
+    "ends_at": "2026-10-03T10:44:00+03:00",
+    "registration_deadline": "2026-10-01T05:44:00+03:00",
+    "location": "Махачкала",
+    "description": "Открыта регистрация на личный зачёт.",
+    "status": "open",
+    "stage": "standalone",
+    "qualifying_competition_id": null,
+    "qualifying_place_limit": null,
+    "registrations_count": 8,
+    "results_count": 0
+  }
+]
