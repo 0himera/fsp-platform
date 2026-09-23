@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,6 +34,8 @@ type Competition struct {
 	Location             string    `json:"location"`
 	Description          string    `json:"description"`
 	Status               string    `json:"status"`
+	Phase                string    `json:"phase"`
+	RegistrationOpen     bool      `json:"registration_open"`
 	Stage                string    `json:"stage"`
 	QualifyingID         *int64    `json:"qualifying_competition_id"`
 	QualifyingPlaceLimit *int      `json:"qualifying_place_limit"`
@@ -88,13 +91,37 @@ const selectCompetition = `SELECT c.id,c.title,c.level_code,c.discipline_code,c.
 
 type scanner interface{ Scan(...any) error }
 
-func scanCompetition(row scanner) (Competition, error) {
+func scanCompetition(row scanner, now time.Time) (Competition, error) {
 	var c Competition
 	err := row.Scan(&c.ID, &c.Title, &c.LevelCode, &c.DisciplineCode, &c.Format, &c.StartsAt, &c.EndsAt, &c.RegistrationDeadline, &c.Location, &c.Description, &c.Status, &c.Stage, &c.QualifyingID, &c.QualifyingPlaceLimit, &c.RegistrationsCount, &c.ResultsCount)
+	if err == nil {
+		c = withPhase(c, now)
+	}
 	return c, err
 }
 
-func (s Service) List(ctx context.Context, status, query string) ([]Competition, error) {
+func withPhase(c Competition, now time.Time) Competition {
+	c.RegistrationOpen = c.Status == "open" && now.Before(c.RegistrationDeadline) && now.Before(c.EndsAt)
+	switch {
+	case c.Status == "draft":
+		c.Phase = "draft"
+	case c.Status == "completed":
+		c.Phase = "completed"
+	case !now.Before(c.EndsAt):
+		c.Phase = "awaiting_results"
+	case now.Before(c.StartsAt):
+		c.Phase = "upcoming"
+	default:
+		c.Phase = "current"
+	}
+	return c
+}
+
+func (s Service) List(ctx context.Context, status, phase, query string) ([]Competition, error) {
+	if phase != "" && phase != "draft" && phase != "upcoming" && phase != "current" && phase != "awaiting_results" && phase != "completed" {
+		return nil, ErrInvalid
+	}
+	now := time.Now().UTC()
 	rows, err := s.DB.Query(ctx, selectCompetition+` WHERE ($1='' OR c.status=$1) AND ($2='' OR c.title ILIKE '%' || $2 || '%') ORDER BY c.starts_at DESC,c.id DESC`, status, query)
 	if err != nil {
 		return nil, err
@@ -102,17 +129,19 @@ func (s Service) List(ctx context.Context, status, query string) ([]Competition,
 	defer rows.Close()
 	list := []Competition{}
 	for rows.Next() {
-		item, err := scanCompetition(rows)
+		item, err := scanCompetition(rows, now)
 		if err != nil {
 			return nil, err
 		}
-		list = append(list, item)
+		if phase == "" || item.Phase == phase {
+			list = append(list, item)
+		}
 	}
 	return list, rows.Err()
 }
 
 func (s Service) Get(ctx context.Context, id int64) (Competition, error) {
-	c, err := scanCompetition(s.DB.QueryRow(ctx, selectCompetition+` WHERE c.id=$1`, id))
+	c, err := scanCompetition(s.DB.QueryRow(ctx, selectCompetition+` WHERE c.id=$1`, id), time.Now().UTC())
 	if errors.Is(err, pgx.ErrNoRows) {
 		return c, ErrNotFound
 	}
@@ -121,8 +150,8 @@ func (s Service) Get(ctx context.Context, id int64) (Competition, error) {
 
 func validInput(in Input) bool {
 	levels := map[string]bool{"rf_championship": true, "all_russian": true, "interregional": true, "rd_championship": true, "regional": true}
-	return len(strings.TrimSpace(in.Title)) >= 3 && len(in.Title) <= 160 && levels[in.LevelCode] && in.DisciplineCode != "" &&
-		(in.Format == "individual" || in.Format == "team") && (in.Status == "draft" || in.Status == "open" || in.Status == "running") &&
+	return utf8.RuneCountInString(strings.TrimSpace(in.Title)) >= 3 && utf8.RuneCountInString(in.Title) <= 160 && utf8.RuneCountInString(in.Location) <= 160 && utf8.RuneCountInString(in.Description) <= 3000 && levels[in.LevelCode] && in.DisciplineCode != "" &&
+		(in.Format == "individual" || in.Format == "team") && (in.Status == "draft" || in.Status == "open" || in.Status == "running" || in.Status == "completed") &&
 		(in.Stage == "standalone" || in.Stage == "qualification" || in.Stage == "final") && ((in.Stage == "final") == (in.QualifyingID != nil)) &&
 		((in.Stage == "final") == (in.QualifyingPlaceLimit != nil)) && (in.QualifyingPlaceLimit == nil || (*in.QualifyingPlaceLimit > 0 && *in.QualifyingPlaceLimit <= 10000)) &&
 		!in.StartsAt.IsZero() && !in.EndsAt.IsZero() && !in.RegistrationDeadline.IsZero() && !in.EndsAt.Before(in.StartsAt) && !in.RegistrationDeadline.After(in.EndsAt)
@@ -150,7 +179,7 @@ func (s Service) validateQualifier(ctx context.Context, in Input) error {
 
 func (s Service) Create(ctx context.Context, in Input, organizerID int64) (Competition, error) {
 	normalizeInput(&in)
-	if !validInput(in) {
+	if !validInput(in) || in.Status == "completed" {
 		return Competition{}, ErrInvalid
 	}
 	if err := s.validateQualifier(ctx, in); err != nil {
@@ -170,15 +199,36 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 	if !validInput(in) {
 		return Competition{}, ErrInvalid
 	}
+	if in.Status == "completed" {
+		current, err := s.Get(ctx, id)
+		if err != nil {
+			return Competition{}, err
+		}
+		if current.Status != "completed" || current.LevelCode != in.LevelCode || current.DisciplineCode != in.DisciplineCode || current.Format != in.Format ||
+			!current.StartsAt.Equal(in.StartsAt) || !current.EndsAt.Equal(in.EndsAt) || !current.RegistrationDeadline.Equal(in.RegistrationDeadline) ||
+			current.Stage != in.Stage || !equalID(current.QualifyingID, in.QualifyingID) || !equalInt(current.QualifyingPlaceLimit, in.QualifyingPlaceLimit) {
+			return Competition{}, ErrClosed
+		}
+		command, err := s.DB.Exec(ctx, `UPDATE competitions SET title=$2,location=$3,description=$4,updated_at=now() WHERE id=$1 AND status='completed'`,
+			id, strings.TrimSpace(in.Title), strings.TrimSpace(in.Location), strings.TrimSpace(in.Description))
+		if err != nil {
+			return Competition{}, err
+		}
+		if command.RowsAffected() == 0 {
+			return Competition{}, ErrClosed
+		}
+		return s.Get(ctx, id)
+	}
 	if err := s.validateQualifier(ctx, in); err != nil {
 		return Competition{}, err
 	}
 	command, err := s.DB.Exec(ctx, `UPDATE competitions SET title=$2,level_code=$3,discipline_code=$4,format=$5,starts_at=$6,ends_at=$7,registration_deadline=$8,location=$9,description=$10,status=$11,stage=$12,qualifying_competition_id=$13,qualifying_place_limit=$14,updated_at=now()
 		WHERE id=$1 AND status<>'completed' AND NOT EXISTS (SELECT 1 FROM results WHERE competition_id=$1)
-		AND (NOT EXISTS (SELECT 1 FROM registrations WHERE competition_id=$1) OR
-			(discipline_code=$4 AND format=$5 AND stage=$12
-			AND qualifying_competition_id IS NOT DISTINCT FROM $13
-			AND qualifying_place_limit IS NOT DISTINCT FROM $14))
+			AND (NOT EXISTS (SELECT 1 FROM registrations WHERE competition_id=$1) OR
+				(discipline_code=$4 AND format=$5 AND stage=$12
+				AND qualifying_competition_id IS NOT DISTINCT FROM $13
+				AND qualifying_place_limit IS NOT DISTINCT FROM $14))
+			AND ($11<>'draft' OR NOT EXISTS (SELECT 1 FROM registrations WHERE competition_id=$1))
 		AND NOT EXISTS (SELECT 1 FROM teams WHERE competition_id=$1 AND $5='individual')
 		AND NOT EXISTS (SELECT 1 FROM competitions child WHERE child.qualifying_competition_id=$1
 			AND ($12<>'qualification' OR $4<>child.discipline_code OR $5<>child.format OR $7>child.starts_at))`,
@@ -193,6 +243,14 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 		return Competition{}, ErrClosed
 	}
 	return s.Get(ctx, id)
+}
+
+func equalID(a, b *int64) bool {
+	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
+}
+
+func equalInt(a, b *int) bool {
+	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
 }
 
 func (s Service) Register(ctx context.Context, competitionID, athleteID int64) error {
@@ -269,6 +327,7 @@ func (s Service) Registrations(ctx context.Context, competitionID int64) ([]Regi
 }
 
 func (s Service) MyRegistrations(ctx context.Context, athleteID int64) ([]Competition, error) {
+	now := time.Now().UTC()
 	rows, err := s.DB.Query(ctx, selectCompetition+` JOIN registrations r ON r.competition_id=c.id WHERE r.athlete_id=$1 ORDER BY c.starts_at DESC`, athleteID)
 	if err != nil {
 		return nil, err
@@ -276,7 +335,7 @@ func (s Service) MyRegistrations(ctx context.Context, athleteID int64) ([]Compet
 	defer rows.Close()
 	list := []Competition{}
 	for rows.Next() {
-		item, err := scanCompetition(rows)
+		item, err := scanCompetition(rows, now)
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +346,7 @@ func (s Service) MyRegistrations(ctx context.Context, athleteID int64) ([]Compet
 
 func (s Service) CreateTeam(ctx context.Context, competitionID int64, name string, memberIDs []int64) (Team, error) {
 	name = strings.TrimSpace(name)
-	if name == "" || len(name) > 100 || len(memberIDs) == 0 {
+	if name == "" || utf8.RuneCountInString(name) > 100 || len(memberIDs) == 0 {
 		return Team{}, ErrInvalid
 	}
 	seen := map[int64]bool{}
@@ -399,7 +458,7 @@ func validateProtocol(format string, results []Result) error {
 		if format == "team" {
 			id = result.TeamID
 		}
-		if id <= 0 || seen[id] || result.Place < 1 || result.Place > len(results) || len(result.ScoreText) > 200 ||
+		if id <= 0 || seen[id] || result.Place < 1 || result.Place > len(results) || utf8.RuneCountInString(result.ScoreText) > 200 ||
 			(format == "individual" && result.TeamID != 0) || (format == "team" && result.AthleteID != 0) {
 			return ErrInvalid
 		}

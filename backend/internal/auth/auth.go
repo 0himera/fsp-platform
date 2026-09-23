@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -152,7 +153,7 @@ func (s Service) EnsureOrganizer(ctx context.Context, email, password string) er
 	if email == "" || password == "" {
 		return nil
 	}
-	if len(password) < 12 {
+	if utf8.RuneCountInString(password) < 12 {
 		return fmt.Errorf("organizer password must be at least %s characters", strconv.Itoa(12))
 	}
 	hash, err := hashPassword(password)

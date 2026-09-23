@@ -71,7 +71,8 @@ func TestRegistrationWhenMailFails(t *testing.T) {
 		t.Fatal(err)
 	}
 	server := New(db, "../../../frontend", failingMailer{}, "http://localhost:8080")
-	request := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(`{"email":"mail-failed@example.org","password":"long-password","full_name":"Тестовый спортсмен","city":"Махачкала","organization":"ДГУ"}`))
+	fullName := strings.Repeat("Я", 100)
+	request := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(fmt.Sprintf(`{"email":"mail-failed@example.org","password":"long-password","full_name":%q,"city":"Махачкала","organization":"ДГУ"}`, fullName)))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, request)
@@ -87,6 +88,13 @@ func TestRegistrationWhenMailFails(t *testing.T) {
 	}
 	if !body.CheckEmail || body.MailSent {
 		t.Fatalf("mail failure was hidden: %+v", body)
+	}
+	request = httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(fmt.Sprintf(`{"email":"too-long@example.org","password":"long-password","full_name":%q}`, fullName+"Я")))
+	request.Header.Set("Content-Type", "application/json")
+	response = httptest.NewRecorder()
+	server.Handler().ServeHTTP(response, request)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("name beyond character limit: status=%d", response.Code)
 	}
 	var count int
 	if err := db.QueryRow(ctx, `SELECT count(*) FROM users u JOIN auth_tokens t ON t.user_id=u.id WHERE u.email='mail-failed@example.org' AND u.email_verified_at IS NULL AND t.purpose='verify_email'`).Scan(&count); err != nil || count != 1 {

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/0himera/fsp-platform/internal/athletes"
 )
@@ -33,7 +34,7 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if !validEmail(input.Email) || len(input.Password) < 8 || len(input.Password) > 128 || len(strings.TrimSpace(input.FullName)) < 2 || len(input.FullName) > 100 || len(input.City) > 100 || len(input.Organization) > 160 {
+	if !validEmail(input.Email) || utf8.RuneCountInString(input.Password) < 8 || utf8.RuneCountInString(input.Password) > 128 || utf8.RuneCountInString(strings.TrimSpace(input.FullName)) < 2 || utf8.RuneCountInString(input.FullName) > 100 || utf8.RuneCountInString(input.City) > 100 || utf8.RuneCountInString(input.Organization) > 160 {
 		writeError(w, http.StatusBadRequest, "Укажите имя, корректную почту и пароль от 8 символов")
 		return
 	}
@@ -114,7 +115,7 @@ func (s *Server) resetPassword(w http.ResponseWriter, r *http.Request) {
 		Token    string `json:"token"`
 		Password string `json:"password"`
 	}
-	if err := decodeJSON(r, &input); err != nil || len(input.Token) < 30 || len(input.Token) > 200 || len(input.Password) < 8 || len(input.Password) > 128 {
+	if err := decodeJSON(r, &input); err != nil || len(input.Token) < 30 || len(input.Token) > 200 || utf8.RuneCountInString(input.Password) < 8 || utf8.RuneCountInString(input.Password) > 128 {
 		writeError(w, http.StatusBadRequest, "Проверьте ссылку и пароль от 8 символов")
 		return
 	}
@@ -182,7 +183,7 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if len(strings.TrimSpace(input.FullName)) < 2 || len(input.FullName) > 100 || len(input.City) > 100 || len(input.Organization) > 160 || len(input.Disciplines) > 5 {
+	if utf8.RuneCountInString(strings.TrimSpace(input.FullName)) < 2 || utf8.RuneCountInString(input.FullName) > 100 || utf8.RuneCountInString(input.City) > 100 || utf8.RuneCountInString(input.Organization) > 160 || len(input.Disciplines) > 5 {
 		writeError(w, http.StatusBadRequest, "Проверьте данные профиля")
 		return
 	}

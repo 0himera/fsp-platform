@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestValidateProtocolBronzeTie(t *testing.T) {
@@ -13,6 +14,30 @@ func TestValidateProtocolBronzeTie(t *testing.T) {
 	}
 	if err := validateProtocol("individual", results); err != nil {
 		t.Fatalf("two bronze places should be valid: %v", err)
+	}
+}
+
+func TestUnicodeInputLengths(t *testing.T) {
+	now := time.Now().UTC()
+	input := Input{
+		Title: strings.Repeat("Я", 160), LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", Status: "open", Stage: "standalone",
+		StartsAt: now, EndsAt: now.Add(time.Hour), RegistrationDeadline: now.Add(30 * time.Minute),
+		Location: strings.Repeat("Я", 160), Description: strings.Repeat("Я", 3000),
+	}
+	if !validInput(input) {
+		t.Fatal("valid Cyrillic input was rejected")
+	}
+	input.Title += "Я"
+	if validInput(input) {
+		t.Fatal("title beyond character limit was accepted")
+	}
+	results := []Result{{AthleteID: 1, Place: 1, ScoreText: strings.Repeat("Я", 200)}}
+	if err := validateProtocol("individual", results); err != nil {
+		t.Fatalf("valid Cyrillic result was rejected: %v", err)
+	}
+	results[0].ScoreText += "Я"
+	if err := validateProtocol("individual", results); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("result beyond character limit was accepted: %v", err)
 	}
 }
 

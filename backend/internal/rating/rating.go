@@ -35,6 +35,7 @@ type Result struct {
 	Stage         string    `json:"stage"`
 	EndsAt        time.Time `json:"ends_at"`
 	Place         int       `json:"place"`
+	ScoreText     string    `json:"score_text"`
 	Finishers     int       `json:"finishers"`
 	Base          float64   `json:"base"`
 	PlaceFactor   float64   `json:"place_factor"`
@@ -199,7 +200,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 		return nil, err
 	}
 	rows, err = s.DB.Query(ctx, `WITH counts AS (SELECT competition_id, count(*)::integer AS n FROM results GROUP BY competition_id)
-		SELECT COALESCE(r.athlete_id,tm.athlete_id),c.id,c.title,c.discipline_code,c.level_code,c.stage,c.ends_at,r.place,counts.n
+			SELECT COALESCE(r.athlete_id,tm.athlete_id),c.id,c.title,c.discipline_code,c.level_code,c.stage,c.ends_at,r.place,r.score_text,counts.n
 		FROM results r JOIN competitions c ON c.id=r.competition_id
 		JOIN counts ON counts.competition_id=c.id
 		LEFT JOIN team_members tm ON tm.team_id=r.team_id
@@ -210,7 +211,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 	for rows.Next() {
 		var id int64
 		var result Result
-		if err := rows.Scan(&id, &result.CompetitionID, &result.Competition, &result.Discipline, &result.Level, &result.Stage, &result.EndsAt, &result.Place, &result.Finishers); err != nil {
+		if err := rows.Scan(&id, &result.CompetitionID, &result.Competition, &result.Discipline, &result.Level, &result.Stage, &result.EndsAt, &result.Place, &result.ScoreText, &result.Finishers); err != nil {
 			rows.Close()
 			return nil, err
 		}

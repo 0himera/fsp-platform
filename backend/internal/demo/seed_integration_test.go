@@ -102,8 +102,9 @@ func TestSeedAndMainFlow(t *testing.T) {
 		t.Fatalf("last place in a small field: %+v", last)
 	}
 	teamTitle := "Межрегиональный командный кубок · Алгоритмы / Демо"
-	teamPoints := resultFor("athlete9@arena.local", teamTitle).Points
-	if teamPoints <= 0 || resultFor("athlete13@arena.local", teamTitle).Points != teamPoints || resultFor("athlete21@arena.local", teamTitle).Points != teamPoints {
+	teamResult := resultFor("athlete9@arena.local", teamTitle)
+	teamPoints := teamResult.Points
+	if teamPoints <= 0 || teamResult.ScoreText != "96 баллов" || resultFor("athlete13@arena.local", teamTitle).Points != teamPoints || resultFor("athlete21@arena.local", teamTitle).Points != teamPoints {
 		t.Fatal("team members did not receive equal points")
 	}
 	qualifying := resultFor("mock001@arena.invalid", "Всероссийский кубок · Отбор / Демо")
@@ -177,11 +178,21 @@ func TestSeedAndMainFlow(t *testing.T) {
 	if err := service.Register(ctx, event.ID, first.ID); !errors.Is(err, competitions.ErrConflict) {
 		t.Fatalf("duplicate registration: %v", err)
 	}
+	if _, err := service.Update(ctx, event.ID, competitions.Input{
+		Title: event.Title, LevelCode: event.LevelCode, DisciplineCode: event.DisciplineCode, Format: event.Format,
+		Stage: event.Stage, StartsAt: event.StartsAt, EndsAt: event.EndsAt, RegistrationDeadline: event.RegistrationDeadline, Status: "draft",
+	}); !errors.Is(err, competitions.ErrClosed) {
+		t.Fatalf("competition with registrations returned to draft: %v", err)
+	}
+	currentEvents, err := service.List(ctx, "", "current", "Интеграционный личный зачёт")
+	if err != nil || len(currentEvents) != 1 || currentEvents[0].ID != event.ID || !currentEvents[0].RegistrationOpen {
+		t.Fatalf("current phase and registration window: %+v, %v", currentEvents, err)
+	}
 	registrations, err := service.Registrations(ctx, event.ID)
 	if err != nil || len(registrations) != 2 {
 		t.Fatalf("organizer registration list: %d entries, %v", len(registrations), err)
 	}
-	checkRating := func(winnerID, loserID int64) {
+	checkRating := func(winnerID, loserID int64, winnerScore string) {
 		t.Helper()
 		winner, err := (rating.Service{DB: db}).One(ctx, winnerID, time.Now().UTC())
 		if err != nil {
@@ -191,11 +202,11 @@ func TestSeedAndMainFlow(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if winner.ResultPoints <= 0 || len(winner.Results) != 1 || winner.Results[0].CompetitionID != event.ID || loser.ResultPoints != 0 {
+		if winner.ResultPoints <= 0 || len(winner.Results) != 1 || winner.Results[0].CompetitionID != event.ID || winner.Results[0].ScoreText != winnerScore || loser.ResultPoints != 0 {
 			t.Fatalf("rating did not follow protocol: winner=%+v loser=%+v", winner, loser)
 		}
 	}
-	protocol := []competitions.Result{{AthleteID: first.ID, Place: 1}, {AthleteID: second.ID, Place: 2}}
+	protocol := []competitions.Result{{AthleteID: first.ID, Place: 1, ScoreText: "7 задач"}, {AthleteID: second.ID, Place: 2, ScoreText: "3 задачи"}}
 	if err := service.PublishResults(ctx, event.ID, organizerID, protocol); !errors.Is(err, competitions.ErrNotFinished) {
 		t.Fatalf("results accepted before competition ended: %v", err)
 	}
@@ -206,18 +217,35 @@ func TestSeedAndMainFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("mark competition as ended: %v", err)
 	}
+	if ended.Phase != "awaiting_results" || ended.RegistrationOpen {
+		t.Fatalf("ended competition phase: %+v", ended)
+	}
 	if err := service.PublishResults(ctx, event.ID, organizerID, protocol); err != nil {
 		t.Fatal(err)
 	}
-	checkRating(first.ID, second.ID)
+	checkRating(first.ID, second.ID, "7 задач")
 	stored, err := service.Get(ctx, event.ID)
 	if err != nil || stored.Status != "completed" || stored.ResultsCount != 2 || !stored.EndsAt.Equal(ended.EndsAt) {
 		t.Fatalf("published event: %+v, %v", stored, err)
 	}
-	if err := service.PublishResults(ctx, event.ID, organizerID, []competitions.Result{{AthleteID: first.ID, Place: 2}, {AthleteID: second.ID, Place: 1}}); err != nil {
+	completedInput := competitions.Input{
+		Title: "Уточнённое название зачёта", LevelCode: stored.LevelCode, DisciplineCode: stored.DisciplineCode, Format: stored.Format,
+		Stage: stored.Stage, StartsAt: stored.StartsAt, EndsAt: stored.EndsAt, RegistrationDeadline: stored.RegistrationDeadline,
+		Location: "Махачкала", Description: "Итоговый протокол опубликован", Status: "completed",
+	}
+	changedLevel := completedInput
+	changedLevel.LevelCode = "rf_championship"
+	if _, err := service.Update(ctx, event.ID, changedLevel); !errors.Is(err, competitions.ErrClosed) {
+		t.Fatalf("published competition level changed: %v", err)
+	}
+	updated, err := service.Update(ctx, event.ID, completedInput)
+	if err != nil || updated.Title != completedInput.Title || updated.Location != completedInput.Location || updated.Phase != "completed" {
+		t.Fatalf("published competition metadata update: %+v, %v", updated, err)
+	}
+	if err := service.PublishResults(ctx, event.ID, organizerID, []competitions.Result{{AthleteID: first.ID, Place: 2, ScoreText: "4 задачи"}, {AthleteID: second.ID, Place: 1, ScoreText: "8 задач"}}); err != nil {
 		t.Fatal(err)
 	}
-	checkRating(second.ID, first.ID)
+	checkRating(second.ID, first.ID, "8 задач")
 	var publications int
 	if err := db.QueryRow(ctx, `SELECT count(*) FROM result_publications WHERE competition_id=$1`, event.ID).Scan(&publications); err != nil || publications != 2 {
 		t.Fatalf("publication history: count=%d, err=%v", publications, err)

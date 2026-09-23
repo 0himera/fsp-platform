@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -23,7 +24,7 @@ func (s *Server) createDiscipline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	input.Name = strings.TrimSpace(input.Name)
-	if !disciplineCodePattern.MatchString(input.Code) || len(input.Name) < 3 || len(input.Name) > 120 {
+	if !disciplineCodePattern.MatchString(input.Code) || utf8.RuneCountInString(input.Name) < 3 || utf8.RuneCountInString(input.Name) > 120 {
 		writeError(w, http.StatusBadRequest, "Проверьте код и название дисциплины")
 		return
 	}
@@ -47,7 +48,7 @@ func (s *Server) renameDiscipline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	input.Name = strings.TrimSpace(input.Name)
-	if len(input.Name) < 3 || len(input.Name) > 120 {
+	if utf8.RuneCountInString(input.Name) < 3 || utf8.RuneCountInString(input.Name) > 120 {
 		writeError(w, http.StatusBadRequest, "Проверьте название дисциплины")
 		return
 	}

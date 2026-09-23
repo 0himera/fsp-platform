@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) competitionList(w http.ResponseWriter, r *http.Request) {
-	list, err := s.Competitions.List(r.Context(), r.URL.Query().Get("status"), r.URL.Query().Get("q"))
+	list, err := s.Competitions.List(r.Context(), r.URL.Query().Get("status"), r.URL.Query().Get("phase"), r.URL.Query().Get("q"))
 	if err != nil {
 		handleError(w, err)
 		return
