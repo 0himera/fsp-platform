@@ -39,7 +39,7 @@ export const LoginForm: React.FC = () => {
 
       {loginMutation.isSuccess && (
         <div className={styles.successMessage}>
-          Успешный вход в роли {role === "organizer" ? "организатора" : "спортсмена"}
+          Успешный вход в роли {loginMutation.data?.user.role === "organizer" ? "организатора" : "спортсмена"}
         </div>
       )}
 
