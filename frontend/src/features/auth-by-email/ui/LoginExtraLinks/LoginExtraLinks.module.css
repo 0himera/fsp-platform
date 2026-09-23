@@ -1,0 +1,11 @@
+.extraLinks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.linkBtn {
+  font-size: 0.75rem;
+  padding: 0;
+  height: auto;
+}

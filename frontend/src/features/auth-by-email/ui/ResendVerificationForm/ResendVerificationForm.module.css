@@ -4,6 +4,17 @@
   gap: 1rem;
 }
 
+.heading {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.desc {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
 .fieldGroup {
   display: flex;
   flex-direction: column;
@@ -16,19 +27,9 @@
   color: var(--color-text-secondary);
 }
 
-.extraLinks {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.25rem;
-}
-
-.linkBtn {
-  font-size: 0.75rem;
+.backBtn {
+  align-self: flex-start;
   padding: 0;
   height: auto;
-}
-
-.error {
-  color: var(--color-error, #dc2626);
   font-size: 0.8125rem;
 }
