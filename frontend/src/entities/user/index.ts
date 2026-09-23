@@ -2,6 +2,8 @@ export { UserCard } from "./ui/UserCard";
 export {
   useAthleteProfile,
   getAthleteProfile,
+} from "./api/athleteProfileApi";
+export {
   useMeQuery,
   getMe,
   useAthleteQuery,
