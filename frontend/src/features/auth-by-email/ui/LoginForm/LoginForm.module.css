@@ -1,0 +1,44 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #a1a1aa;
+}
+
+.inputOverride {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fafafa;
+  border-radius: 12px;
+}
+
+.inputOverride:focus {
+  border-color: #71717a;
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 4px;
+  border-radius: 12px;
+}
+
+.successMessage {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4e4e7;
+}

@@ -1,0 +1,16 @@
+.container {
+  width: 100%;
+}
+
+.tabsList {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 38px;
+  border-radius: 12px;
+}
+
+.tabTrigger {
+  border-radius: 9px;
+  font-size: 13px;
+}
