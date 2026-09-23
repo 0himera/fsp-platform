@@ -1,0 +1,1 @@
+export { AdminCompetitionsTab } from "./AdminCompetitionsTab";

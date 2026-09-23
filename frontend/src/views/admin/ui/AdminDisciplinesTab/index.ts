@@ -1,0 +1,1 @@
+export { AdminDisciplinesTab } from "./AdminDisciplinesTab";
