@@ -1,0 +1,1 @@
+export { RankingTableRow } from "./RankingTableRow";
