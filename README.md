@@ -10,7 +10,7 @@
 docker compose up --build
 ```
 
-Откройте [localhost:8080](http://localhost:8080). При первом запуске создаются демонстрационные спортсмены и соревнования. База хранится в Docker volume, поэтому данные сохраняются между перезапусками.
+Откройте [localhost:8080](http://localhost:8080). Демосидер создаёт 24 спортсмена и 15 соревнований: 10 с опубликованными протоколами и 5 с открытой регистрацией. В данных есть большая и малая сетки, одинаковые бронзовые места, старые результаты и командный зачёт. Повторный запуск не дублирует записи и не перезаписывает изменённые профили. База хранится в Docker volume.
 
 Демо-доступ:
 
@@ -89,4 +89,21 @@ docker-compose.yml     приложение и PostgreSQL
 ```bash
 cd backend && go test ./...
 node --check ../frontend/app.js
+```
+
+Fuzz-тесты проверяют ограничения баллов, монотонность по месту, размеру сетки и давности, правило четырёх лучших результатов и допустимость протоколов:
+
+```bash
+cd backend
+go test -run '^$' -fuzz '^FuzzScoreInvariants$' -fuzztime=10s -parallel=2 ./internal/rating
+go test -run '^$' -fuzz '^FuzzCalculateBestFour$' -fuzztime=10s -parallel=2 ./internal/rating
+go test -run '^$' -fuzz '^FuzzValidateProtocol$' -fuzztime=10s -parallel=2 ./internal/competitions
+```
+
+Интеграционный тест создаёт временную схему PostgreSQL, проверяет сидер, заявки, публикацию, исправление результатов и рейтинг, затем удаляет схему:
+
+```bash
+docker compose up -d db
+cd backend
+TEST_DATABASE_URL='postgres://arena:arena@localhost:5432/arena?sslmode=disable' go test -run '^TestSeedAndMainFlow$' -v ./internal/demo
 ```

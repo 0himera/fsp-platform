@@ -329,10 +329,26 @@ func nullableID(id int64) any {
 	return id
 }
 
-func (s Service) PublishResults(ctx context.Context, competitionID, organizerID int64, results []Result) error {
-	if len(results) == 0 {
+func validateProtocol(format string, results []Result) error {
+	if (format != "individual" && format != "team") || len(results) == 0 {
 		return ErrInvalid
 	}
+	seen := map[int64]bool{}
+	for _, result := range results {
+		id := result.AthleteID
+		if format == "team" {
+			id = result.TeamID
+		}
+		if id <= 0 || seen[id] || result.Place < 1 || result.Place > len(results) || len(result.ScoreText) > 200 ||
+			(format == "individual" && result.TeamID != 0) || (format == "team" && result.AthleteID != 0) {
+			return ErrInvalid
+		}
+		seen[id] = true
+	}
+	return nil
+}
+
+func (s Service) PublishResults(ctx context.Context, competitionID, organizerID int64, results []Result) error {
 	tx, err := s.DB.Begin(ctx)
 	if err != nil {
 		return err
@@ -350,17 +366,14 @@ func (s Service) PublishResults(ctx context.Context, competitionID, organizerID 
 	if startsAt.After(time.Now()) {
 		return ErrClosed
 	}
-	seen := map[int64]bool{}
+	if err := validateProtocol(format, results); err != nil {
+		return err
+	}
 	for _, r := range results {
 		id := r.AthleteID
 		if format == "team" {
 			id = r.TeamID
 		}
-		if id <= 0 || seen[id] || r.Place < 1 || r.Place > len(results) || len(r.ScoreText) > 200 ||
-			(format == "individual" && r.TeamID != 0) || (format == "team" && r.AthleteID != 0) {
-			return ErrInvalid
-		}
-		seen[id] = true
 		var valid bool
 		if format == "team" {
 			err = tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM teams t JOIN team_members m ON m.team_id=t.id WHERE t.id=$1 AND t.competition_id=$2)`, id, competitionID).Scan(&valid)
