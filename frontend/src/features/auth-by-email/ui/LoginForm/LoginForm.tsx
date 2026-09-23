@@ -26,8 +26,8 @@ export const LoginForm: React.FC = () => {
       </div>
 
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>Электронная почта</label>
-        <Input
+        <label className={styles.label} htmlFor="login-email">Электронная почта</label>
+        <Input id="login-email"
           type="email"
           required
           placeholder="sportsman@fsp-rd.ru"
