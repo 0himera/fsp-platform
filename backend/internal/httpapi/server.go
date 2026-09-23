@@ -72,10 +72,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("PUT /api/competitions/{id}/results", s.publishResults)
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(s.FrontendDir))))
 	mux.HandleFunc("GET /", s.index)
-	return security(mux)
+	return s.security(mux)
 }
 
-func security(next http.Handler) http.Handler {
+func (s *Server) security(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -86,7 +86,20 @@ func security(next http.Handler) http.Handler {
 			if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch || r.Method == http.MethodDelete {
 				if origin := r.Header.Get("Origin"); origin != "" {
 					parsed, err := url.Parse(origin)
-					if err != nil || parsed.Host != r.Host {
+					if err != nil {
+						writeError(w, http.StatusForbidden, "Недопустимый источник запроса")
+						return
+					}
+					allowed := parsed.Host == r.Host
+					if !allowed && (strings.HasPrefix(parsed.Host, "localhost") || strings.HasPrefix(parsed.Host, "127.0.0.1")) {
+						allowed = true
+					}
+					if !allowed && s.PublicURL != "" {
+						if pub, err := url.Parse(s.PublicURL); err == nil && pub.Host == parsed.Host {
+							allowed = true
+						}
+					}
+					if !allowed {
 						writeError(w, http.StatusForbidden, "Недопустимый источник запроса")
 						return
 					}
@@ -102,6 +115,7 @@ func security(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
