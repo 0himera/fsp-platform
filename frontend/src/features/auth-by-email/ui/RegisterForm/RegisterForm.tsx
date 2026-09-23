@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/shared/ui";
-import { useRegisterMutation } from "../../api/authApi";
+import { useRegisterForm } from "../../model/useRegisterForm";
 import { RegisterSuccessNotice } from "../RegisterSuccessNotice";
 import { RegisterFormFields } from "../RegisterFormFields";
 import styles from "./RegisterForm.module.css";
@@ -12,54 +12,36 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = () => {
-  const [fullName, setFullName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [city, setCity] = React.useState("");
-  const [organization, setOrganization] = React.useState("");
+  const form = useRegisterForm();
 
-  const registerMutation = useRegisterMutation();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password || !fullName.trim()) return;
-    registerMutation.mutate({
-      full_name: fullName.trim(),
-      email: email.trim(),
-      password,
-      city: city.trim() || undefined,
-      organization: organization.trim() || undefined,
-    });
-  };
-
-  if (registerMutation.isSuccess) {
+  if (form.registerMutation.isSuccess) {
     return (
       <RegisterSuccessNotice
-        email={email}
-        mailSent={registerMutation.data?.mail_sent}
+        email={form.email}
+        mailSent={form.registerMutation.data?.mail_sent}
       />
     );
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className={styles.form} onSubmit={form.handleSubmit}>
       <RegisterFormFields
-        fullName={fullName}
-        onFullNameChange={setFullName}
-        email={email}
-        onEmailChange={setEmail}
-        password={password}
-        onPasswordChange={setPassword}
-        city={city}
-        onCityChange={setCity}
-        organization={organization}
-        onOrgChange={setOrganization}
+        fullName={form.fullName}
+        onFullNameChange={form.setFullName}
+        email={form.email}
+        onEmailChange={form.setEmail}
+        password={form.password}
+        onPasswordChange={form.setPassword}
+        city={form.city}
+        onCityChange={form.setCity}
+        organization={form.organization}
+        onOrgChange={form.setOrganization}
       />
-      {registerMutation.isError && (
-        <p className={styles.error}>{registerMutation.error?.message || "Ошибка регистрации"}</p>
+      {form.registerMutation.isError && (
+        <p className={styles.error}>{form.registerMutation.error?.message || "Ошибка регистрации"}</p>
       )}
-      <Button type="submit" disabled={registerMutation.isPending}>
-        {registerMutation.isPending ? "Регистрация..." : "Зарегистрироваться"}
+      <Button type="submit" disabled={form.registerMutation.isPending}>
+        {form.registerMutation.isPending ? "Регистрация..." : "Зарегистрироваться"}
       </Button>
     </form>
   );
