@@ -1,0 +1,22 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.link {
+  font-size: 13.5px;
+  color: #a1a1aa;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  font-weight: 450;
+}
+
+.link:hover {
+  color: #fafafa;
+}
+
+.active {
+  color: #fafafa;
+  font-weight: 550;
+}
