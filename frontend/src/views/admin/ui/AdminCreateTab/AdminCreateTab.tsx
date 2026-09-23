@@ -19,18 +19,18 @@ export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => 
   const createMutation = useCreateCompetitionMutation();
 
   React.useEffect(() => {
-    if (disciplines && disciplines.length > 0 && !discipline) setDiscipline(disciplines[0].code);
+    if (disciplines?.[0] && !discipline) setDiscipline(disciplines[0].code);
   }, [disciplines, discipline]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const now = new Date();
-    const starts = new Date(now.getTime() + 7 * 86400000).toISOString();
-    const ends = new Date(now.getTime() + 8 * 86400000).toISOString();
-    const deadline = new Date(now.getTime() + 6 * 86400000).toISOString();
+    const now = Date.now();
+    const starts_at = new Date(now + 7 * 86400000).toISOString();
+    const ends_at = new Date(now + 8 * 86400000).toISOString();
+    const registration_deadline = new Date(now + 6 * 86400000).toISOString();
 
     createMutation.mutate(
-      { title, level_code: level, discipline_code: discipline, format: "individual", starts_at: starts, ends_at: ends, registration_deadline: deadline, location, description: title, status: "open", stage: "standalone" },
+      { title, level_code: level, discipline_code: discipline, format: "individual", starts_at, ends_at, registration_deadline, location, description: title, status: "open", stage: "standalone" },
       { onSuccess }
     );
   };

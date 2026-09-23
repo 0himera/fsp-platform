@@ -22,14 +22,13 @@ export const CompetitionItem: React.FC<CompetitionItemProps> = ({
 }) => {
   const statusLabel = COMPETITION_STATUSES[competition.status] || competition.status;
   const levelLabel = COMPETITION_LEVELS[competition.level_code] || competition.level_code;
+  const dateStr = new Date(competition.starts_at).toLocaleDateString("ru-RU");
 
   return (
     <Card className={styles.card}>
       <CardHeader>
         <div className={styles.badges}>
-          <Badge variant={competition.status === "open" ? "default" : "secondary"}>
-            {statusLabel}
-          </Badge>
+          <Badge variant={competition.status === "open" ? "default" : "secondary"}>{statusLabel}</Badge>
           <span className={styles.level}>{levelLabel}</span>
         </div>
         <CardTitle>
@@ -38,23 +37,17 @@ export const CompetitionItem: React.FC<CompetitionItemProps> = ({
           </Link>
         </CardTitle>
         <CardDescription className={styles.meta}>
-          {new Date(competition.starts_at).toLocaleDateString("ru-RU")} · {competition.location}
+          {dateStr} · {competition.location}
         </CardDescription>
       </CardHeader>
       <div className={styles.footer}>
         <span className={styles.count}>Участников: {competition.registrations_count}</span>
-        {isRegistered ? (
-          <Badge variant="outline">Вы зарегистрированы</Badge>
-        ) : canRegister ? (
-          <Button
-            size="sm"
-            className={styles.actionBtn}
-            onClick={() => onRegister(competition.id)}
-            disabled={isRegistering}
-          >
+        {isRegistered && <Badge variant="outline">Вы зарегистрированы</Badge>}
+        {!isRegistered && canRegister && (
+          <Button size="sm" className={styles.actionBtn} onClick={() => onRegister(competition.id)} disabled={isRegistering}>
             Подать заявку
           </Button>
-        ) : null}
+        )}
       </div>
     </Card>
   );
