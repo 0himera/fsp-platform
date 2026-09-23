@@ -53,3 +53,37 @@ export function useRegisterMutation() {
   });
 }
 
+export function useVerifyEmailMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) =>
+      apiClient.post<{ user: import("@/shared/api").User }>("/api/auth/verify-email", { token }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(userKeys.me(), { user: data.user });
+      queryClient.invalidateQueries({ queryKey: userKeys.all });
+    },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (email: string) =>
+      apiClient.post<{ check_email: boolean }>("/api/auth/forgot-password", { email }),
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: ({ token, password }: { token: string; password: string }) =>
+      apiClient.post<{ reset: boolean }>("/api/auth/reset-password", { token, password }),
+  });
+}
+
+export function useResendVerificationMutation() {
+  return useMutation({
+    mutationFn: (email: string) =>
+      apiClient.post<{ check_email: boolean }>("/api/auth/resend-verification", { email }),
+  });
+}
+

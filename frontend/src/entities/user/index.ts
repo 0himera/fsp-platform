@@ -6,6 +6,7 @@ export {
   getMe,
   useAthleteQuery,
   useUpdateProfileMutation,
+  useUpdateRankMutation,
   userKeys,
 } from "./api/userApi";
 export { toAthleteProfile } from "./model/types";

@@ -137,3 +137,19 @@ export interface Discipline {
   name: string;
 }
 
+export interface CreateCompetitionInput {
+  title: string;
+  level_code: string;
+  discipline_code: string;
+  format: CompetitionFormat;
+  starts_at: string;
+  ends_at: string;
+  registration_deadline: string;
+  location: string;
+  description: string;
+  status?: CompetitionStatus;
+  stage?: CompetitionStage;
+  qualifying_competition_id?: number | null;
+  qualifying_place_limit?: number | null;
+}
+

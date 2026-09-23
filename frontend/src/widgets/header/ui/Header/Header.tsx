@@ -22,9 +22,19 @@ export const Header: React.FC = () => {
         <div className={styles.actions}>
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                {user.full_name || user.email}
-              </span>
+              {user.role === "organizer" ? (
+                <a href="/admin">
+                  <Button variant="outline" size="sm">
+                    Панель организатора
+                  </Button>
+                </a>
+              ) : (
+                <a href="/profile">
+                  <Button variant="outline" size="sm">
+                    {user.full_name || "Личный кабинет"}
+                  </Button>
+                </a>
+              )}
               <Button
                 variant="outline"
                 size="sm"

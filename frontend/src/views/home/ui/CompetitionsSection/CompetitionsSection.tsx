@@ -49,7 +49,11 @@ export const CompetitionsSection: React.FC = () => {
                       {COMPETITION_LEVELS[c.level_code] || c.level_code}
                     </span>
                   </div>
-                  <CardTitle className={styles.cardTitle}>{c.title}</CardTitle>
+                  <CardTitle className={styles.cardTitle}>
+                    <a href={`/competitions/${c.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                      {c.title}
+                    </a>
+                  </CardTitle>
                   <CardDescription className={styles.cardMeta}>
                     {new Date(c.starts_at).toLocaleDateString("ru-RU", {
                       day: "numeric",
@@ -62,7 +66,12 @@ export const CompetitionsSection: React.FC = () => {
                   <p className={styles.cardDesc}>
                     {c.description ? c.description.slice(0, 140) + "…" : "Регламент опубликован."}
                   </p>
-                  <div className={styles.actions}>
+                  <div className={styles.actions} style={{ display: "flex", gap: "0.5rem", alignItems: "center", justifyContent: "space-between" }}>
+                    <a href={`/competitions/${c.id}`}>
+                      <Button variant="outline" size="sm">
+                        Подробнее
+                      </Button>
+                    </a>
                     {isRegistered ? (
                       <span className={styles.registeredBadge}>✓ Заявка подана</span>
                     ) : canRegister ? (
@@ -75,7 +84,7 @@ export const CompetitionsSection: React.FC = () => {
                       </Button>
                     ) : (
                       <span className={styles.formatInfo}>
-                        {c.format === "team" ? "Командный зачёт" : "Личный зачёт"}
+                        {c.format === "team" ? "Командный" : "Одиночный"}
                       </span>
                     )}
                   </div>

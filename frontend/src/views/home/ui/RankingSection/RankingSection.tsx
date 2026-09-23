@@ -68,7 +68,13 @@ export const RankingSection: React.FC = () => {
                       </span>
                     </td>
                     <td>
-                      <div className={styles.athleteName}>{a.full_name}</div>
+                      <a
+                        href={`/athletes/${a.id}`}
+                        className={styles.athleteName}
+                        style={{ textDecoration: "none", color: "inherit", display: "inline-block" }}
+                      >
+                        {a.full_name}
+                      </a>
                       {a.disciplines && a.disciplines.length > 0 && (
                         <div className={styles.disciplines}>
                           {a.disciplines.join(", ")}
