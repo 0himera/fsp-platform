@@ -1,0 +1,46 @@
+.card {
+  border: 1px solid var(--color-border);
+}
+
+.empty {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.itemTitle {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.itemTitle:hover {
+  text-decoration: underline;
+}
+
+.itemMeta {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}

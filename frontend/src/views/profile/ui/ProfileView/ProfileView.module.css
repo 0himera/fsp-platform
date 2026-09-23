@@ -1,0 +1,17 @@
+.container {
+  max-width: 1000px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.authNotice {
+  max-width: 600px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-secondary);
+}
