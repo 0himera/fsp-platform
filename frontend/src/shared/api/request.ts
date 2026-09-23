@@ -41,10 +41,11 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
 
   if (!response.ok) {
     let errorPayload: unknown;
+    const responseText = await response.text();
     try {
-      errorPayload = await response.json();
+      errorPayload = JSON.parse(responseText);
     } catch {
-      errorPayload = await response.text();
+      errorPayload = responseText;
     }
     throw new ApiError(`API failed with ${response.status}`, response.status, errorPayload);
   }
