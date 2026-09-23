@@ -1,0 +1,46 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.avatarWrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #27272a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.nameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fullName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0;
+}
+
+.metaInfo {
+  font-size: 12.5px;
+  color: #a1a1aa;
+  margin: 0;
+}

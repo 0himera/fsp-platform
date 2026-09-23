@@ -1,0 +1,24 @@
+.ratingBadge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: #1c1c1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+.ratingLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #71717a;
+  font-weight: 500;
+}
+
+.ratingValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fafafa;
+  line-height: 1.2;
+}
