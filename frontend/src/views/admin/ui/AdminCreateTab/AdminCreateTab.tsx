@@ -12,15 +12,12 @@ interface AdminCreateTabProps {
 export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => {
   const [title, setTitle] = React.useState("");
   const [level, setLevel] = React.useState("rd_championship");
-  const [discipline, setDiscipline] = React.useState("");
+  const [customDiscipline, setCustomDiscipline] = React.useState<string | null>(null);
   const [location, setLocation] = React.useState("Махачкала, ДГТУ");
 
   const { data: disciplines } = useDisciplinesQuery();
   const createMutation = useCreateCompetitionMutation();
-
-  React.useEffect(() => {
-    if (disciplines?.[0] && !discipline) setDiscipline(disciplines[0].code);
-  }, [disciplines, discipline]);
+  const discipline = customDiscipline ?? disciplines?.[0]?.code ?? "";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +42,7 @@ export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => 
             <select value={level} onChange={(e) => setLevel(e.target.value)} className={styles.select}>
               {Object.entries(COMPETITION_LEVELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
-            <select value={discipline} onChange={(e) => setDiscipline(e.target.value)} className={styles.select}>
+            <select value={discipline} onChange={(e) => setCustomDiscipline(e.target.value)} className={styles.select}>
               {disciplines?.map((d) => <option key={d.code} value={d.code}>{d.name}</option>)}
             </select>
           </div>

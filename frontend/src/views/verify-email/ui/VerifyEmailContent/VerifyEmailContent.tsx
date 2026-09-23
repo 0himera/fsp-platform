@@ -14,14 +14,14 @@ export const VerifyEmailContent: React.FC = () => {
   const verifyMutation = useVerifyEmailMutation();
   const resendMutation = useResendVerificationMutation();
   const [resendEmail, setResendEmail] = React.useState("");
-  const [hasTriggered, setHasTriggered] = React.useState(false);
+  const hasTriggeredRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (token && !hasTriggered) {
-      setHasTriggered(true);
+    if (token && !hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
       verifyMutation.mutate(token);
     }
-  }, [token, hasTriggered, verifyMutation]);
+  }, [token, verifyMutation]);
 
   const handleResend = (e: React.FormEvent) => {
     e.preventDefault();

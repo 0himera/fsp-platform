@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from "@/shared/ui";
+import { Card, CardHeader, CardContent, Button, Badge } from "@/shared/ui";
 import { COMPETITION_LEVELS, COMPETITION_STATUSES, COMPETITION_STAGES } from "@/shared/config";
 import type { Competition } from "@/shared/api";
 import styles from "./CompetitionDetailHeader.module.css";
@@ -52,7 +52,7 @@ export const CompetitionDetailHeader: React.FC<CompetitionDetailHeaderProps> = (
         <div className={styles.metaGrid}>
           <div>Место: <strong>{competition.location}</strong></div>
           <div>Даты: <strong>{new Date(competition.starts_at).toLocaleDateString("ru-RU")} — {new Date(competition.ends_at).toLocaleDateString("ru-RU")}</strong></div>
-          <div>Дедлайн заявок: <strong>{new Date(competition.registration_deadline).toLocaleDateString("ru-RU")}</strong></div>
+          <div>Дедлайн: <strong>{new Date(competition.registration_deadline).toLocaleDateString("ru-RU")}</strong></div>
         </div>
       </CardContent>
     </Card>
