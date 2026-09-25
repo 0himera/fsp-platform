@@ -1,15 +1,18 @@
-import * as React from "react";
-import { APP_CONFIG } from "@/shared/config";
+import Link from "next/link";
 import styles from "./HeaderBrand.module.css";
 
-export const HeaderBrand: React.FC = () => {
+export function HeaderBrand() {
   return (
-    <a href="/" className={styles.brandWrapper} style={{ textDecoration: "none", color: "inherit" }}>
-      <div className={styles.logoBadge}>ФСП</div>
-      <div className={styles.titleBlock}>
-        <span className={styles.title}>{APP_CONFIG.shortName}</span>
-        <span className={styles.subtitle}>{APP_CONFIG.festival}</span>
-      </div>
-    </a>
+    <Link href="/" className={styles.brand} aria-label="Арена — Федерация спортивного программирования Дагестана">
+      <svg className={styles.mark} viewBox="0 0 70 48" role="img" aria-label="Горы">
+        <path d="M2 42 22 19l8 9 14-18 24 32H2Z" />
+        <path d="m15 42 15-17 8 8 7-9 12 18M22 19l8 9 14-18 7 12" />
+        <path d="m26 24 4 4 5-6m6-8 5 7 5-4" />
+      </svg>
+      <span className={styles.copy}>
+        <strong>АРЕНА · ФСП ДАГЕСТАНА</strong>
+        <small>СПОРТ. ЛЮДИ. РАЗВИТИЕ.</small>
+      </span>
+    </Link>
   );
-};
+}

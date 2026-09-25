@@ -20,5 +20,4 @@ export type {
   Athlete,
   MeResponse,
 } from "./model/types";
-
-
+export type { UpdateProfileInput } from "./api/userApi";

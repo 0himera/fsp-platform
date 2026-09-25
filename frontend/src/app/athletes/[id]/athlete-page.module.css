@@ -1,0 +1,11 @@
+.message { display: grid; place-items: center; flex: 1; min-height: 55vh; color: #818894; font: 14px Arial, sans-serif; }
+.messageCard { width: min(calc(100% - 32px), 560px); margin: 70px auto; padding: 28px; border: 1px solid #e7e2dc; border-radius: 9px; background: white; }
+.messageCard h1 { margin: 0 0 10px; color: #17243a; font-size: 26px; }
+.messageCard p { color: #768092; font: 13px/1.5 Arial, sans-serif; }
+.messageCard a { color: var(--wine); font: 12px Arial, sans-serif; }
+.rankEditor { padding: 15px 17px; border: 1px solid #e7e2dc; border-radius: 8px; background: white; }
+.rankEditor summary { color: #17243a; font-size: 12px; font-weight: 700; cursor: pointer; }
+.rankForm { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-top: 13px; }
+.rankForm label { color: #687384; font: 10px Arial, sans-serif; }
+.rankForm select { min-height: 35px; padding: 5px 8px; border: 1px solid #e3ded8; border-radius: 5px; background: #fff; color: #17243a; font: 11px Arial, sans-serif; }
+.error { flex-basis: 100%; color: #b4233c; font: 10px Arial, sans-serif; }

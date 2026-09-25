@@ -1,0 +1,11 @@
+.page { flex:1; padding:40px 28px 76px; }
+.container { max-width:1450px; margin:0 auto; }
+.heading { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:25px; }
+.heading > div > span { color:var(--wine); font:700 10px Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
+.heading h1 { margin:9px 0 8px; color:#17243a; font-size:clamp(35px,4vw,54px); line-height:1; }
+.heading p { max-width:620px; margin:0; color:#7b8490; font:14px/1.55 Arial,sans-serif; }
+.heading > strong { display:grid; gap:4px; padding-bottom:5px; color:var(--wine); font-size:34px; font-weight:400; text-align:right; }
+.heading small { color:#818894; font:11px Arial,sans-serif; }
+.list { display:grid; gap:12px; }
+.empty { padding:60px 20px; border:1px solid #e8e3dd; border-radius:9px; background:white; color:#858c96; text-align:center; font:14px Arial,sans-serif; }
+@media (max-width:650px) { .page { padding:28px 15px 50px; } .heading { align-items:start; } .heading h1 { font-size:36px; } .heading p { font-size:12px; } .heading > strong { display:none; } }

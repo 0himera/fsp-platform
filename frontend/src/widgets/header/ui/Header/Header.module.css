@@ -1,25 +1,13 @@
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-  background: rgba(9, 9, 11, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.container {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.header { position:sticky; top:0; z-index:50; width:100%; background:rgba(250,249,246,.94); border-bottom:1px solid #e7e2dc; backdrop-filter:blur(14px); }
+.container { position:relative; display:flex; align-items:center; gap:clamp(18px,2.4vw,38px); width:min(100%,1680px); min-height:82px; margin:0 auto; padding:10px 32px; }
+.actions { position:relative; display:flex; align-items:center; gap:13px; margin-left:auto; padding-left:10px; flex:0 0 auto; }
+.motto { z-index:1; color:#7d7c79; font-size:12px; font-style:italic; line-height:1.35; white-space:nowrap; }
+.mountains { position:absolute; z-index:0; width:300px; height:70px; right:44px; top:50%; transform:translateY(-50%); fill:none; stroke:#b9b5ad; stroke-width:1.2; opacity:.48; pointer-events:none; }
+.accountLink { position:relative; z-index:1; display:grid; place-items:center; width:40px; height:40px; border:1px solid #253248; border-radius:50%; background:rgba(250,249,246,.8); color:#18263a; transition:background 150ms ease,color 150ms ease; }
+.accountLink:hover { background:#18263a; color:white; }
+.accountInitial { font:700 14px Arial,sans-serif; }
+.logout { position:relative; z-index:1; display:grid; place-items:center; width:29px; height:29px; border:0; border-radius:50%; background:transparent; color:#778092; }
+.logout:hover { color:var(--wine); background:#f2e7ea; }
+.logout:disabled { opacity:.5; cursor:wait; }
+@media (max-width:1180px) { .container { gap:18px; padding-inline:22px; } .motto,.mountains { display:none; } }
+@media (max-width:760px) { .container { min-height:72px; flex-wrap:wrap; gap:7px 14px; padding:10px 16px 0; } .actions { padding:0; } .accountLink { width:36px; height:36px; } .logout { display:none; } }

@@ -1,52 +1,14 @@
 @import "tailwindcss";
-
-:root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #141416;
-  --card-foreground: #fafafa;
-  --popover: #141416;
-  --popover-foreground: #fafafa;
-  --primary: #f4f4f5;
-  --primary-foreground: #18181b;
-  --secondary: #202023;
-  --secondary-foreground: #e4e4e7;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #71717a;
-  --radius: 0.75rem;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-}
+:root { --background:#f7f5f1; --foreground:#142033; --card:#fff; --card-foreground:#142033; --popover:#fff; --popover-foreground:#142033; --primary:#92243e; --primary-foreground:#fff; --secondary:#f0ece7; --secondary-foreground:#263248; --muted:#f3f1ed; --muted-foreground:#768092; --accent:#f5edf0; --accent-foreground:#83223a; --destructive:#b4233c; --destructive-foreground:#fff; --border:#e9e5df; --input:#e9e5df; --ring:#a94960; --radius:.75rem; --ink:#142033; --muted-ink:#768092; --paper:#fff; --wine:#92243e; --wine-dark:#761a32; --gold:#b48b45; --line:#e9e5df; }
+@theme inline { --color-background:var(--background); --color-foreground:var(--foreground); --color-primary:var(--primary); --color-primary-foreground:var(--primary-foreground); --color-secondary:var(--secondary); --color-secondary-foreground:var(--secondary-foreground); --color-destructive:var(--destructive); --color-destructive-foreground:var(--destructive-foreground); --color-border:var(--border); --color-input:var(--input); --color-ring:var(--ring); }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { min-height:100vh; margin:0; background:var(--background); color:var(--foreground); font-family:Georgia,"Times New Roman",serif; -webkit-font-smoothing:antialiased; }
+button,input,select,textarea { font:inherit; }
+button { cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+img { display:block; max-width:100%; }
+::selection { background:#ead3d9; color:#57172a; }
+.site-shell { display:flex; flex-direction:column; min-height:100vh; }
+.site-footer { display:flex; justify-content:space-between; gap:16px; width:min(100%,1600px); margin:auto auto 0; padding:22px 32px; color:#89909a; font:11px/1.5 Arial,sans-serif; }
+@media (max-width:700px) { .site-footer { flex-direction:column; padding:20px; } }

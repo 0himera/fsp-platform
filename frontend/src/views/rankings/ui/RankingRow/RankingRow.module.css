@@ -1,0 +1,13 @@
+.own { background:#f7eef0; }
+.own:hover { background:#f3e7ea!important; }
+.place,.topPlace { display:inline-grid; place-items:center; min-width:24px; height:24px; color:#27344a; font-size:13px; }
+.topPlace { color:var(--wine); font-weight:700; }
+.identity { display:flex; align-items:center; gap:9px; min-width:180px; }
+.identity > span:last-child { display:grid; gap:3px; }
+.identity strong { color:#1a273b; font:500 12px Arial,sans-serif; }
+.identity:hover strong { color:var(--wine); }
+.identity small { color:#9298a0; font:9px Arial,sans-serif; }
+.city { min-width:110px; color:#657184; }
+.rank { display:inline-block; padding:5px 8px; border-radius:4px; background:#f2e7ea; color:#87243c; font:10px Arial,sans-serif; white-space:nowrap; }
+.number { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.total { color:#17243a; font-size:14px; font-weight:700; }

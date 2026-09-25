@@ -1,0 +1,6 @@
+.metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.metrics article { display:grid; gap:6px; min-height:102px; padding:15px 17px; border:1px solid #e7e2dc; border-radius:8px; background:#fff; }
+.metrics span { color:#828b97; font:10px Arial,sans-serif; }
+.metrics strong { color:#17243a; font-size:24px; line-height:1; font-variant-numeric:tabular-nums; }
+.metrics small { color:#a0a4aa; font:9px Arial,sans-serif; }
+@media (max-width:600px) { .metrics { grid-template-columns:1fr; } .metrics article { min-height:78px; grid-template-columns:1fr auto; align-items:center; } .metrics article span { align-self:end; } .metrics article strong { grid-column:2; grid-row:1/span 2; } .metrics article small { align-self:start; } }

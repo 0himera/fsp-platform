@@ -34,13 +34,25 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       SMTP_FROM: "Арена ФСП РД <noreply@arena.local>"
-      PUBLIC_BASE_URL: http://localhost:8080
+      PUBLIC_BASE_URL: http://localhost:3000
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
       mailpit:
+        condition: service_started
+  web:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_INTERNAL_URL: http://app:8080
+    environment:
+      BACKEND_INTERNAL_URL: http://app:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      app:
         condition: service_started
 
 volumes:

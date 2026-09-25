@@ -1,0 +1,11 @@
+.editor { padding: 16px 18px; border: 1px solid #e7e2dc; border-radius: 8px; background: white; }
+.editor summary { color: #17243a; font-size: 13px; font-weight: 700; cursor: pointer; }
+.form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+.form > label { display: grid; gap: 6px; color: #687384; font: 11px Arial, sans-serif; }
+.wide, .form fieldset { grid-column: 1 / -1; }
+.form fieldset { display: flex; flex-wrap: wrap; gap: 9px 16px; padding: 11px; border: 1px solid #e7e2dc; border-radius: 5px; }
+.form legend { padding: 0 5px; color: #687384; font: 10px Arial, sans-serif; }
+.form fieldset label { display: flex; align-items: center; gap: 6px; color: #536074; font: 10px Arial, sans-serif; }
+.form fieldset input { accent-color: var(--wine); }
+.submit { justify-self: start; }
+@media (max-width: 560px) { .form { grid-template-columns: 1fr; } .wide, .form fieldset { grid-column: auto; } .form fieldset { flex-direction: column; } }

@@ -17,6 +17,7 @@ export { Badge, badgeVariants } from "./badge";
 export type { BadgeProps } from "./badge";
 
 export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+export { AthleteAvatar } from "./AthleteAvatar";
 
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
 
