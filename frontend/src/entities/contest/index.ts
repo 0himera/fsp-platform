@@ -6,3 +6,5 @@ export {
   useReviewContestSubmissionMutation,
   useFinalizeContestMutation,
 } from "./api/submissionMutations";
+export { getTemplatesForMode, type TaskTemplate } from "./model/taskTemplates";
+
