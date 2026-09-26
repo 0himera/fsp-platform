@@ -25,6 +25,11 @@ import { PublicationHistory } from "@/features/manage-publications";
 import { CompetitionDocuments } from "@/features/manage-documents";
 import { TeamManager, TeamRegistrationDialog } from "@/features/manage-teams";
 import {
+  useCompetitionJudgesQuery,
+  useAddCompetitionJudgeMutation,
+  useCoachesQuery,
+} from "@/entities/staff";
+import {
   COMPETITION_LEVELS,
   COMPETITION_STATUSES,
   COMPETITION_STAGES,
@@ -44,7 +49,13 @@ export default function CompetitionDetailPage() {
   const updateCompetitionMutation = useUpdateCompetitionMutation();
   const publishResultsMutation = usePublishResultsMutation();
 
-  const [activeTab, setActiveTab] = React.useState<"registrations" | "teams" | "results" | "admin">("registrations");
+  const { data: judges = [] } = useCompetitionJudgesQuery(Number(id));
+  const { data: allStaff = [] } = useCoachesQuery();
+  const addJudgeMutation = useAddCompetitionJudgeMutation();
+  const [selectedJudgeId, setSelectedJudgeId] = React.useState<number | "">("");
+  const [judgeRoleNote, setJudgeRoleNote] = React.useState("Судья");
+
+  const [activeTab, setActiveTab] = React.useState<"registrations" | "teams" | "results" | "judges" | "admin">("registrations");
 
   const [showTeamDialog, setShowTeamDialog] = React.useState(false);
 
@@ -315,6 +326,13 @@ export default function CompetitionDetailPage() {
           onClick={() => setActiveTab("results")}
         >
           Итоговый протокол ({results.length})
+        </Button>
+        <Button
+          variant={activeTab === "judges" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveTab("judges")}
+        >
+          Судейская коллегия ({judges.length})
         </Button>
         {isOrganizer && (
           <Button
@@ -633,6 +651,123 @@ export default function CompetitionDetailPage() {
                     </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Judges */}
+      {activeTab === "judges" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Судейская коллегия ({judges.length})</CardTitle>
+              <CardDescription>
+                Судьи и технические специалисты, обеспечивающие проведение и честность соревнования
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {judges.length === 0 ? (
+                <p style={{ opacity: 0.7 }}>Судейская коллегия пока не назначена</p>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.1)", fontSize: "0.875rem", opacity: 0.7 }}>
+                        <th style={{ padding: "0.75rem 0.5rem", width: "40px" }}>№</th>
+                        <th style={{ padding: "0.75rem 0.5rem" }}>Судья</th>
+                        <th style={{ padding: "0.75rem 0.5rem" }}>Должность в коллегии</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {judges.map((j, idx) => (
+                        <tr key={j.user_id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                          <td style={{ padding: "0.75rem 0.5rem", opacity: 0.7 }}>{idx + 1}</td>
+                          <td style={{ padding: "0.75rem 0.5rem", fontWeight: 600 }}>{j.full_name}</td>
+                          <td style={{ padding: "0.75rem 0.5rem" }}>
+                            <Badge variant="outline">{j.role_note || "Судья"}</Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {isOrganizer && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Назначить судью на соревнование</CardTitle>
+                <CardDescription>
+                  Добавьте аттестованного судью или тренера в состав судейской коллегии этого турнира
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!selectedJudgeId) return;
+                    addJudgeMutation.mutate({
+                      competitionId: Number(id),
+                      judgeId: Number(selectedJudgeId),
+                      roleNote: judgeRoleNote.trim() || "Судья",
+                    }, {
+                      onSuccess: () => {
+                        setSelectedJudgeId("");
+                        setJudgeRoleNote("Судья");
+                      },
+                    });
+                  }}
+                  style={{ display: "flex", gap: "1rem", alignItems: "flex-end", flexWrap: "wrap" }}
+                >
+                  <div style={{ minWidth: "220px", flex: 1 }}>
+                    <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.35rem", opacity: 0.8 }}>
+                      Выберите специалиста
+                    </label>
+                    <select
+                      style={{
+                        width: "100%",
+                        padding: "0.5rem 0.75rem",
+                        borderRadius: "6px",
+                        background: "var(--card)",
+                        color: "var(--foreground)",
+                        border: "1px solid var(--border)",
+                        fontSize: "0.9rem",
+                      }}
+                      value={selectedJudgeId}
+                      onChange={(e) => setSelectedJudgeId(e.target.value ? Number(e.target.value) : "")}
+                      required
+                    >
+                      <option value="">-- Выберите судью / тренера --</option>
+                      {allStaff.map((s) => (
+                        <option key={s.user_id} value={s.user_id}>
+                          {s.full_name} ({s.role === "judge" ? "Судья" : "Тренер"}{s.city ? `, ${s.city}` : ""})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ minWidth: "200px", flex: 1 }}>
+                    <label style={{ display: "block", fontSize: "0.8rem", marginBottom: "0.35rem", opacity: 0.8 }}>
+                      Должность в коллегии
+                    </label>
+                    <Input
+                      placeholder="Главный судья, Член жюри..."
+                      value={judgeRoleNote}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setJudgeRoleNote(e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={addJudgeMutation.isPending || !selectedJudgeId}
+                  >
+                    {addJudgeMutation.isPending ? "Назначение..." : "Назначить"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           )}

@@ -23,3 +23,9 @@ export type {
   MeResponse,
 } from "./model/types";
 export type { UpdateProfileInput } from "./api/userApi";
+
+export {
+  useNotificationsQuery,
+  useReadNotificationMutation,
+  useReadAllNotificationsMutation,
+} from "./api/notificationsApi";

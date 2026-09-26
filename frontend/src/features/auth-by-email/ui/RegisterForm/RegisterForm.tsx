@@ -11,6 +11,7 @@ export const RegisterForm: React.FC = () => {
   const [password, setPassword] = React.useState("");
   const [city, setCity] = React.useState("");
   const [organization, setOrganization] = React.useState("");
+  const [role, setRole] = React.useState<"athlete" | "coach" | "judge">("athlete");
 
   const registerMutation = useRegisterMutation();
 
@@ -24,6 +25,7 @@ export const RegisterForm: React.FC = () => {
       password,
       city: city.trim() || undefined,
       organization: organization.trim() || undefined,
+      role,
     });
   };
 
@@ -51,6 +53,27 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>Роль на платформе</label>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {[
+            { id: "athlete", label: "Спортсмен" },
+            { id: "coach", label: "Тренер" },
+            { id: "judge", label: "Судья" },
+          ].map((item) => (
+            <Button
+              key={item.id}
+              type="button"
+              size="sm"
+              variant={role === item.id ? "default" : "outline"}
+              onClick={() => setRole(item.id as "athlete" | "coach" | "judge")}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <div className={styles.fieldGroup}>
         <label className={styles.label} htmlFor="reg-name">ФИО *</label>
         <Input

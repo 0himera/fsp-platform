@@ -29,16 +29,25 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		FullName     string `json:"full_name"`
 		Organization string `json:"organization"`
 		City         string `json:"city"`
+		Role         string `json:"role"`
 	}
 	if err := decodeJSON(r, &input); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if input.Role == "" {
+		input.Role = "athlete"
+	}
+	allowedRoles := map[string]bool{"athlete": true, "coach": true, "judge": true}
+	if !allowedRoles[input.Role] {
+		writeError(w, http.StatusBadRequest, "Недопустимая роль")
 		return
 	}
 	if !validEmail(input.Email) || utf8.RuneCountInString(input.Password) < 8 || utf8.RuneCountInString(input.Password) > 128 || utf8.RuneCountInString(strings.TrimSpace(input.FullName)) < 2 || utf8.RuneCountInString(input.FullName) > 100 || utf8.RuneCountInString(input.City) > 100 || utf8.RuneCountInString(input.Organization) > 160 {
 		writeError(w, http.StatusBadRequest, "Укажите имя, корректную почту и пароль от 8 символов")
 		return
 	}
-	user, token, err := s.Auth.RegisterPending(r.Context(), input.Email, input.Password, input.FullName, input.Organization, input.City)
+	user, token, err := s.Auth.RegisterPending(r.Context(), input.Email, input.Password, input.FullName, input.Organization, input.City, input.Role)
 	if err != nil {
 		handleError(w, err)
 		return

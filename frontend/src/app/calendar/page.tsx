@@ -1,3 +1,5 @@
-import { EventsPage } from "@/views/events";
+import { CalendarView } from "@/views/calendar";
 
-export default EventsPage;
+export default function CalendarPage() {
+  return <CalendarView />;
+}

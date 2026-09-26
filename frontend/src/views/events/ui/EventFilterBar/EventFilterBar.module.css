@@ -5,3 +5,17 @@
 .search:focus-within { border-color:#b87b89; box-shadow:0 0 0 3px rgba(146,36,62,.08); }
 .search input { min-width:0; border:0; outline:0; background:transparent; font:12px "JetBrains Mono",monospace; }
 @media (max-width:650px) { .toolbar { align-items:stretch; flex-direction:column; } .filters { align-self:start; max-width:100%; overflow:auto; } .filters button { white-space:nowrap; } .search { width:100%; } }
+
+.select {
+  min-height: 34px;
+  border-radius: 5px;
+  border: 1px solid #e5e0d9;
+  background: #fff;
+  padding: 0 12px;
+  font: 12px "JetBrains Mono", monospace;
+  color: #1a1a1a;
+  outline: none;
+}
+.select:focus {
+  border-color: #b87b89;
+}

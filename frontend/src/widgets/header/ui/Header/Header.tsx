@@ -8,6 +8,7 @@ import { useMeQuery } from "@/entities/user";
 import { useLogoutMutation } from "@/features/auth-by-email";
 import { HeaderBrand } from "../HeaderBrand";
 import { HeaderNav } from "../HeaderNav";
+import { NotificationBell } from "../NotificationBell";
 import styles from "./Header.module.css";
 
 export const Header: React.FC = () => {
@@ -46,6 +47,7 @@ export const Header: React.FC = () => {
             <path d="M2 65 53 19l20 20 27-31 52 57M70 65l58-42 24 20 31-31 63 53M178 65l46-38 25 19 31-33 38 52" />
             <path d="m42 29 11 5 20 5m-1 19 27-20 22 18m36-15 31 7 17 17m31-20 25 8 31-14" />
           </svg>
+          <NotificationBell />
           <button className={styles.themeToggle} type="button" onClick={toggleTheme} aria-label={isDark ? "Включить светлую тему" : "Включить тёмную тему"} title={isDark ? "Светлая тема" : "Тёмная тема"}>
             {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>

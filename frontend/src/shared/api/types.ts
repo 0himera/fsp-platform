@@ -15,7 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-export type UserRole = "athlete" | "organizer";
+export type UserRole = "athlete" | "organizer" | "coach" | "judge";
 
 export type RankCode = "none" | "III" | "II" | "I" | "KMS" | "MS" | "MSMK" | "ZMS";
 
@@ -196,4 +196,46 @@ export interface CreateCompetitionInput {
   stage?: CompetitionStage;
   qualifying_competition_id?: number | null;
   qualifying_place_limit?: number | null;
+}
+
+// Rank history
+export interface RankChange {
+  id: number;
+  old_rank_code: string;
+  new_rank_code: string;
+  changed_by: number;
+  changed_at: string;
+}
+
+// Notification
+export interface Notification {
+  id: number;
+  kind: string;
+  title: string;
+  body: string;
+  link: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unread: number;
+}
+
+// Staff (coach/judge)
+export interface StaffProfile {
+  user_id: number;
+  full_name: string;
+  organization: string;
+  city: string;
+  bio: string;
+  avatar_url: string;
+  role: "coach" | "judge";
+}
+
+export interface JudgeEntry {
+  user_id: number;
+  full_name: string;
+  role_note: string;
 }

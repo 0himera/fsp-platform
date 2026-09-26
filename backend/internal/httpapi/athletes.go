@@ -154,3 +154,40 @@ func (s *Server) myRegistrations(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, items)
 }
+
+func (s *Server) rankHistory(w http.ResponseWriter, r *http.Request) {
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	type rankChange struct {
+		ID        int64     `json:"id"`
+		OldRank   string    `json:"old_rank_code"`
+		NewRank   string    `json:"new_rank_code"`
+		ChangedBy int64     `json:"changed_by"`
+		ChangedAt time.Time `json:"changed_at"`
+	}
+	rows, err := s.DB.Query(r.Context(),
+		`SELECT id, old_rank_code, new_rank_code, changed_by, changed_at
+		 FROM rank_changes WHERE athlete_id=$1 ORDER BY changed_at DESC`, id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	defer rows.Close()
+	history := []rankChange{}
+	for rows.Next() {
+		var rc rankChange
+		if err := rows.Scan(&rc.ID, &rc.OldRank, &rc.NewRank, &rc.ChangedBy, &rc.ChangedAt); err != nil {
+			handleError(w, err)
+			return
+		}
+		history = append(history, rc)
+	}
+	if err := rows.Err(); err != nil {
+		handleError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, history)
+}

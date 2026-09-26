@@ -7,12 +7,14 @@ import type { Athlete, Competition } from "@/shared/api";
 import { useCompetitionsQuery } from "@/entities/competition";
 import { useRankingsQuery } from "@/entities/ranking";
 import { useDisciplinesQuery } from "@/entities/discipline";
+import { useRankHistoryQuery } from "@/entities/staff";
 import { ProfileHero } from "../ProfileHero";
 import { RatingMetrics } from "../RatingMetrics";
 import { AchievementSection } from "../AchievementSection";
 import { ResultsHistory } from "../ResultsHistory";
 import { RegistrationList } from "../RegistrationList";
 import { ProfileSidebar } from "../ProfileSidebar";
+import { RankHistory } from "../RankHistory/RankHistory";
 import styles from "./AthleteProfileView.module.css";
 
 interface Props { athlete: Athlete; own?: boolean; email?: string; editor?: ReactNode; rankEditor?: ReactNode; registrations?: Competition[]; }
@@ -24,6 +26,7 @@ export function AthleteProfileView({ athlete, own = false, email, editor, rankEd
   const { data: competitions = [] } = useCompetitionsQuery();
   const { data: rankings } = useRankingsQuery();
   const { data: disciplines = [] } = useDisciplinesQuery();
+  const { data: rankHistory = [] } = useRankHistoryQuery(athlete.id);
   const names = new Map(disciplines.map((item) => [item.code, item.name]));
   React.useEffect(() => {
     const dialog = dialogRef.current;
@@ -40,6 +43,6 @@ export function AthleteProfileView({ athlete, own = false, email, editor, rankEd
       <div className={styles.dialogBody}>{editor}</div>
     </dialog>}
     {rankEditor && <div className={styles.editors}>{rankEditor}</div>}
-    <div className={styles.columns}><div className={styles.primary}><RatingMetrics athlete={athlete} /><AchievementSection results={athlete.results} items={athlete.achievements || []} own={own} selected={athlete.featured_achievement} /><ResultsHistory results={athlete.results} disciplines={names} />{own && <RegistrationList items={registrations} />}</div><ProfileSidebar nextEvent={upcoming(competitions)[0]} leaders={rankings?.athletes.slice(0,3) || []} /></div>
+    <div className={styles.columns}><div className={styles.primary}><RatingMetrics athlete={athlete} /><AchievementSection results={athlete.results} items={athlete.achievements || []} own={own} selected={athlete.featured_achievement} /><ResultsHistory results={athlete.results} disciplines={names} /><RankHistory history={rankHistory} />{own && <RegistrationList items={registrations} />}</div><ProfileSidebar nextEvent={upcoming(competitions)[0]} leaders={rankings?.athletes.slice(0,3) || []} /></div>
   </div></main>;
 }

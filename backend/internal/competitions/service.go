@@ -633,7 +633,37 @@ func (s Service) PublishResults(ctx context.Context, competitionID, organizerID 
 	if _, err := tx.Exec(ctx, `UPDATE competitions SET status='completed',updated_at=now() WHERE id=$1`, competitionID); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	// fetch title for notification (ignore error — best-effort)
+	var title string
+	_ = s.DB.QueryRow(ctx, `SELECT title FROM competitions WHERE id=$1`, competitionID).Scan(&title)
+	go s.notifyResultsPublished(context.Background(), competitionID, title)
+	return nil
+}
+
+func (s Service) notifyResultsPublished(ctx context.Context, competitionID int64, title string) {
+	rows, err := s.DB.Query(ctx, `SELECT athlete_id FROM registrations WHERE competition_id=$1`, competitionID)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		if rows.Scan(&id) == nil {
+			ids = append(ids, id)
+		}
+	}
+	_ = rows.Err()
+	notifTitle := "Опубликованы результаты: " + title
+	link := fmt.Sprintf("/competitions/%d", competitionID)
+	for _, id := range ids {
+		_, _ = s.DB.Exec(ctx,
+			`INSERT INTO notifications(user_id,kind,title,body,link) VALUES($1,'results_published',$2,'Проверьте ваше место и рейтинг.',$3)`,
+			id, notifTitle, link)
+	}
 }
 
 func (s Service) Results(ctx context.Context, competitionID int64) ([]Result, error) {

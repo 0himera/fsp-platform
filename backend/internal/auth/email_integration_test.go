@@ -54,7 +54,7 @@ func TestEmailAccountFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	svc := Service{DB: db}
-	user, verification, err := svc.RegisterPending(ctx, " Test@Example.org ", "original-password", "Тестовый спортсмен", "ДГУ", "Махачкала")
+	user, verification, err := svc.RegisterPending(ctx, " Test@Example.org ", "original-password", "Тестовый спортсмен", "ДГУ", "Махачкала", "athlete")
 	if err != nil {
 		t.Fatal(err)
 	}
