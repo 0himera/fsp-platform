@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Contest } from "@/shared/api";
 import styles from "./ContestHeader.module.css";
 
@@ -21,6 +22,11 @@ export function ContestHeader({ contest, isOrganizer, isUpcoming }: Props) {
       )}
       {contest.finalized && (
         <p className={styles.notice}>Контест завершён. Итоговый протокол опубликован.</p>
+      )}
+      {contest.mode === "algorithm" && (
+        <Link href={`/competitions/${contest.competition_id}/contest`} className={styles.arenaLink}>
+          Открыть интерактивную Арену (IDE) →
+        </Link>
       )}
     </div>
   );

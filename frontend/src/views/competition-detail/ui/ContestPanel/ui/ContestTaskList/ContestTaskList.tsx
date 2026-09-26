@@ -31,12 +31,12 @@ export function ContestTaskList({ tasks, competitionId, mode, isOrganizer, ...su
             <span className={styles.points}>{task.max_points} баллов</span>
           </div>
           <p className={styles.statement}>{task.statement}</p>
-          {!isOrganizer && mode === "algorithm" && submissionProps.canSubmitNow && (
+          {mode === "algorithm" && (
             <Link href={`/competitions/${competitionId}/contest`} className={styles.solveLink}>
               Решать задачу онлайн →
             </Link>
           )}
-          {!isOrganizer && mode === "algorithm" && !submissionProps.canSubmitNow && submissionProps.canRegister && (
+          {!isOrganizer && !submissionProps.canSubmitNow && submissionProps.canRegister && (
             <Button size="sm" onClick={submissionProps.onRegister} disabled={submissionProps.isRegisterPending}>
               {submissionProps.isRegisterPending ? "Регистрация…" : "Зарегистрироваться для участия"}
             </Button>
