@@ -1,0 +1,32 @@
+.infoCard {
+  margin-bottom: 2rem;
+  border: 1px solid var(--color-border);
+}
+
+.detailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.label {
+  color: var(--color-text-secondary);
+}
+
+.value {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}

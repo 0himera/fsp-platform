@@ -2,17 +2,14 @@
   padding: 40px 0;
   min-height: 100vh;
 }
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
-
 .heading {
   margin-bottom: 32px;
 }
-
 .heading span {
   display: block;
   font-size: 14px;
@@ -21,46 +18,12 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .heading h1 {
   font-size: 32px;
   font-weight: 700;
   color: var(--foreground);
   margin: 0;
 }
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.monthTitle {
-  font-size: 20px;
-  font-weight: 600;
-  min-width: 160px;
-  text-align: center;
-}
-
-.navBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--foreground);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.navBtn:hover {
-  background: var(--hover);
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -70,7 +33,6 @@
   border-radius: 12px;
   overflow: hidden;
 }
-
 .weekday {
   background: var(--muted, #f3f4f6);
   padding: 12px;
@@ -79,139 +41,6 @@
   font-size: 14px;
   color: var(--muted-foreground);
 }
-
 :global([data-theme="dark"]) .weekday {
   background: var(--muted, #1f2937);
-}
-
-.day {
-  background: var(--background);
-  min-height: 120px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dayOther {
-  background: var(--muted, #fafafa);
-  opacity: 0.6;
-}
-
-:global([data-theme="dark"]) .dayOther {
-  background: var(--muted, #111827);
-}
-
-.dayToday .dayNum {
-  background: var(--primary);
-  color: white;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dayNum {
-  font-size: 14px;
-  font-weight: 500;
-  align-self: flex-end;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.events {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.chip {
-  font-size: 11px;
-  padding: 4px 6px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  transition: opacity 0.2s;
-}
-
-.chip:hover {
-  opacity: 0.8;
-}
-
-.more {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  padding: 0 4px;
-  font-weight: 500;
-}
-
-.phaseUpcoming {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-:global([data-theme="dark"]) .phaseUpcoming {
-  background-color: rgba(29, 78, 216, 0.2);
-  color: #93c5fd;
-}
-
-.phaseCurrent {
-  background-color: #dcfce7;
-  color: #15803d;
-}
-:global([data-theme="dark"]) .phaseCurrent {
-  background-color: rgba(21, 128, 61, 0.2);
-  color: #86efac;
-}
-
-.phaseAwaiting {
-  background-color: #ffedd5;
-  color: #c2410c;
-}
-:global([data-theme="dark"]) .phaseAwaiting {
-  background-color: rgba(194, 65, 12, 0.2);
-  color: #fdba74;
-}
-
-.phaseCompleted {
-  background-color: #f3f4f6;
-  color: #4b5563;
-}
-:global([data-theme="dark"]) .phaseCompleted {
-  background-color: rgba(75, 85, 99, 0.2);
-  color: #d1d5db;
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-}
-
-.legendItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--muted-foreground);
-}
-
-.legendDot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
 }

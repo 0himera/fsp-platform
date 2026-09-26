@@ -12,24 +12,30 @@ export const HomePage: React.FC = () => {
   const { data: rankings } = useRankingsQuery();
   const [index, setIndex] = React.useState(0);
   const [paused, setPaused] = React.useState(false);
+
   const events = React.useMemo(() => [...competitions].filter((item) => item.status !== "draft").sort((a, b) => {
     const activeA = a.status === "completed" ? 1 : 0;
     const activeB = b.status === "completed" ? 1 : 0;
     return activeA - activeB || (activeA ? new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime() : new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   }), [competitions]);
+
   const slides = events.slice(0, 5);
-  React.useEffect(() => { setIndex(0); }, [slides.length]);
+  const safeIndex = slides.length > 0 ? index % slides.length : 0;
+
   React.useEffect(() => {
     if (paused || slides.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setIndex((value) => (value + 1) % slides.length), 6500);
     return () => window.clearInterval(timer);
-  }, [index, paused, slides.length]);
+  }, [paused, slides.length]);
+
   const activeEvents = events.filter((item) => item.status === "open" || item.status === "running").length;
 
-  return <main className={styles.page} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-    <HomeStage events={events} slides={slides} index={index} loading={isLoading} onSelect={setIndex} />
-    <HomeHighlights activeEvents={activeEvents} athletes={rankings?.athletes.length || 0} />
-  </main>;
+  return (
+    <main className={styles.page} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <HomeStage events={events} slides={slides} index={safeIndex} loading={isLoading} onSelect={setIndex} />
+      <HomeHighlights activeEvents={activeEvents} athletes={rankings?.athletes.length || 0} />
+    </main>
+  );
 };
 
 export default HomePage;

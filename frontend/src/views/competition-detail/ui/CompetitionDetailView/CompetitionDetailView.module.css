@@ -1,0 +1,19 @@
+.container {
+  max-width: 1000px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.loading,
+.notFound {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}

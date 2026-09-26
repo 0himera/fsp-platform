@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useMeQuery } from "@/entities/user";
-import { useAcceptTeamInviteMutation } from "@/entities/competition";
+import { useAcceptTeamInviteMutation } from "@/features/manage-teams";
 
 export default function TeamInvitePage() {
   const me = useMeQuery();
@@ -12,7 +12,8 @@ export default function TeamInvitePage() {
   const [token, setToken] = React.useState("");
 
   React.useEffect(() => {
-    setToken(new URLSearchParams(window.location.search).get("token") || "");
+    const param = new URLSearchParams(window.location.search).get("token") || "";
+    queueMicrotask(() => setToken(param));
   }, []);
 
   React.useEffect(() => {

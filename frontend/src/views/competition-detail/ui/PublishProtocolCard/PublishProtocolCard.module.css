@@ -1,0 +1,18 @@
+.card {
+  border: 1px solid var(--border);
+}
+
+.info {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.warning {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--muted);
+  font-size: 13px;
+  color: var(--foreground);
+}

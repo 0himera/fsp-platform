@@ -1,13 +1,12 @@
 .git
 .agents
 .codex
-.env*
+.env
+.env*.local
 design
 README.md
 **/*.test
 **/coverage.out
-
-# Frontend dependencies and build artifacts (save 1+ GB build context)
 node_modules/
 **/node_modules/
 .next/
@@ -16,3 +15,4 @@ dist/
 build/
 out/
 uploads/
+**/.turbo

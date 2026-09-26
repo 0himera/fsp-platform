@@ -1,0 +1,1 @@
+export { CompetitionTabContent } from "./CompetitionTabContent";

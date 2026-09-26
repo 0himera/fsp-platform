@@ -11,6 +11,7 @@
 .table td { padding:clamp(8px,.55vw,16px) clamp(9px,.55vw,16px); border-bottom:1px solid #eeeae5; vertical-align:middle; }
 .table tbody tr:last-child td { border-bottom:0; }
 .table tbody tr:hover { background:#f6f8fc; }
+:global([data-theme="dark"]) .table tbody tr:hover { background:rgba(255,255,255,.05); }
 .empty { padding:38px 20px; color:#858c96; text-align:center; font:13px "JetBrains Mono",monospace; }
 .count { margin:0; padding:10px 15px; border-top:1px solid #eeeae5; color:#8b929b; font:10px "JetBrains Mono",monospace; }
 @media (max-width:680px) { .heading { align-items:stretch; flex-direction:column; padding:15px; } .search { width:100%; } .table { min-width:0; table-layout:fixed; } .table th,.table td { padding:9px 5px; } .table th:first-child { width:48px; } .table th:last-child { width:72px; } .table th:nth-child(3),.table th:nth-child(4),.table th:nth-child(5),.table th:nth-child(6),.table td:nth-child(3),.table td:nth-child(4),.table td:nth-child(5),.table td:nth-child(6) { display:none; } }

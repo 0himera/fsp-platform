@@ -11,7 +11,7 @@ export function useNotificationsQuery(enabled = true) {
     queryKey: notificationKeys.all,
     queryFn: () => apiClient.get<NotificationsResponse>("/api/notifications"),
     staleTime: 1000 * 30,
-    refetchInterval: 1000 * 60, // poll every minute
+    refetchInterval: 1000 * 60,
     enabled,
   });
 }

@@ -1,25 +1,29 @@
 .section {
-  display: flex;
-  flex-direction: column;
-  border-radius: 20px;
+  width: 100%;
 }
 
 .header {
-  padding-bottom: 16px;
+  padding-bottom: 0.75rem;
 }
 
 .heading {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #f4f4f5;
-  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
 }
 
 .description {
-  font-size: 13.5px;
-  color: #71717a;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .content {
-  padding-top: 0;
+  padding-top: 0.5rem;
 }

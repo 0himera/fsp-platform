@@ -2,15 +2,18 @@ export { UserCard } from "./ui/UserCard";
 export {
   useAthleteProfile,
   getAthleteProfile,
+} from "./api/athleteProfileApi";
+export {
   useMeQuery,
   getMe,
   useAthleteQuery,
-  useUpdateProfileMutation,
-  useFeaturedAchievementMutation,
-  useAvatarMutation,
-  useUpdateRankMutation,
   userKeys,
 } from "./api/userApi";
+export {
+  useNotificationsQuery,
+  useReadNotificationMutation,
+  useReadAllNotificationsMutation,
+} from "./api/notificationsApi";
 export { toAthleteProfile } from "./model/types";
 export type {
   AthleteProfile,
@@ -22,10 +25,3 @@ export type {
   Athlete,
   MeResponse,
 } from "./model/types";
-export type { UpdateProfileInput } from "./api/userApi";
-
-export {
-  useNotificationsQuery,
-  useReadNotificationMutation,
-  useReadAllNotificationsMutation,
-} from "./api/notificationsApi";

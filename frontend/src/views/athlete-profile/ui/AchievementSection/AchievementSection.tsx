@@ -1,7 +1,7 @@
 import { Award, CalendarDays, CircleCheck, Medal, Trophy } from "lucide-react";
 import type { AthleteResult } from "@/shared/api";
 import type { Achievement } from "@/shared/api";
-import { useFeaturedAchievementMutation } from "@/entities/user";
+import { useFeaturedAchievementMutation } from "@/features/update-profile";
 import { formatDate } from "@/shared/lib";
 import { buildAchievements, type AchievementKind } from "../../model/achievements";
 import styles from "./AchievementSection.module.css";

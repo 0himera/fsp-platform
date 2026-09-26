@@ -9,6 +9,7 @@
 .wrap td { padding:clamp(11px,.7vw,20px) clamp(12px,.75vw,22px); border-bottom:1px solid #eeeae5; color:#263248; vertical-align:middle; }
 .wrap tr:last-child td { border-bottom:0; }
 .wrap tbody tr:hover { background:#f6f8fc; }
+:global([data-theme="dark"]) .wrap tbody tr:hover { background:rgba(255,255,255,.05); }
 .wrap td small { display:block; margin-top:4px; color:#969da5; font-size:9px; }
 .wrap td a { display:block; max-width:240px; color:#17243a; font-weight:600; }
 .wrap td a:hover { color:var(--wine); }

@@ -1,0 +1,1 @@
+export { RegisterSuccessNotice } from "./RegisterSuccessNotice";

@@ -1,0 +1,41 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(64, 47, 255, 0.12);
+  border: 1px solid rgba(64, 47, 255, 0.35);
+  box-shadow: 0 0 20px rgba(64, 47, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ec1d35;
+  box-shadow: 0 0 10px #ec1d35;
+  animation: pulse 1.6s infinite ease-in-out;
+}
+
+.text {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #7164ff;
+  text-transform: uppercase;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+    box-shadow: 0 0 14px #ec1d35;
+  }
+}

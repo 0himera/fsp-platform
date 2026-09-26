@@ -11,6 +11,7 @@
 .dialogHeader h2 { margin:5px 0 0; font-size:22px; }
 .close { display:grid; place-items:center; width:34px; height:34px; flex:none; border:1px solid #dfe5ee; border-radius:6px; background:#fff; color:#1b1c21; font-size:25px; line-height:1; cursor:pointer; }
 .close:hover { background:#edf1f8; }
+:global([data-theme="dark"]) .close:hover { background:rgba(255,255,255,.1); }
 .dialogBody { display:grid; gap:12px; padding:16px; }
 .columns { display:grid; grid-template-columns:minmax(0,1fr) clamp(320px,22vw,560px); gap:clamp(15px,1.3vw,34px); align-items:start; margin-top:15px; }
 .primary { display:grid; gap:15px; min-width:0; }

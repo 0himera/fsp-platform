@@ -1,0 +1,1 @@
+export { CompetitionJudges } from "./CompetitionJudges";

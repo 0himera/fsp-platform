@@ -1,25 +1,5 @@
-import { APP_CONFIG } from "../config";
 import { ApiError, type RequestOptions } from "./types";
-
-function buildUrl(endpoint: string, params?: RequestOptions["params"]): string {
-  const base = APP_CONFIG.apiBaseUrl.replace(/\/$/, "");
-  const path = endpoint.replace(/^\//, "");
-  let url = endpoint.startsWith("http") ? endpoint : base ? `${base}/${path}` : `/${path}`;
-
-  if (params) {
-    const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        searchParams.append(key, String(value));
-      }
-    });
-    const queryString = searchParams.toString();
-    if (queryString) {
-      url += (url.includes("?") ? "&" : "?") + queryString;
-    }
-  }
-  return url;
-}
+import { buildUrl } from "./url";
 
 export async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, token, headers, ...restOptions } = options;
@@ -30,9 +10,7 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
   });
   if (!(restOptions.body instanceof FormData)) defaultHeaders.set("Content-Type", "application/json");
 
-  if (token) {
-    defaultHeaders.set("Authorization", `Bearer ${token}`);
-  }
+  if (token) defaultHeaders.set("Authorization", `Bearer ${token}`);
 
   const mergedHeaders = new Headers(defaultHeaders);
   new Headers(headers).forEach((value, key) => mergedHeaders.set(key, value));

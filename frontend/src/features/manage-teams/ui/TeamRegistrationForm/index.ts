@@ -1,0 +1,1 @@
+export { TeamRegistrationForm } from "./TeamRegistrationForm";

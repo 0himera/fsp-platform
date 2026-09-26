@@ -7,9 +7,15 @@ interface Props { events: Competition[]; slides: Competition[]; index: number; l
 
 export function HomeStage({ events, slides, index, loading, onSelect }: Props) {
   const current = slides[index];
-  const selectEvent = (id: number) => { const selected = slides.findIndex((event) => event.id === id); if (selected >= 0) onSelect(selected); };
+  const selectEvent = (id: number) => {
+    const selected = slides.findIndex((event) => event.id === id);
+    if (selected >= 0) onSelect(selected);
+  };
   return <section className={styles.stage}>
-    <div className={styles.inner}><div className={styles.featureColumn}><FeaturedEvent event={current} discipline={current?.discipline_code.replaceAll("_", " ") || ""} loading={loading} count={slides.length} index={index} onSelect={onSelect} /></div>
+    <div className={styles.inner}>
+      <div className={styles.featureColumn}>
+        <FeaturedEvent slides={slides} loading={loading} index={index} onSelect={onSelect} />
+      </div>
       <UpcomingEvents events={events.slice(0, 5)} selectedId={current?.id} onSelect={selectEvent} />
     </div>
   </section>;

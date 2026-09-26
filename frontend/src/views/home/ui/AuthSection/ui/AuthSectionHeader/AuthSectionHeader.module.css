@@ -1,0 +1,21 @@
+.header {
+  padding-bottom: 0.75rem;
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  margin-top: 0.25rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
