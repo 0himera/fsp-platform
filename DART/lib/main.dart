@@ -37,6 +37,7 @@ import 'features/results/results.dart';
 import 'pages/auth/auth.dart';
 import 'pages/home/home.dart';
 import 'shared/api/api.dart';
+import 'shared/ui/ui.dart';
 
 void main() => runApp(FpsApp(services: AppServices.http()));
 
@@ -128,10 +129,9 @@ class FpsApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Федерация спортивного программирования',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.darkTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
         home: const AuthGate(),
       ),
     );

@@ -1,40 +1,45 @@
-/// Заглушка «пусто» — один виджет на все списки приложения.
-///
-/// Держим её в `shared/ui`, а не пишем каждый раз `Center(Text(...))`: пустой
-/// экран обязан объяснять, ЧТО делать дальше («выберите турнир»), а не молчать,
-/// и формулировки должны быть одинаковыми во всём приложении.
-library;
-
 import 'package:flutter/material.dart';
 
 class EmptyNotice extends StatelessWidget {
   const EmptyNotice({super.key, required this.text, this.icon});
 
   final String text;
-
-  /// Иконка необязательная: в диалоге она не нужна, в списке уместна.
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                size: 40,
-                color: Theme.of(context).colorScheme.outline,
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161920),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF272B35)),
+                ),
+                child: Icon(
+                  icon,
+                  size: 28,
+                  color: const Color(0xFF9AA2B1),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
             ],
             Text(
               text,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF9AA2B1),
+                height: 1.45,
+              ),
             ),
           ],
         ),

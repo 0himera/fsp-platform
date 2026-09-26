@@ -1,46 +1,64 @@
-// Material даёт нам Widget, BuildContext, ElevatedButton, Color и Text.
 import 'package:flutter/material.dart';
 
-/// Кнопка приложения — базовый UI-примитив слоя `shared`.
-///
-/// Проще не сделать: принимает текст, цвет и действие. Вся логика —
-/// «отдать Flutter то, что попросили». Нужна она в одном месте, потому что
-/// радиус и высота тогда будут одинаковыми у всех кнопок в приложении.
 class AppButton extends StatelessWidget {
   const AppButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.color,
+    this.textColor,
+    this.icon,
   });
 
-  /// Надпись на кнопке.
   final String text;
-
-  /// Функция, которая выполнится по нажатию. Если передашь `null`,
-  /// ElevatedButton сам затемнит кнопку и сделает её некликабельной.
   final VoidCallback? onPressed;
-
-  /// Цвет фона. Необязательный: тогда берём основной цвет темы,
-  /// и кнопка автоматически подстраивается под тёмную/светлую тему.
   final Color? color;
+  final Color? textColor;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        // Если цвет не задан — берём цвет темы (оператор ?? = «или»).
-        backgroundColor: color ?? Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white, // текст всегда белый
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
-            12,
-          ), // единый скруг для всех кнопок
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = color ?? (isDark ? const Color(0xFFF4F5F7) : const Color(0xFF11141A));
+    final fg = textColor ?? (isDark ? const Color(0xFF0D0F12) : const Color(0xFFFFFFFF));
+
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bg,
+          foregroundColor: fg,
+          disabledBackgroundColor: bg.withValues(alpha: 0.35),
+          disabledForegroundColor: fg.withValues(alpha: 0.35),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
-        minimumSize: const Size(0, 48), // минимум по высоте — удобно пальцем
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: fg),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+                color: fg,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Text(text),
     );
   }
 }
