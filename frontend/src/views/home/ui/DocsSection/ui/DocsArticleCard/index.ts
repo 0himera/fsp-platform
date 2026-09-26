@@ -1,0 +1,1 @@
+export { DocsArticleCard } from "./DocsArticleCard";

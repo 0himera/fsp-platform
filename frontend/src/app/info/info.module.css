@@ -1,3 +1,11 @@
-.page { width:min(var(--site-width),3200px); margin:0 auto; padding:clamp(32px,3vw,96px) 0 clamp(48px,4vw,120px); }
-@media (max-width:1180px) { .page { width:100%; padding-right:var(--site-gutter); padding-left:var(--site-gutter); } }
-@media (max-width:650px) { .page { padding-top:30px; padding-bottom:50px; } }
+.page {
+  width: min(var(--site-width), 3200px);
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 48px) 0 clamp(48px, 5vw, 96px);
+}
+@media (max-width: 1180px) {
+  .page {
+    width: 100%;
+    padding-inline: var(--site-gutter);
+  }
+}

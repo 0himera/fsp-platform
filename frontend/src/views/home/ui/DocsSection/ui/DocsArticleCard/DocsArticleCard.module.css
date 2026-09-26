@@ -1,0 +1,13 @@
+.card { display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); cursor: pointer; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.card:hover { transform: translateY(-3px); border-color: var(--wine); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); }
+.card:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.cardTop { display: flex; align-items: flex-start; gap: 14px; }
+.iconWrap { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; background: rgba(197, 22, 48, 0.12); color: var(--wine); }
+.meta { display: flex; flex-direction: column; gap: 4px; }
+.title { margin: 0; font-size: 16px; font-weight: 700; color: var(--foreground); line-height: 1.3; }
+.description { margin: 0; font-size: 11px; color: var(--muted-foreground); font-family: "JetBrains Mono", monospace; line-height: 1.4; }
+.summary { margin: 0; font-size: 13px; color: var(--muted-foreground); line-height: 1.6; }
+.footer { display: flex; align-items: center; padding-top: 14px; border-top: 1px solid var(--border); }
+.action { display: inline-flex; align-items: center; gap: 8px; color: var(--wine); font: 700 11px "JetBrains Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+.arrow { transition: transform .15s ease; }
+.card:hover .arrow { transform: translate(2px, -2px); }

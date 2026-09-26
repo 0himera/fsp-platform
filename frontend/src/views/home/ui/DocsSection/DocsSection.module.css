@@ -1,32 +1,8 @@
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 3rem;
-  margin-bottom: 3rem;
-  scroll-margin-top: 5rem;
-}
-.header { display: flex; flex-direction: column; gap: 0.25rem; }
-.heading { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-.description { font-size: 0.95rem; color: var(--muted-foreground, #71717a); }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
-.card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 260px;
-  transition: border-color 150ms ease, transform 150ms ease;
-  cursor: pointer;
-}
-.card:hover { transform: translateY(-2px); border-color: var(--wine); }
-.card:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
-.cardTitle { font-size: 1.125rem; font-weight: 600; }
-.cardBody { font-size: 0.875rem; color: var(--muted-foreground, #71717a); line-height: 1.5; }
-.openArticle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 0; border: 0; background: transparent; color: var(--wine); font: 700 11px "JetBrains Mono",monospace; cursor: pointer; }
-.openArticle:hover { text-decoration: underline; text-underline-offset: 4px; }
-.link { color: #2563eb; text-decoration: underline; }
-.documents { display: grid; gap: .65rem; padding: 1rem; border: 1px solid #e2e7f0; border-radius: 8px; background: #fff; }
-.documents h3 { margin: 0; font-size: 1rem; }
-.documents > div { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem 0; border-top: 1px solid #eeeae5; }
-.documents a { color: #84243b; }
-.documents button { width: max-content; padding: .5rem .75rem; border: 0; border-radius: 4px; background: #84243b; color: #fff; cursor: pointer; }
+.section { display: flex; flex-direction: column; gap: 24px; }
+.header { display: flex; flex-direction: column; gap: 8px; }
+.badge { color: var(--wine); font: 700 10px "JetBrains Mono", monospace; letter-spacing: .12em; text-transform: uppercase; }
+.heading { margin: 0; font-size: clamp(24px, 2.5vw, 34px); font-weight: 800; color: var(--foreground); letter-spacing: -0.02em; }
+.description { margin: 0; font-size: 14px; color: var(--muted-foreground); line-height: 1.5; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 960px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
