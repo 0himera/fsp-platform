@@ -31,7 +31,7 @@ class ApiConfig {
   /// Значение из `--dart-define`, либо локальный бэкенд.
   static const String defaultBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8080',
+    defaultValue: 'http://10.8.1.8:3000',
   );
 
   /// Базовый адрес БЕЗ завершающего слэша.
