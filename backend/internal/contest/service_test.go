@@ -28,6 +28,12 @@ func TestScoreRecall(t *testing.T) {
 			positive: "0", want: 1,
 		},
 		{
+			name:     "handles utf-8 bom prefix",
+			data:     "\xef\xbb\xbfid,prediction\na,1\nb,0\n",
+			expected: map[string]string{"a": "1", "b": "0"},
+			positive: "1", want: 1,
+		},
+		{
 			name:     "rejects missing rows",
 			data:     "id,prediction\na,1\n",
 			expected: map[string]string{"a": "1", "b": "0"},
@@ -92,6 +98,7 @@ func TestValidPublicCSV(t *testing.T) {
 		want bool
 	}{
 		{name: "all IDs once", csv: "id,feature\nrow-1,0.2\nrow-2,0.8\n", want: true},
+		{name: "handles utf-8 bom", csv: "\ufeffid,feature\nrow-1,0.2\nrow-2,0.8\n", want: true},
 		{name: "accepts extra feature columns", csv: "id,x,y\nrow-1,0.2,0.4\nrow-2,0.8,0.1\n", want: true},
 		{name: "rejects wrong header", csv: "name,feature\nrow-1,0.2\nrow-2,0.8\n"},
 		{name: "rejects unknown ID", csv: "id,feature\nrow-1,0.2\nother,0.8\n"},

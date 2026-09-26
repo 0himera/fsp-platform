@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
@@ -100,7 +101,7 @@ func (s Service) Create(ctx context.Context, competitionID int64, mode, instruct
 	if err != nil {
 		return Contest{}, err
 	}
-	if format != "individual" || status == "completed" || !startsAt.After(time.Now()) || !endsAt.After(time.Now()) {
+	if format != "individual" || status == "completed" || !endsAt.After(time.Now()) {
 		return Contest{}, ErrInvalid
 	}
 	_, err = s.DB.Exec(ctx, `INSERT INTO contests(competition_id,mode,instructions) VALUES($1,$2,$3)`, competitionID, mode, strings.TrimSpace(instructions))
@@ -177,16 +178,16 @@ func (s Service) AddTask(ctx context.Context, competitionID int64, mode string, 
 	} else if mode != "algorithm" {
 		return Task{}, ErrInvalid
 	}
-	var startsAt time.Time
+	var endsAt time.Time
 	var finalizedAt *time.Time
-	err := s.DB.QueryRow(ctx, `SELECT c.starts_at,x.finalized_at FROM competitions c JOIN contests x ON x.competition_id=c.id WHERE c.id=$1`, competitionID).Scan(&startsAt, &finalizedAt)
+	err := s.DB.QueryRow(ctx, `SELECT c.ends_at,x.finalized_at FROM competitions c JOIN contests x ON x.competition_id=c.id WHERE c.id=$1`, competitionID).Scan(&endsAt, &finalizedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Task{}, ErrNotFound
 	}
 	if err != nil {
 		return Task{}, err
 	}
-	if finalizedAt != nil || !startsAt.After(time.Now()) {
+	if finalizedAt != nil || !endsAt.After(time.Now()) {
 		return Task{}, ErrClosed
 	}
 	if input.Position < 1 {
@@ -206,9 +207,10 @@ func (s Service) AddTask(ctx context.Context, competitionID int64, mode string, 
 }
 
 func validPublicCSV(content string, expected map[string]string) bool {
+	content = strings.TrimPrefix(content, "\ufeff")
 	reader := csv.NewReader(strings.NewReader(content))
 	header, err := reader.Read()
-	if err != nil || len(header) < 2 || strings.TrimSpace(strings.ToLower(header[0])) != "id" {
+	if err != nil || len(header) < 2 || strings.TrimPrefix(strings.TrimSpace(strings.ToLower(header[0])), "\ufeff") != "id" {
 		return false
 	}
 	reader.FieldsPerRecord = len(header)
@@ -535,10 +537,11 @@ func (s Service) failJob(ctx context.Context, submissionID int64, message string
 }
 
 func scoreRecall(data []byte, expected map[string]string, positive string) (float64, string, error) {
+	data = bytes.TrimPrefix(data, []byte("\xef\xbb\xbf"))
 	reader := csv.NewReader(strings.NewReader(string(data)))
 	reader.FieldsPerRecord = 2
 	header, err := reader.Read()
-	if err != nil || len(header) != 2 || strings.TrimSpace(strings.ToLower(header[0])) != "id" || strings.TrimSpace(strings.ToLower(header[1])) != "prediction" {
+	if err != nil || len(header) != 2 || strings.TrimPrefix(strings.TrimSpace(strings.ToLower(header[0])), "\ufeff") != "id" || strings.TrimSpace(strings.ToLower(header[1])) != "prediction" {
 		return 0, "", errors.New("ожидаются CSV-колонки id,prediction")
 	}
 	predictions := make(map[string]string, len(expected))
