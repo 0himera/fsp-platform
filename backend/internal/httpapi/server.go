@@ -21,6 +21,7 @@ import (
 	"github.com/0himera/fsp-platform/internal/auth"
 	"github.com/0himera/fsp-platform/internal/competitions"
 	"github.com/0himera/fsp-platform/internal/contest"
+	"github.com/0himera/fsp-platform/internal/codeforces"
 	"github.com/0himera/fsp-platform/internal/rating"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -33,6 +34,7 @@ type Server struct {
 	Athletes     athletes.Service
 	Competitions competitions.Service
 	Contests     contest.Service
+	Codeforces   codeforces.Service
 	Rating       rating.Service
 	FrontendDir  string
 	Mailer       interface {
@@ -58,6 +60,7 @@ func New(db *pgxpool.Pool, frontendDir string, mailer interface {
 		Athletes:     athletes.Service{DB: db},
 		Competitions: competitions.Service{DB: db},
 		Contests:     contest.Service{DB: db},
+		Codeforces:   codeforces.NewService(db),
 		Rating:       rating.Service{DB: db},
 		FrontendDir:  frontendDir,
 		Mailer:       mailer,
@@ -126,6 +129,11 @@ func (s *Server) Handler() http.Handler {
 		s.registerContestRoutes(mux)
 	}
 	mux.HandleFunc("POST /internal/competitions/{id}/results", s.publishContestResultsInternal)
+	mux.HandleFunc("GET /api/competitions/{id}/codeforces", s.getCodeforces)
+	mux.HandleFunc("POST /api/competitions/{id}/codeforces/link", s.linkCodeforces)
+	mux.HandleFunc("POST /api/competitions/{id}/codeforces/import-tasks", s.importCodeforcesTasks)
+	mux.HandleFunc("POST /api/competitions/{id}/codeforces/sync", s.syncCodeforcesStandings)
+	mux.HandleFunc("GET /api/codeforces/user/{handle}", s.getCodeforcesUser)
 	mux.HandleFunc("GET /api/competitions/{id}/export", s.exportCompetition)
 	mux.HandleFunc("GET /api/competitions/{id}/judges", s.competitionJudges)
 	mux.HandleFunc("POST /api/competitions/{id}/judges", s.addCompetitionJudge)

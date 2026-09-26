@@ -74,6 +74,7 @@ type Athlete struct {
 	Achievements        []Achievement `json:"achievements"`
 	FeaturedAchievement *Achievement  `json:"featured_achievement"`
 	FeaturedCode        string        `json:"-"`
+	CodeforcesHandle    string        `json:"codeforces_handle"`
 }
 
 func achievements(results []Result) []Achievement {
@@ -208,7 +209,7 @@ func Calculate(a Athlete, asOf time.Time) Athlete {
 type Service struct{ DB *pgxpool.Pool }
 
 func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
-	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.city,a.organization,a.rank_code,a.avatar_url,a.featured_achievement_code FROM athletes a ORDER BY a.user_id`)
+	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.city,a.organization,a.rank_code,a.avatar_url,a.featured_achievement_code,COALESCE(a.codeforces_handle,'') FROM athletes a ORDER BY a.user_id`)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 	byID := map[int64]int{}
 	for rows.Next() {
 		var a Athlete
-		if err := rows.Scan(&a.ID, &a.FullName, &a.City, &a.Organization, &a.RankCode, &a.AvatarURL, &a.FeaturedCode); err != nil {
+		if err := rows.Scan(&a.ID, &a.FullName, &a.City, &a.Organization, &a.RankCode, &a.AvatarURL, &a.FeaturedCode, &a.CodeforcesHandle); err != nil {
 			rows.Close()
 			return nil, err
 		}

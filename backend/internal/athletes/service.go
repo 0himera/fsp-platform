@@ -11,10 +11,11 @@ import (
 var ErrNotFound = errors.New("athlete not found")
 
 type Update struct {
-	FullName     string   `json:"full_name"`
-	Organization string   `json:"organization"`
-	City         string   `json:"city"`
-	Disciplines  []string `json:"disciplines"`
+	FullName         string   `json:"full_name"`
+	Organization     string   `json:"organization"`
+	City             string   `json:"city"`
+	Disciplines      []string `json:"disciplines"`
+	CodeforcesHandle string   `json:"codeforces_handle"`
 }
 
 type Service struct{ DB *pgxpool.Pool }
@@ -25,7 +26,7 @@ func (s Service) Update(ctx context.Context, userID int64, input Update) error {
 		return err
 	}
 	defer tx.Rollback(ctx)
-	command, err := tx.Exec(ctx, `UPDATE athletes SET full_name=$2,organization=$3,city=$4 WHERE user_id=$1`, userID, strings.TrimSpace(input.FullName), strings.TrimSpace(input.Organization), strings.TrimSpace(input.City))
+	command, err := tx.Exec(ctx, `UPDATE athletes SET full_name=$2,organization=$3,city=$4,codeforces_handle=$5 WHERE user_id=$1`, userID, strings.TrimSpace(input.FullName), strings.TrimSpace(input.Organization), strings.TrimSpace(input.City), strings.TrimSpace(input.CodeforcesHandle))
 	if err != nil {
 		return err
 	}
