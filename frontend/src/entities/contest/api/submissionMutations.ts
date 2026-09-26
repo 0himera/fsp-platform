@@ -36,7 +36,12 @@ export function useReviewContestSubmissionMutation(id: number) {
 export function useFinalizeContestMutation(id: number) {
   const refresh = useRefreshContest(id);
   return useMutation({
-    mutationFn: () => apiClient.post(`/api/competitions/${id}/contest/finalize`),
+    mutationFn: (options?: { force?: boolean }) =>
+      apiClient.post(
+        options?.force
+          ? `/api/competitions/${id}/contest/finalize?force=true`
+          : `/api/competitions/${id}/contest/finalize`
+      ),
     onSuccess: refresh,
   });
 }

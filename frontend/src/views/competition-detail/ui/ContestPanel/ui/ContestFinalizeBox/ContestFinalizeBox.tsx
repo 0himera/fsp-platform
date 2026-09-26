@@ -14,11 +14,15 @@ export function ContestFinalizeBox({ competitionId, mayFinalize }: Props) {
   const finalize = useFinalizeContestMutation(competitionId);
   const [errorText, setErrorText] = React.useState("");
 
-  const handleFinalize = () => {
+  const handleFinalize = (force = false) => {
     setErrorText("");
-    finalize.mutate(undefined, {
-      onError: (err) => setErrorText(err instanceof Error ? err.message : "Не удалось завершить контест"),
-    });
+    finalize.mutate(
+      { force },
+      {
+        onError: (err) =>
+          setErrorText(err instanceof Error ? err.message : "Не удалось завершить контест"),
+      }
+    );
   };
 
   return (
@@ -28,9 +32,25 @@ export function ContestFinalizeBox({ competitionId, mayFinalize }: Props) {
           ? "Все оценки будут внесены в протокол турнира и учтены в рейтинге."
           : "Завершить контест можно после окончания времени турнира."}
       </p>
-      <Button variant="secondary" disabled={!mayFinalize || finalize.isPending} onClick={handleFinalize}>
-        {finalize.isPending ? "Публикация…" : "Завершить и опубликовать результаты"}
-      </Button>
+      <div className={styles.actions}>
+        <Button
+          variant="secondary"
+          disabled={!mayFinalize || finalize.isPending}
+          onClick={() => handleFinalize(false)}
+        >
+          {finalize.isPending ? "Публикация…" : "Завершить и опубликовать результаты"}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className={styles.forceBtn}
+          disabled={finalize.isPending}
+          onClick={() => handleFinalize(true)}
+          title="Завершить турнир и опубликовать текущие результаты"
+        >
+          {finalize.isPending ? "Завершение…" : "Форсированное завершение"}
+        </Button>
+      </div>
       {errorText && <p className={styles.error}>{errorText}</p>}
     </div>
   );

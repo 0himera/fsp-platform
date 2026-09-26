@@ -257,12 +257,18 @@ func (s *Server) finalizeContest(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]bool{"finalized": true})
 		return
 	}
+	force := r.URL.Query().Get("force") == "true" || r.URL.Query().Get("force") == "1"
+	if force {
+		now := time.Now().UTC()
+		_, _ = s.DB.Exec(r.Context(), `UPDATE competitions SET ends_at=LEAST(ends_at,$2), registration_deadline=LEAST(registration_deadline,$2), updated_at=now() WHERE id=$1`, competitionID, now)
+		_, _ = s.DB.Exec(r.Context(), `UPDATE contest_submissions SET status='graded', score=COALESCE(score,0), automatic_score=COALESCE(automatic_score,0), verdict=CASE WHEN verdict='' THEN 'Завершено досрочно' ELSE verdict END WHERE competition_id=$1 AND status IN ('submitted','queued','checking')`, competitionID)
+	}
 	results, err := s.Contests.BuildProtocol(r.Context(), competitionID)
 	if err != nil {
 		handleContestError(w, err)
 		return
 	}
-	if err := s.publishContestResults(r.Context(), competitionID, organizer.ID, results); err != nil {
+	if err := s.publishContestResults(r.Context(), competitionID, organizer.ID, results, force); err != nil {
 		if s.PlatformInternalURL != "" {
 			slog.Error("contest result publication failed", "competition_id", competitionID, "error", err)
 			writeError(w, http.StatusBadGateway, "Не удалось передать протокол платформе")
@@ -278,8 +284,14 @@ func (s *Server) finalizeContest(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]bool{"finalized": true})
 }
 
-func (s *Server) publishContestResults(ctx context.Context, competitionID, organizerID int64, results []competitions.Result) error {
+func (s *Server) publishContestResults(ctx context.Context, competitionID, organizerID int64, results []competitions.Result, force bool) error {
 	if s.PlatformInternalURL == "" {
+		if force {
+			now := time.Now().UTC()
+			if _, err := s.DB.Exec(ctx, `UPDATE competitions SET ends_at=LEAST(ends_at,$2), registration_deadline=LEAST(registration_deadline,$2), updated_at=now() WHERE id=$1`, competitionID, now); err != nil {
+				return err
+			}
+		}
 		return s.Competitions.PublishResults(ctx, competitionID, organizerID, results)
 	}
 	if s.ContestResultsToken == "" {
@@ -290,6 +302,9 @@ func (s *Server) publishContestResults(ctx context.Context, competitionID, organ
 		return err
 	}
 	endpoint := strings.TrimRight(s.PlatformInternalURL, "/") + "/internal/competitions/" + strconv.FormatInt(competitionID, 10) + "/results"
+	if force {
+		endpoint += "?force=true"
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -324,6 +339,14 @@ func (s *Server) publishContestResultsInternal(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+	force := r.URL.Query().Get("force") == "true" || r.URL.Query().Get("force") == "1"
+	if force {
+		now := time.Now().UTC()
+		if _, err := s.DB.Exec(r.Context(), `UPDATE competitions SET ends_at=LEAST(ends_at,$2), registration_deadline=LEAST(registration_deadline,$2), updated_at=now() WHERE id=$1`, competitionID, now); err != nil {
+			handleError(w, err)
+			return
+		}
 	}
 	publisherID, err := strconv.ParseInt(r.Header.Get("X-Arena-Publisher-ID"), 10, 64)
 	if err != nil || publisherID < 1 {
