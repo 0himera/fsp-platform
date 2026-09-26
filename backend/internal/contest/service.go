@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -80,12 +81,21 @@ type Submission struct {
 	ReviewedAt     *time.Time `json:"reviewed_at,omitempty"`
 }
 
+type TaskResult struct {
+	TaskID   int64   `json:"task_id"`
+	Title    string  `json:"title"`
+	Score    float64 `json:"score"`
+	Attempts int     `json:"attempts"`
+}
+
 type Leader struct {
-	AthleteID int64   `json:"athlete_id"`
-	FullName  string  `json:"full_name"`
-	Place     int     `json:"place"`
-	Score     float64 `json:"score"`
-	MaxScore  float64 `json:"max_score"`
+	AthleteID     int64        `json:"athlete_id"`
+	FullName      string       `json:"full_name"`
+	Place         int          `json:"place"`
+	Score         float64      `json:"score"`
+	MaxScore      float64      `json:"max_score"`
+	TotalAttempts int          `json:"total_attempts"`
+	Tasks         []TaskResult `json:"tasks"`
 }
 
 func (s Service) Create(ctx context.Context, competitionID int64, mode, instructions string) (Contest, error) {
@@ -412,37 +422,102 @@ func (s Service) Review(ctx context.Context, competitionID, submissionID, review
 }
 
 func (s Service) Leaderboard(ctx context.Context, competitionID int64) ([]Leader, error) {
-	var maxScore float64
-	if err := s.DB.QueryRow(ctx, `SELECT COALESCE(sum(max_points),0) FROM contest_tasks WHERE competition_id=$1`, competitionID).Scan(&maxScore); err != nil {
-		return nil, err
-	}
-	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,COALESCE(sum(best.score),0)::float8
-		FROM registrations r JOIN athletes a ON a.user_id=r.athlete_id
-		LEFT JOIN LATERAL (
-			SELECT s.task_id,max(COALESCE(s.score,s.automatic_score,0))::float8 AS score
-			FROM contest_submissions s WHERE s.competition_id=r.competition_id AND s.athlete_id=r.athlete_id AND s.status IN ('graded','invalid')
-			GROUP BY s.task_id
-		) best ON true
-		WHERE r.competition_id=$1 GROUP BY a.user_id,a.full_name ORDER BY 3 DESC,a.full_name,a.user_id`, competitionID)
+	taskRows, err := s.DB.Query(ctx, `SELECT id, title, max_points FROM contest_tasks WHERE competition_id=$1 ORDER BY position, id`, competitionID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	items := []Leader{}
-	for rows.Next() {
-		var item Leader
-		item.MaxScore = maxScore
-		if err := rows.Scan(&item.AthleteID, &item.FullName, &item.Score); err != nil {
+	defer taskRows.Close()
+	type taskInfo struct {
+		id        int64
+		title     string
+		maxPoints float64
+	}
+	tasks := []taskInfo{}
+	var maxScore float64
+	for taskRows.Next() {
+		var t taskInfo
+		if err := taskRows.Scan(&t.id, &t.title, &t.maxPoints); err != nil {
 			return nil, err
+		}
+		maxScore += t.maxPoints
+		tasks = append(tasks, t)
+	}
+	athRows, err := s.DB.Query(ctx, `SELECT a.user_id, a.full_name FROM registrations r JOIN athletes a ON a.user_id=r.athlete_id WHERE r.competition_id=$1 ORDER BY a.full_name, a.user_id`, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	defer athRows.Close()
+	type athInfo struct {
+		id   int64
+		name string
+	}
+	athletes := []athInfo{}
+	for athRows.Next() {
+		var a athInfo
+		if err := athRows.Scan(&a.id, &a.name); err != nil {
+			return nil, err
+		}
+		athletes = append(athletes, a)
+	}
+	type stat struct {
+		attempts int
+		score    float64
+	}
+	stats := make(map[int64]map[int64]stat)
+	subRows, err := s.DB.Query(ctx, `SELECT athlete_id, task_id, count(*), max(COALESCE(score, automatic_score, 0))::float8
+		FROM contest_submissions WHERE competition_id=$1 GROUP BY athlete_id, task_id`, competitionID)
+	if err != nil {
+		return nil, err
+	}
+	defer subRows.Close()
+	for subRows.Next() {
+		var aID, tID int64
+		var attempts int
+		var score float64
+		if err := subRows.Scan(&aID, &tID, &attempts, &score); err != nil {
+			return nil, err
+		}
+		if stats[aID] == nil {
+			stats[aID] = make(map[int64]stat)
+		}
+		stats[aID][tID] = stat{attempts: attempts, score: score}
+	}
+	items := make([]Leader, 0, len(athletes))
+	for _, ath := range athletes {
+		item := Leader{
+			AthleteID:     ath.id,
+			FullName:      ath.name,
+			MaxScore:      maxScore,
+			Tasks:         make([]TaskResult, 0, len(tasks)),
+			TotalAttempts: 0,
+			Score:         0,
+		}
+		athStats := stats[ath.id]
+		for _, t := range tasks {
+			st := athStats[t.id]
+			item.Tasks = append(item.Tasks, TaskResult{
+				TaskID:   t.id,
+				Title:    t.title,
+				Score:    st.score,
+				Attempts: st.attempts,
+			})
+			item.Score += st.score
+			item.TotalAttempts += st.attempts
 		}
 		items = append(items, item)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Score != items[j].Score {
+			return items[i].Score > items[j].Score
+		}
+		if items[i].TotalAttempts != items[j].TotalAttempts {
+			return items[i].TotalAttempts < items[j].TotalAttempts
+		}
+		return items[i].FullName < items[j].FullName
+	})
 	place := 0
 	for i := range items {
-		if items[i].Score == 0 {
+		if items[i].Score == 0 && items[i].TotalAttempts == 0 {
 			place = len(items)
 		} else if i == 0 || items[i].Score != items[i-1].Score {
 			place = i + 1
