@@ -22,3 +22,46 @@ main { min-width:0; }
 @media (min-width:2000px) { html { font-size:clamp(17px,.82vw,22px); } }
 @media (max-width:780px) { :root { --site-gutter:18px; } }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --background:#111721;
+  --foreground:#edf1f7;
+  --card:var(--background);
+  --card-foreground:var(--foreground);
+  --popover:var(--background);
+  --popover-foreground:var(--foreground);
+  --secondary:var(--background);
+  --secondary-foreground:var(--foreground);
+  --muted:var(--background);
+  --muted-foreground:#c1c9d5;
+  --accent:var(--background);
+  --accent-foreground:var(--foreground);
+  --border:#303b4b;
+  --input:#303b4b;
+  --ring:#7164ff;
+  --ink:var(--foreground);
+  --muted-ink:#c1c9d5;
+  --paper:var(--background);
+  --line:#303b4b;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] main { background:var(--background); color:var(--foreground); }
+html[data-theme="dark"] .site-footer { color:var(--foreground); }
+html[data-theme="dark"] main :is(article,[class*="panel"],[class*="Panel"],[class*="card"],[class*="Card"],[class*="editor"],[class*="Editor"],[class*="messageCard"],[class*="dialog"],[class*="Dialog"],[class*="section"],[class*="Section"],[class*="metric"],[class*="Metric"],[class*="documents"],[class*="upload"],[class*="search"],[class*="Search"],[class*="empty"],[class*="Empty"],[class*="filters"],[class*="Filters"],[class*="tabs"],[class*="Tabs"],[class*="hero"],[class*="Hero"],[class*="method"],[class*="Method"],[class*="note"],[class*="Note"],[class*="next"],[class*="Next"],[class*="top"],[class*="Top"],[class*="close"],[class*="Close"]) { border-color:var(--border); background:var(--background); color:var(--foreground); box-shadow:none; }
+html[data-theme="dark"] main :is(h1,h2,h3,h4,h5,h6,p,strong,small,span,th,td,label,summary,li,a,button) { color:var(--foreground); }
+html[data-theme="dark"] main :is(input,select,textarea) { border-color:var(--border); background-color:var(--background); color:var(--foreground); }
+html[data-theme="dark"] main :is(input,textarea)::placeholder { color:var(--muted-foreground); }
+html[data-theme="dark"] main [class*="stage"] { background:var(--background); }
+html[data-theme="dark"] main [class*="caption"] { border-top:1px solid var(--border); color:var(--foreground); }
+html[data-theme="dark"] main button[aria-pressed="true"],
+html[data-theme="dark"] main [class*="row"]:hover,
+html[data-theme="dark"] main [aria-pressed="true"] { background:var(--background); color:var(--foreground); box-shadow:none; }
+html[data-theme="dark"] main [class*="own"]:hover { background:var(--background)!important; }
+html[data-theme="dark"] main [class*="status"] { background:rgba(17,23,33,.9); color:var(--foreground); }
+html[data-theme="dark"] main table,
+html[data-theme="dark"] main tr,
+html[data-theme="dark"] main th,
+html[data-theme="dark"] main td { border-color:var(--border); }
+html[data-theme="dark"] ::selection { background:#5144a6; color:#fff; }

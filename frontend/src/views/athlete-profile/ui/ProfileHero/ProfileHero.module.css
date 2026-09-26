@@ -2,7 +2,9 @@
 .identity { display:flex; align-items:center; gap:clamp(18px,1.4vw,38px); min-width:0; }
 .identity > div { min-width:0; }
 .identity > div > span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.13em; text-transform:uppercase; }
+.nameLine { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; }
 .identity h1 { margin:8px 0 9px; color:#132137; font-size:clamp(30px,2.7vw,68px); line-height:1.03; }
+.editButton { flex:none; }
 .identity p { display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin:0; color:#29364a; font-size:15px; }
 .identity p svg { color:var(--wine); }
 .identity > div > small { display:block; margin-top:6px; color:#8b929b; font:11px "JetBrains Mono",monospace; }

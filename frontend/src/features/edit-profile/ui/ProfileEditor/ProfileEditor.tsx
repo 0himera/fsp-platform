@@ -20,8 +20,8 @@ export function ProfileEditor({ athlete, disciplines, saving, onSave }: Props) {
   const submit = (event: React.FormEvent) => { event.preventDefault(); onSave({ full_name: name.trim(), city: city.trim(), organization: organization.trim(), disciplines: selected }); };
 
   return (
-    <details className={styles.editor}>
-      <summary>Редактировать профиль</summary>
+    <section className={styles.editor}>
+      <h2>Данные профиля</h2>
       <form className={styles.form} onSubmit={submit}>
         <label className={styles.wide}>Фото профиля<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) avatar.mutate(file); }} /></label>
         {athlete.avatar_url && <button type="button" onClick={() => avatar.mutate(null)} disabled={avatar.isPending}>Удалить фото</button>}
@@ -31,6 +31,6 @@ export function ProfileEditor({ athlete, disciplines, saving, onSave }: Props) {
         <fieldset><legend>Дисциплины · до 5</legend>{disciplines.map((item) => <label key={item.code}><input type="checkbox" checked={selected.includes(item.code)} onChange={() => toggle(item.code)} />{item.name}</label>)}</fieldset>
         <Button className={styles.submit} size="sm" disabled={saving}>{saving ? "Сохраняем…" : "Сохранить изменения"}</Button>
       </form>
-    </details>
+    </section>
   );
 }

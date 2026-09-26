@@ -1,5 +1,5 @@
 .editor { padding: 16px 18px; border: 1px solid #e2e7f0; border-radius: 8px; background: white; }
-.editor summary { color: #17243a; font-size: 13px; font-weight: 700; cursor: pointer; }
+.editor h2 { margin:0; color: #17243a; font-size: 16px; }
 .form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
 .form > label { display: grid; gap: 6px; color: #687384; font: 11px "JetBrains Mono", monospace; }
 .wide, .form fieldset { grid-column: 1 / -1; }
