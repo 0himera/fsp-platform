@@ -20,15 +20,12 @@ export function TeamRegistrationDialog({ competition, onClose }: Props) {
   const maxSize = competition.max_team_size || 5;
 
   const handleSubmit = (name: string, description: string, emailList: string[]) => {
-    create.mutate(
-      { competitionId: competition.id, name, description },
-      {
-        onSuccess: ({ team, invite_url }: CreateTeamResponse) => {
-          setInviteUrl(invite_url);
-          if (emailList.length) invite.mutate({ competitionId: competition.id, teamId: team.id, emails: emailList });
-        },
-      }
-    );
+    create.mutate({ competitionId: competition.id, name, description }, {
+      onSuccess: ({ team, invite_url }: CreateTeamResponse) => {
+        setInviteUrl(invite_url);
+        if (emailList.length) invite.mutate({ competitionId: competition.id, teamId: team.id, emails: emailList });
+      },
+    });
   };
 
   return (
@@ -38,12 +35,7 @@ export function TeamRegistrationDialog({ competition, onClose }: Props) {
         <h2 id="team-create-title">Создать команду и подать заявку</h2>
         <p>Вы станете капитаном. В команде может быть до {maxSize} участников, включая вас.</p>
         {!inviteUrl ? (
-          <TeamRegistrationForm
-            maxSize={maxSize}
-            isPending={create.isPending}
-            errorMessage={create.error?.message}
-            onSubmit={handleSubmit}
-          />
+          <TeamRegistrationForm maxSize={maxSize} isPending={create.isPending} errorMessage={create.error?.message} onSubmit={handleSubmit} />
         ) : (
           <TeamRegistrationSuccess
             inviteUrl={inviteUrl}

@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.paragraph { margin: 0; }
+.list { margin: 2px 0 4px 18px; padding: 0; list-style-type: disc; }
+.listItem { margin-bottom: 2px; }
+.numItem { display: flex; gap: 6px; margin: 2px 0; }
+.numPrefix { font-weight: 600; flex-shrink: 0; }
+.h3 { font-size: 14.5px; font-weight: 700; margin: 6px 0 2px 0; }
+.h4 { font-size: 13.5px; font-weight: 600; margin: 4px 0 2px 0; }
+.bold { font-weight: 700; }
+.code {
+  font-family: monospace;
+  background-color: var(--muted, rgba(0, 0, 0, 0.06));
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+:global([data-theme="dark"]) .code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.spacing { height: 4px; }
