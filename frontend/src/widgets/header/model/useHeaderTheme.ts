@@ -10,7 +10,7 @@ export function useHeaderTheme() {
     const dark = savedTheme === "dark";
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     document.documentElement.style.colorScheme = dark ? "dark" : "light";
-    setIsDark(dark);
+    queueMicrotask(() => setIsDark(dark));
   }, []);
 
   const toggleTheme = () => {

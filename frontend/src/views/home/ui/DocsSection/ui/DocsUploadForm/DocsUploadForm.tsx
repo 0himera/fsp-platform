@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useUploadDocumentMutation } from "@/entities/document";
-import styles from "../../DocsSection.module.css";
+import styles from "./DocsUploadForm.module.css";
 
 export const DocsUploadForm: React.FC = () => {
   const upload = useUploadDocumentMutation();

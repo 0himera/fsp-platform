@@ -1,0 +1,1 @@
+export { TeamRegistrationSuccess } from "./TeamRegistrationSuccess";

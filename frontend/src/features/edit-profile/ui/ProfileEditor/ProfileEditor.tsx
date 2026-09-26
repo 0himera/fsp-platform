@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import type { Athlete, Discipline } from "@/shared/api";
-import type { UpdateProfileInput } from "@/entities/user";
-import { useAvatarMutation } from "@/entities/user";
+import { type UpdateProfileInput, useAvatarMutation } from "@/features/update-profile";
 import { Button, Input } from "@/shared/ui";
 import styles from "./ProfileEditor.module.css";
 
@@ -15,7 +14,14 @@ export function ProfileEditor({ athlete, disciplines, saving, onSave }: Props) {
   const [organization, setOrganization] = React.useState(athlete.organization);
   const [selected, setSelected] = React.useState(athlete.disciplines);
   const avatar = useAvatarMutation();
-  React.useEffect(() => { setName(athlete.full_name); setCity(athlete.city); setOrganization(athlete.organization); setSelected(athlete.disciplines); }, [athlete]);
+  React.useEffect(() => {
+    queueMicrotask(() => {
+      setName(athlete.full_name);
+      setCity(athlete.city);
+      setOrganization(athlete.organization);
+      setSelected(athlete.disciplines);
+    });
+  }, [athlete]);
   const toggle = (code: string) => setSelected((values) => values.includes(code) ? values.filter((item) => item !== code) : values.length < 5 ? [...values, code] : values);
   const submit = (event: React.FormEvent) => { event.preventDefault(); onSave({ full_name: name.trim(), city: city.trim(), organization: organization.trim(), disciplines: selected }); };
 

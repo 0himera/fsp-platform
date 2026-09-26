@@ -20,7 +20,7 @@ export default function AthletePublicPage() {
   const [selectedRank, setSelectedRank] = React.useState("none");
 
   React.useEffect(() => {
-    if (athlete) setSelectedRank(athlete.rank_code || "none");
+    if (athlete) queueMicrotask(() => setSelectedRank(athlete.rank_code || "none"));
   }, [athlete]);
 
   if (isLoading) return <main className={styles.message}>Загружаем профиль спортсмена…</main>;

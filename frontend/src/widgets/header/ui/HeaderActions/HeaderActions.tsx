@@ -11,7 +11,7 @@ import { useHeaderTheme } from "../../model/useHeaderTheme";
 import styles from "./HeaderActions.module.css";
 
 interface HeaderActionsProps {
-  me?: MeResponse;
+  me?: MeResponse | null;
   accountHref: string;
 }
 

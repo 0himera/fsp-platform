@@ -2,7 +2,7 @@ import * as React from "react";
 import { ArrowUpRight, X } from "lucide-react";
 import { APP_CONFIG } from "@/shared/config";
 import type { DocArticle } from "../../model/articles";
-import styles from "../../DocsSection.module.css";
+import styles from "./DocsArticleDialog.module.css";
 
 interface Props {
   article: DocArticle | null;

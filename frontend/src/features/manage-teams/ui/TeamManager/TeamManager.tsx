@@ -2,24 +2,61 @@
 
 import * as React from "react";
 import type { Team } from "@/shared/api";
-import { useCreateTeamInviteLinkMutation, useDeleteTeamMutation, useInviteTeamMembersMutation, useRemoveTeamMemberMutation, useUpdateTeamMutation } from "@/entities/competition";
+import { useDeleteTeamMutation } from "../../api/manageTeamsApi";
+import { useRemoveTeamMemberMutation } from "../../api/manageTeamsInviteApi";
+import { TeamInvites } from "../TeamInvites";
+import { TeamSettings } from "../TeamSettings";
 import styles from "./TeamManager.module.css";
 
-export function TeamManager({ competitionId, team, maxSize, athleteId }: { competitionId: number; team: Team; maxSize: number; athleteId: number }) {
-  const [name, setName] = React.useState(team.name);
-  const [description, setDescription] = React.useState(team.description || "");
-  const [emails, setEmails] = React.useState("");
-  const [inviteUrl, setInviteUrl] = React.useState("");
-  const update = useUpdateTeamMutation();
+interface TeamManagerProps {
+  competitionId: number;
+  team: Team;
+  maxSize: number;
+  athleteId: number;
+}
+
+export function TeamManager({ competitionId, team, maxSize, athleteId }: TeamManagerProps) {
   const deleteTeam = useDeleteTeamMutation();
-  const createLink = useCreateTeamInviteLinkMutation();
-  const invite = useInviteTeamMembersMutation();
   const remove = useRemoveTeamMemberMutation();
   const isCaptain = team.captain_id === athleteId;
-  const emailList = emails.split(/[\s,;]+/).filter(Boolean);
-  return <section className={styles.panel}><header><div><span>Команда · до {maxSize} участников</span><h3>{team.name}</h3></div>{isCaptain && <button className={styles.delete} disabled={deleteTeam.isPending} onClick={() => { if (window.confirm("Удалить команду и отменить заявки всех её участников?")) deleteTeam.mutate({ competitionId, teamId: team.id }); }}>Распустить команду</button>}</header>
-    {team.description && <p>{team.description}</p>}<ul>{team.members.map((member) => <li key={member.athlete_id}><span>{member.full_name}{member.athlete_id === team.captain_id && <b>Капитан</b>}</span>{member.athlete_id !== team.captain_id && isCaptain && <button className={styles.remove} disabled={remove.isPending} onClick={() => remove.mutate({ competitionId, teamId: team.id, athleteId: member.athlete_id })}>Удалить участника</button>}</li>)}</ul>
-    {!isCaptain ? <small>Изменять состав и приглашать участников может только капитан.</small> : <div className={styles.controls}><details><summary>Настройки команды</summary><form onSubmit={(event) => { event.preventDefault(); update.mutate({ competitionId, teamId: team.id, name, description }); }}><input required minLength={2} maxLength={100} value={name} onChange={(event) => setName(event.target.value)} /><textarea maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} /><button disabled={update.isPending}>Сохранить</button></form></details>
-    <div className={styles.invites}><label>Пригласить по почте<input value={emails} onChange={(event) => setEmails(event.target.value)} placeholder="email@example.com" /></label><button disabled={!emailList.length || invite.isPending} onClick={() => invite.mutate({ competitionId, teamId: team.id, emails: emailList })}>Отправить приглашения</button><button className={styles.linkButton} disabled={createLink.isPending} onClick={() => createLink.mutate({ competitionId, teamId: team.id }, { onSuccess: (data) => setInviteUrl(data.invite_url) })}>Создать ссылку-приглашение</button>{inviteUrl && <input readOnly value={inviteUrl} onFocus={(event) => event.currentTarget.select()} />}{invite.isSuccess && <small>Отправлено: {invite.data.sent.length}; ошибки: {invite.data.failed.length}</small>}{invite.isError && <small role="alert">{invite.error.message}</small>}</div></div>}
-  </section>;
+
+  return (
+    <section className={styles.panel}>
+      <header>
+        <div>
+          <span>Команда · до {maxSize} участников</span>
+          <h3>{team.name}</h3>
+        </div>
+        {isCaptain && (
+          <button className={styles.delete} disabled={deleteTeam.isPending} onClick={() => {
+            if (window.confirm("Удалить команду и отменить заявки всех её участников?")) {
+              deleteTeam.mutate({ competitionId, teamId: team.id });
+            }
+          }}>Распустить команду</button>
+        )}
+      </header>
+      {team.description && <p>{team.description}</p>}
+      <ul>
+        {team.members.map((m) => (
+          <li key={m.athlete_id}>
+            <span>{m.full_name}{m.athlete_id === team.captain_id && <b>Капитан</b>}</span>
+            {m.athlete_id !== team.captain_id && isCaptain && (
+              <button className={styles.remove} disabled={remove.isPending} onClick={() => remove.mutate({ competitionId, teamId: team.id, athleteId: m.athlete_id })}>Удалить</button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!isCaptain ? <small>Изменять состав и приглашать участников может только капитан.</small> : (
+        <div className={styles.controls}>
+          <TeamSettings
+            competitionId={competitionId}
+            teamId={team.id}
+            initialName={team.name}
+            initialDescription={team.description}
+          />
+          <TeamInvites competitionId={competitionId} teamId={team.id} />
+        </div>
+      )}
+    </section>
+  );
 }

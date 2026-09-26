@@ -1,0 +1,21 @@
+.container {
+  margin: 1rem 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.docLink {
+  margin: 6px 0;
+  color: var(--wine);
+}
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

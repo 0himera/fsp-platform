@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useCompetitionsQuery, useMyRegistrationsQuery, useRegisterCompetitionMutation } from "@/entities/competition";
+import { useCompetitionsQuery, useMyRegistrationsQuery } from "@/entities/competition";
+import { useRegisterCompetitionMutation } from "@/features/register-competition";
 import { useMeQuery } from "@/entities/user";
 import { useDisciplinesQuery } from "@/entities/discipline";
 import { EventFilterBar } from "../EventFilterBar";

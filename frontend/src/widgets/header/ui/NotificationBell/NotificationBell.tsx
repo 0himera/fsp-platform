@@ -1,9 +1,14 @@
 "use client";
+
 import * as React from "react";
-import Link from "next/link";
 import { Bell } from "lucide-react";
-import { useNotificationsQuery, useReadNotificationMutation, useReadAllNotificationsMutation } from "@/entities/user";
-import { useMeQuery } from "@/entities/user";
+import {
+  useNotificationsQuery,
+  useReadNotificationMutation,
+  useReadAllNotificationsMutation,
+  useMeQuery,
+} from "@/entities/user";
+import { NotificationDropdown } from "../NotificationDropdown";
 import styles from "./NotificationBell.module.css";
 
 export function NotificationBell() {
@@ -39,41 +44,13 @@ export function NotificationBell() {
         {unread > 0 && <span className={styles.badge}>{unread > 9 ? "9+" : unread}</span>}
       </button>
       {open && (
-        <div className={styles.dropdown} role="dialog" aria-label="Уведомления">
-          <div className={styles.dropdownHeader}>
-            <span>Уведомления</span>
-            {unread > 0 && (
-              <button type="button" className={styles.readAll} onClick={() => readAll.mutate()}>
-                Прочитать все
-              </button>
-            )}
-          </div>
-          {items.length === 0 ? (
-            <div className={styles.empty}>Уведомлений пока нет</div>
-          ) : (
-            <ul className={styles.list}>
-              {items.map((n) => (
-                <li key={n.id} className={n.read_at ? styles.read : styles.unread}>
-                  {n.link ? (
-                    <Link
-                      href={n.link}
-                      className={styles.item}
-                      onClick={() => { if (!n.read_at) readOne.mutate(n.id); setOpen(false); }}
-                    >
-                      <strong>{n.title}</strong>
-                      {n.body && <span>{n.body}</span>}
-                    </Link>
-                  ) : (
-                    <div className={styles.item}>
-                      <strong>{n.title}</strong>
-                      {n.body && <span>{n.body}</span>}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <NotificationDropdown
+          unread={unread}
+          items={items}
+          onReadAll={() => readAll.mutate()}
+          onReadOne={(id) => readOne.mutate(id)}
+          onClose={() => setOpen(false)}
+        />
       )}
     </div>
   );

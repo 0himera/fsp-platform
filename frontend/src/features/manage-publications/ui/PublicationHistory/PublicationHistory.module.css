@@ -1,0 +1,23 @@
+.container {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.row span {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}

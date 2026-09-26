@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
       "no-var": "error",
       "prefer-const": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@next/next/no-img-element": "off",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-restricted-syntax": [
         "error",

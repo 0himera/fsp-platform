@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/shared/api";
+import { apiClient, type CreateTeamResponse } from "@/shared/api";
 import { competitionKeys } from "@/entities/competition";
-import type { Team } from "@/shared/api";
 
 export function useCreateTeamMutation() {
   const queryClient = useQueryClient();
@@ -10,14 +9,17 @@ export function useCreateTeamMutation() {
     mutationFn: ({
       competitionId,
       name,
+      description,
       memberIds,
     }: {
       competitionId: string | number;
       name: string;
-      memberIds: number[];
+      description?: string;
+      memberIds?: number[];
     }) =>
-      apiClient.post<Team>(`/api/competitions/${competitionId}/teams`, {
+      apiClient.post<CreateTeamResponse>(`/api/competitions/${competitionId}/teams`, {
         name,
+        description,
         member_ids: memberIds,
       }),
     onSuccess: (_, { competitionId }) => {

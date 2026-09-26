@@ -5,15 +5,14 @@ import { Button } from "@/shared/ui";
 import { useRegisterForm } from "../../model/useRegisterForm";
 import { RegisterSuccessNotice } from "../RegisterSuccessNotice";
 import { RegisterFormFields } from "../RegisterFormFields";
+import { RegisterRoleSelector } from "../RegisterRoleSelector";
 import styles from "./RegisterForm.module.css";
 
-const ROLES = [
-  { id: "athlete" as const, label: "Спортсмен" },
-  { id: "coach" as const, label: "Тренер" },
-  { id: "judge" as const, label: "Судья" },
-];
+interface RegisterFormProps {
+  onSuccess?: () => void;
+}
 
-export const RegisterForm: React.FC = () => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess: _onSuccess }) => {
   const form = useRegisterForm();
 
   if (form.registerMutation.isSuccess) {
@@ -27,22 +26,7 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <form className={styles.form} onSubmit={form.handleSubmit}>
-      <div className={styles.fieldGroup}>
-        <label className={styles.label}>Роль на платформе</label>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          {ROLES.map((item) => (
-            <Button
-              key={item.id}
-              type="button"
-              size="sm"
-              variant={form.role === item.id ? "default" : "outline"}
-              onClick={() => form.setRole(item.id)}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <RegisterRoleSelector role={form.role} onChange={form.setRole} />
       <RegisterFormFields
         fullName={form.fullName}
         onFullNameChange={form.setFullName}

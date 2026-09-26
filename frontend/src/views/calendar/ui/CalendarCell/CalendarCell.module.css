@@ -1,0 +1,58 @@
+.day {
+  background: var(--background);
+  min-height: 120px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dayOther {
+  background: var(--muted, #fafafa);
+  opacity: 0.6;
+}
+:global([data-theme="dark"]) .dayOther {
+  background: var(--muted, #111827);
+}
+.dayToday .dayNum {
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+}
+.dayNum {
+  font-size: 14px;
+  font-weight: 500;
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.chip {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.chip:hover { opacity: 0.8; }
+.more { font-size: 11px; color: var(--muted-foreground); padding: 0 4px; font-weight: 500; }
+.phaseUpcoming { background-color: #dbeafe; color: #1d4ed8; }
+:global([data-theme="dark"]) .phaseUpcoming { background-color: rgba(29, 78, 216, 0.2); color: #93c5fd; }
+.phaseCurrent { background-color: #dcfce7; color: #15803d; }
+:global([data-theme="dark"]) .phaseCurrent { background-color: rgba(21, 128, 61, 0.2); color: #86efac; }
+.phaseAwaiting { background-color: #ffedd5; color: #c2410c; }
+:global([data-theme="dark"]) .phaseAwaiting { background-color: rgba(194, 65, 12, 0.2); color: #fdba74; }
+.phaseCompleted { background-color: #f3f4f6; color: #4b5563; }
+:global([data-theme="dark"]) .phaseCompleted { background-color: rgba(75, 85, 99, 0.2); color: #d1d5db; }

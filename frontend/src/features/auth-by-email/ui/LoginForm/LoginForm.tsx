@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Button, Input } from "@/shared/ui";
-import type { UserRole } from "@/entities/user";
-import { useLoginMutation } from "../../api/authApi";
+import { useLoginForm } from "../../model/useLoginForm";
 import { RoleSelector } from "../RoleSelector";
 import { ForgotPasswordForm } from "../ForgotPasswordForm";
 import { ResendVerificationForm } from "../ResendVerificationForm";
@@ -12,29 +10,18 @@ import { LoginExtraLinks } from "../LoginExtraLinks";
 import styles from "./LoginForm.module.css";
 
 export const LoginForm: React.FC = () => {
-  const router = useRouter();
-  const [email, setEmail] = React.useState("athlete1@arena.local");
-  const [password, setPassword] = React.useState("");
-  const [role, setRole] = React.useState<UserRole>("athlete");
-  const [view, setView] = React.useState<"login" | "forgot" | "resend">("login");
-
-  const loginMutation = useLoginMutation();
-
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
-    setEmail(newRole === "organizer" ? "organizer@arena.local" : "athlete1@arena.local");
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    loginMutation.mutate({ email, password: password || undefined, role }, {
-      onSuccess: () => {
-        const returnTo = new URLSearchParams(window.location.search).get("returnTo");
-        router.push(returnTo?.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/profile");
-      },
-    });
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    role,
+    view,
+    setView,
+    loginMutation,
+    handleRoleChange,
+    handleSubmit,
+  } = useLoginForm();
 
   if (view === "forgot") return <ForgotPasswordForm onBack={() => setView("login")} />;
   if (view === "resend") return <ResendVerificationForm onBack={() => setView("login")} />;
