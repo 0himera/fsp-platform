@@ -1,19 +1,10 @@
-/// Главный экран: нижняя навигация по разделам (п.1–5 ТЗ в одном месте).
-///
-/// СОСТАВ ВКЛАДОК ЗАВИСИТ ОТ РОЛИ. Спортсмену нужны «заявки / соревнования /
-/// рейтинг / кабинет»; организатору — «соревнования / рейтинг / админка /
-/// кабинет». Ролей две, и сервер различает их честно (403 на админских
-/// эндпоинтах), поэтому показ лишних кнопок — просто мусор в интерфейсе, а не
-/// защита.
-///
-/// `IndexedStack` держит все вкладки в дереве: переключение вкладки не
-/// сбрасывает введённый в поиск текст и не дёргает сеть заново.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../features/auth/auth.dart';
+import '../../shared/ui/ui.dart';
 import '../admin/admin.dart';
 import '../competitions/competitions.dart';
 import '../profile/profile.dart';
@@ -31,8 +22,6 @@ class _HomePageState extends State<HomePage> {
   int _tab = 0;
 
   Future<void> _logout() async {
-    // Выход без подтверждения раздражает меньше, чем диалог «вы уверены?»
-    // каждый раз, поэтому просто зовём logout: AuthGate сам вернёт на форму.
     await context.read<AuthController>().logout();
   }
 
@@ -41,8 +30,6 @@ class _HomePageState extends State<HomePage> {
     final auth = context.watch<AuthController>();
     final organizer = auth.isOrganizer;
 
-    // Набор вкладок разный для двух ролей — проще прочитать два списка
-    // целиком, чем выводить их из условных вставок.
     final List<Widget> pages;
     final List<String> labels;
     if (organizer) {
@@ -63,42 +50,104 @@ class _HomePageState extends State<HomePage> {
       labels = const ['Мои заявки', 'Турниры', 'Рейтинг', 'Кабинет'];
     }
 
-    // Индекс мог остаться от другой роли (вход организатором после спортсмена
-    // без перезапуска приложения), поэтому проверяем границу.
     final index = _tab < pages.length ? _tab : 0;
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text(organizer ? 'Панель Федерации' : 'Федерация СП'),
+        titleSpacing: 20,
+        title: Row(
+          children: [
+            Text(
+              organizer ? 'Панель Федерации' : 'Федерация СП',
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceElevated,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: Text(
+                organizer ? 'ОРГ' : 'АТЛЕТ',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            tooltip: 'Выйти',
-            onPressed: _logout,
-            icon: const Icon(Icons.logout),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              tooltip: 'Выйти',
+              onPressed: _logout,
+              icon: const Icon(Icons.logout_rounded, size: 20, color: AppTheme.textSecondary),
+            ),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: AppTheme.border, height: 1),
+        ),
       ),
       body: IndexedStack(index: index, children: pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        // Мобильная навигация по умолчанию показывает иконки; подписей в
-        // четыре-пять вкладок достаточно, а типы иконок обязаны быть парными.
-        type: BottomNavigationBarType.fixed,
-        onTap: (value) => setState(() => _tab = value),
-        items: [
-          for (final label in labels)
-            BottomNavigationBarItem(icon: Icon(_iconOf(label)), label: label),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F1116),
+          border: Border(top: BorderSide(color: AppTheme.border, width: 1)),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: index,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: AppTheme.textPrimary,
+          unselectedItemColor: AppTheme.textTertiary,
+          onTap: (value) => setState(() => _tab = value),
+          items: [
+            for (final label in labels)
+              BottomNavigationBarItem(
+                icon: Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Icon(_iconOf(label), size: 21),
+                ),
+                activeIcon: Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceElevated,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.borderLight),
+                    ),
+                    child: Icon(_iconOf(label), size: 21, color: AppTheme.textPrimary),
+                  ),
+                ),
+                label: label,
+              ),
+          ],
+        ),
       ),
     );
   }
 
   IconData _iconOf(String label) => switch (label) {
-    'Мои заявки' => Icons.playlist_add_check,
-    'Турниры' => Icons.emoji_events,
-    'Рейтинг' => Icons.leaderboard,
-    'Админка' => Icons.admin_panel_settings,
-    // 'Кабинет'
-    _ => Icons.person,
+    'Мои заявки' => Icons.assignment_turned_in_outlined,
+    'Турниры' => Icons.emoji_events_outlined,
+    'Рейтинг' => Icons.leaderboard_outlined,
+    'Админка' => Icons.admin_panel_settings_outlined,
+    _ => Icons.person_outline_rounded,
   };
 }

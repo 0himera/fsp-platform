@@ -1,12 +1,3 @@
-/// Карточка турнира — переиспользуемый кусок списка (п.2 ТЗ).
-///
-/// Один виджет на три списка: «турниры», «мои заявки», «мои созданные» в
-/// админке. Различаются они только подписью и кнопкой справа (`trailing`),
-/// поэтому плодить три почти одинаковые карточки — значит однажды поправить
-/// две из трёх.
-///
-/// Название дисциплины берётся из `CompetitionsController`: сервер передаёт
-/// код (`uav`), а человек должен видеть «БПЛА».
 library;
 
 import 'package:flutter/material.dart';
@@ -14,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../entities/competition/competition.dart';
 import '../../features/competitions/competitions.dart';
+import '../../shared/ui/ui.dart';
 import '../../shared/utils/utils.dart';
 import 'competitions.dart';
 
@@ -26,12 +18,7 @@ class CompetitionTile extends StatelessWidget {
   });
 
   final Competition competition;
-
-  /// Кнопка справа (отозвать заявку, редактировать черновик). Пусто — карточка
-  /// только для просмотра.
   final Widget? trailing;
-
-  /// Ведёт ли нажатие в карточку турнира. В админке иногда нужен свой обработчик.
   final bool openOnTap;
 
   @override
@@ -40,50 +27,174 @@ class CompetitionTile extends StatelessWidget {
       competition.disciplineCode,
     );
     final now = DateTime.now();
+    final isRegClosed = competition.status == CompetitionStatus.open && !competition.isRegistrationOpen(now);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ListTile(
-        title: Text(competition.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$discipline · ${competition.level.label} · ${competition.format.label} зачёт',
-            ),
-            Text(
-              '${competition.location.isEmpty ? 'Место не указано' : competition.location} · ${formatDate(competition.startsAt)}',
-            ),
-            // Три числа, которые важны спортсмену до открытия карточки:
-            // статус, сколько заявок и есть ли уже протокол.
-            Text(
-              '${competition.status.label}'
-              ' · заявок: ${competition.registrationsCount}'
-              '${competition.resultsCount > 0 ? ' · протокол: ${competition.resultsCount}' : ''}'
-              '${competition.isGatedFinal ? ' · финал: проход ${competition.qualifyingPlaceLimit ?? '?'}' : ''}',
-              style: TextStyle(
-                // Просроченный дедлайн всё ещё может висеть со статусом
-                // «открыто» (сервер меняет статус только публикацией), поэтому
-                // подсвечиваем факт «приём закрыт по времени».
-                color:
-                    competition.status == CompetitionStatus.open &&
-                        !competition.isRegistrationOpen(now)
-                    ? Theme.of(context).colorScheme.error
-                    : null,
-              ),
-            ),
-          ],
-        ),
-        isThreeLine: true,
-        trailing: trailing,
-        onTap: openOnTap
-            ? () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      CompetitionDetailsPage(competitionId: competition.id),
+    final (statusBg, statusFg) = switch (competition.status) {
+      CompetitionStatus.open => isRegClosed 
+          ? (AppTheme.error.withValues(alpha: 0.12), AppTheme.error)
+          : (AppTheme.success.withValues(alpha: 0.12), AppTheme.success),
+      CompetitionStatus.running => (AppTheme.warning.withValues(alpha: 0.12), AppTheme.warning),
+      CompetitionStatus.completed => (AppTheme.surfaceElevated, AppTheme.textTertiary),
+      _ => (AppTheme.surfaceElevated, AppTheme.textTertiary),
+    };
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: openOnTap
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CompetitionDetailsPage(competitionId: competition.id),
+                    ),
+                  )
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.tagBg,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: AppTheme.borderLight),
+                      ),
+                      child: Text(
+                        discipline.isEmpty ? competition.disciplineCode : discipline,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${competition.level.label} · ${competition.format.label} зачёт',
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: AppTheme.textTertiary,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        competition.status.label,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: statusFg,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            : null,
+                const SizedBox(height: 10),
+                Text(
+                  competition.title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                    color: AppTheme.textPrimary,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textTertiary),
+                    const SizedBox(width: 4),
+                    Text(
+                      competition.location.isEmpty ? 'Место не указано' : competition.location,
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(width: 14),
+                    const Icon(Icons.calendar_today_outlined, size: 13, color: AppTheme.textTertiary),
+                    const SizedBox(width: 4),
+                    Text(
+                      formatDate(competition.startsAt),
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF101217),
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(color: AppTheme.border),
+                          ),
+                          child: Text(
+                            'заявок: ${competition.registrationsCount}',
+                            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                          ),
+                        ),
+                        if (competition.resultsCount > 0)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF101217),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(color: AppTheme.border),
+                            ),
+                            child: Text(
+                              'протокол: ${competition.resultsCount}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                            ),
+                          ),
+                        if (competition.isGatedFinal)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF101217),
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(color: AppTheme.border),
+                            ),
+                            child: Text(
+                              'финал: проход ${competition.qualifyingPlaceLimit ?? "?"}',
+                              style: const TextStyle(fontSize: 11, color: AppTheme.warning),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (trailing != null)
+                      trailing!
+                    else if (openOnTap)
+                      const Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textTertiary),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
