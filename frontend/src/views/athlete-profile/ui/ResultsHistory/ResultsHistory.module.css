@@ -1,0 +1,33 @@
+.section { overflow:hidden; border:1px solid #e2e7f0; border-radius:8px; background:#fff; }
+.section header { display:flex; justify-content:space-between; align-items:end; gap:14px; padding:17px 19px 14px; border-bottom:1px solid #eeeae5; }
+.section header span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.13em; text-transform:uppercase; }
+.section h2 { margin:5px 0 0; color:#18263a; font-size:21px; }
+.section header small { color:#858d97; font:10px "JetBrains Mono",monospace; }
+.wrap { overflow:auto; }
+.wrap table { width:100%; border-collapse:collapse; text-align:left; font:clamp(11px,.58vw,16px)/1.4 "JetBrains Mono",monospace; }
+.wrap th { padding:clamp(11px,.7vw,20px) clamp(12px,.75vw,22px); border-bottom:1px solid #e2e7ef; color:#8a919a; font:clamp(9px,.48vw,13px) "JetBrains Mono",monospace; font-weight:400; }
+.wrap td { padding:clamp(11px,.7vw,20px) clamp(12px,.75vw,22px); border-bottom:1px solid #eeeae5; color:#263248; vertical-align:middle; }
+.wrap tr:last-child td { border-bottom:0; }
+.wrap tbody tr:hover { background:#f6f8fc; }
+.wrap td small { display:block; margin-top:4px; color:#969da5; font-size:9px; }
+.wrap td a { display:block; max-width:240px; color:#17243a; font-weight:600; }
+.wrap td a:hover { color:var(--wine); }
+.date { color:#7f8996!important; white-space:nowrap; }
+.points { color:var(--wine); font-size:14px; }
+.empty { padding:25px 18px; color:#8b929b; font:11px "JetBrains Mono",monospace; text-align:center; }
+@media (max-width:680px) {
+  .section header { align-items:start; padding:15px; }
+  .section h2 { font-size:18px; }
+  .section header small { padding-top:3px; white-space:nowrap; }
+  .wrap { overflow:visible; padding:10px; }
+  .wrap table,.wrap tbody { display:block; }
+  .wrap thead { display:none; }
+  .wrap tbody { display:grid; gap:9px; }
+  .wrap tr { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0 12px; padding:11px; border:1px solid #eeeae5; border-radius:6px; }
+  .wrap td { padding:4px 0; border:0; }
+  .wrap td:nth-child(2) { grid-column:1/-1; order:2; }
+  .wrap td:nth-child(3) { display:none; }
+  .wrap td:nth-child(4) { grid-column:1/-1; order:3; }
+  .wrap td:nth-child(5) { order:1; text-align:right; }
+  .wrap td:nth-child(2) a { max-width:100%; }
+}

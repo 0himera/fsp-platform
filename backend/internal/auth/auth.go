@@ -23,6 +23,7 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrEmailUnverified = errors.New("email not verified")
 var ErrInvalidToken = errors.New("invalid or expired token")
 var ErrTooSoon = errors.New("request sent too recently")
+var ErrEmailInUse = errors.New("email address is already used")
 
 type User struct {
 	ID       int64  `json:"id"`
@@ -56,16 +57,16 @@ func verifyPassword(encoded, password string) bool {
 	return subtle.ConstantTimeCompare(got, want) == 1
 }
 
-func (s Service) RegisterPending(ctx context.Context, email, password, fullName, organization, city string) (User, string, error) {
-	return s.register(ctx, email, password, fullName, organization, city, false)
+func (s Service) RegisterPending(ctx context.Context, email, password, fullName, organization, city, role string) (User, string, error) {
+	return s.register(ctx, email, password, fullName, organization, city, role, false)
 }
 
 // RegisterVerified is for trusted local demo data, never for public requests.
 func (s Service) RegisterVerified(ctx context.Context, email, password, fullName, organization, city string) (User, string, error) {
-	return s.register(ctx, email, password, fullName, organization, city, true)
+	return s.register(ctx, email, password, fullName, organization, city, "athlete", true)
 }
 
-func (s Service) register(ctx context.Context, email, password, fullName, organization, city string, verified bool) (User, string, error) {
+func (s Service) register(ctx context.Context, email, password, fullName, organization, city, role string, verified bool) (User, string, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	fullName = strings.TrimSpace(fullName)
 	hash, err := hashPassword(password)
@@ -77,12 +78,19 @@ func (s Service) register(ctx context.Context, email, password, fullName, organi
 		return User{}, "", err
 	}
 	defer tx.Rollback(ctx)
-	user := User{Email: email, Role: "athlete", FullName: fullName}
-	if err := tx.QueryRow(ctx, `INSERT INTO users (email,password_hash,role,email_verified_at) VALUES ($1,$2,'athlete',CASE WHEN $3 THEN now() ELSE NULL END) RETURNING id`, email, hash, verified).Scan(&user.ID); err != nil {
+	user := User{Email: email, Role: role, FullName: fullName}
+	if err := tx.QueryRow(ctx, `INSERT INTO users (email,password_hash,role,email_verified_at) VALUES ($1,$2,$3,CASE WHEN $4 THEN now() ELSE NULL END) RETURNING id`, email, hash, role, verified).Scan(&user.ID); err != nil {
 		return User{}, "", err
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO athletes (user_id,full_name,organization,city) VALUES ($1,$2,$3,$4)`, user.ID, fullName, strings.TrimSpace(organization), strings.TrimSpace(city)); err != nil {
-		return User{}, "", err
+	if role == "athlete" {
+		if _, err := tx.Exec(ctx, `INSERT INTO athletes (user_id,full_name,organization,city) VALUES ($1,$2,$3,$4)`, user.ID, fullName, strings.TrimSpace(organization), strings.TrimSpace(city)); err != nil {
+			return User{}, "", err
+		}
+	} else {
+		// coach or judge: create staff profile
+		if _, err := tx.Exec(ctx, `INSERT INTO staff_profiles (user_id,full_name,organization,city) VALUES ($1,$2,$3,$4)`, user.ID, fullName, strings.TrimSpace(organization), strings.TrimSpace(city)); err != nil {
+			return User{}, "", err
+		}
 	}
 	var token string
 	if verified {
@@ -147,6 +155,32 @@ func (s Service) Logout(ctx context.Context, token string) error {
 	hash := sha256.Sum256([]byte(token))
 	_, err := s.DB.Exec(ctx, `DELETE FROM sessions WHERE token_hash=$1`, hash[:])
 	return err
+}
+
+func (s Service) ChangePassword(ctx context.Context, userID int64, current, next string) error {
+	var encoded string
+	if err := s.DB.QueryRow(ctx, `SELECT password_hash FROM users WHERE id=$1`, userID).Scan(&encoded); err != nil {
+		return err
+	}
+	if !verifyPassword(encoded, current) {
+		return ErrInvalidCredentials
+	}
+	hash, err := hashPassword(next)
+	if err != nil {
+		return err
+	}
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `UPDATE users SET password_hash=$2 WHERE id=$1`, userID, hash); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM sessions WHERE user_id=$1`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s Service) EnsureOrganizer(ctx context.Context, email, password string) error {

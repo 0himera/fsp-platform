@@ -9,6 +9,11 @@ export {
   useAthleteQuery,
   userKeys,
 } from "./api/userApi";
+export {
+  useNotificationsQuery,
+  useReadNotificationMutation,
+  useReadAllNotificationsMutation,
+} from "./api/notificationsApi";
 export { toAthleteProfile } from "./model/types";
 export type {
   AthleteProfile,

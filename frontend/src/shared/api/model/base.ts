@@ -15,7 +15,7 @@ export class ApiError extends Error {
   }
 }
 
-export type UserRole = "athlete" | "organizer";
+export type UserRole = "athlete" | "organizer" | "coach" | "judge";
 
 export type RankCode =
   | "none"

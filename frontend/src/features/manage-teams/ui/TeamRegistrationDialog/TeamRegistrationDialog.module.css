@@ -1,0 +1,6 @@
+.scrim { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); background:#091321aa; }
+.dialog { position:relative; width:min(540px,100%); max-height:calc(100dvh - 24px); overflow:auto; padding:clamp(18px,5vw,26px); border:1px solid #e5e0da; border-radius:12px; background:#fff; color:#19263a; box-shadow:0 24px 80px #10182840; }
+.dialog h2 { margin:0 36px 8px 0; font-size:23px; }.dialog p { color:#687487; line-height:1.5; }
+.dialog form,.success { display:grid; gap:13px; margin-top:18px; }.dialog label { display:grid; gap:6px; color:#657184; font:12px "JetBrains Mono",monospace; }
+.dialog input,.dialog textarea { width:100%; padding:10px; border:1px solid #d8dce2; border-radius:5px; color:#19263a; background:#fff; }.dialog textarea { min-height:78px; resize:vertical; }
+.dialog button { width:max-content; padding:10px 14px; border:0; border-radius:5px; background:#8e203b; color:white; cursor:pointer; }.dialog .close { position:absolute; right:15px; top:14px; width:32px; padding:3px; background:#f1edef; color:#263448; font-size:22px; }.dialog small { color:#7a8492; }

@@ -4,7 +4,7 @@ import { QueryProvider } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Цифровая платформа ФСП РД | ТехноСпортФест – 2026",
+  title: "ФСП Республики Дагестан",
   description:
     "Цифровая платформа Федерации спортивного программирования Республики Дагестан для спортсменов, соревнований и рейтинга.",
 };
@@ -18,8 +18,11 @@ export default function RootLayout({
     <html lang="ru">
       <body>
         <QueryProvider>
-          <Header />
-          {children}
+          <div className="site-shell">
+            <Header />
+            {children}
+            <footer className="site-footer"><span>ФСП Республики Дагестан · Внутренний рейтинг не заменяет официальные спортивные разряды.</span></footer>
+          </div>
         </QueryProvider>
       </body>
     </html>

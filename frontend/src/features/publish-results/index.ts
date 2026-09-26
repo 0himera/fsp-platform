@@ -1,1 +1,4 @@
-export { usePublishResultsMutation } from "./api/publishResultsApi";
+export {
+  usePublishResultsMutation,
+  useRestorePublicationMutation,
+} from "./api/publishResultsApi";

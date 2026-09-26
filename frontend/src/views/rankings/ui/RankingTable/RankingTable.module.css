@@ -1,0 +1,17 @@
+.section { overflow:hidden; border:1px solid #e2e7f0; border-radius:9px; background:white; }
+.heading { display:flex; align-items:end; justify-content:space-between; gap:16px; padding:17px 18px 14px; border-bottom:1px solid #ece8e2; }
+.heading > div > span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+.heading h2 { margin:5px 0 0; color:#17243a; font-size:22px; }
+.search { display:flex; align-items:center; gap:8px; width:min(100%,310px); min-height:38px; padding:0 9px; border:1px solid #e5e0d9; border-radius:6px; color:#858e99; }
+.search:focus-within { border-color:#b87b89; box-shadow:0 0 0 3px rgba(146,36,62,.07); }
+.search input { min-width:0; border:0; outline:0; background:transparent; font:11px "JetBrains Mono",monospace; }
+.wrap { overflow:auto; }
+.table { width:100%; border-collapse:collapse; color:#263248; font:clamp(12px,.62vw,17px) "JetBrains Mono",monospace; }
+.table th { padding:clamp(11px,.7vw,20px) clamp(9px,.55vw,16px); border-bottom:1px solid #e2e7ef; color:#838b96; font:clamp(10px,.52vw,14px) "JetBrains Mono",monospace; font-weight:400; text-align:left; white-space:nowrap; }
+.table td { padding:clamp(8px,.55vw,16px) clamp(9px,.55vw,16px); border-bottom:1px solid #eeeae5; vertical-align:middle; }
+.table tbody tr:last-child td { border-bottom:0; }
+.table tbody tr:hover { background:#f6f8fc; }
+.empty { padding:38px 20px; color:#858c96; text-align:center; font:13px "JetBrains Mono",monospace; }
+.count { margin:0; padding:10px 15px; border-top:1px solid #eeeae5; color:#8b929b; font:10px "JetBrains Mono",monospace; }
+@media (max-width:680px) { .heading { align-items:stretch; flex-direction:column; padding:15px; } .search { width:100%; } .table { min-width:0; table-layout:fixed; } .table th,.table td { padding:9px 5px; } .table th:first-child { width:48px; } .table th:last-child { width:72px; } .table th:nth-child(3),.table th:nth-child(4),.table th:nth-child(5),.table th:nth-child(6),.table td:nth-child(3),.table td:nth-child(4),.table td:nth-child(5),.table td:nth-child(6) { display:none; } }
+@media (max-width:380px) { .table th:first-child { width:38px; } .table th:last-child { width:62px; } .table td { font-size:11px; } }

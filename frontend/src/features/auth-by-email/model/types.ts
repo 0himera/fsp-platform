@@ -12,6 +12,7 @@ export interface RegisterFormValues {
   full_name: string;
   organization?: string;
   city?: string;
+  role?: UserRole;
 }
 
 export interface AuthSession {

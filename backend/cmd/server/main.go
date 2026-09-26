@@ -68,7 +68,7 @@ func main() {
 		}
 		sender = configured
 	}
-	server := &http.Server{Addr: addr, Handler: httpapi.New(db, env("FRONTEND_DIR", "../frontend"), sender, env("PUBLIC_BASE_URL", "http://localhost:8080")).Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
+	server := &http.Server{Addr: addr, Handler: httpapi.New(db, env("FRONTEND_DIR", "../frontend"), sender, env("PUBLIC_BASE_URL", "http://localhost:8080"), os.Getenv("EXPORT_API_TOKEN")).Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

@@ -3,6 +3,7 @@ package rating
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"sort"
 	"time"
@@ -46,21 +47,61 @@ type Result struct {
 	Included      bool      `json:"included"`
 }
 
+type Achievement struct {
+	Code        string    `json:"code"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Kind        string    `json:"kind"`
+	Date        time.Time `json:"date"`
+}
+
 type Athlete struct {
-	ID           int64    `json:"id"`
-	FullName     string   `json:"full_name"`
-	City         string   `json:"city"`
-	Organization string   `json:"organization"`
-	RankCode     string   `json:"rank_code"`
-	Disciplines  []string `json:"disciplines"`
-	Place        int      `json:"rating_place"`
-	Total        float64  `json:"rating"`
-	ResultPoints float64  `json:"result_points"`
-	RankBase     float64  `json:"rank_base"`
-	Activity     float64  `json:"activity_factor"`
-	RankPoints   float64  `json:"rank_points"`
-	Results      []Result `json:"results"`
-	RulesVersion string   `json:"rules_version"`
+	ID                  int64         `json:"id"`
+	FullName            string        `json:"full_name"`
+	City                string        `json:"city"`
+	Organization        string        `json:"organization"`
+	RankCode            string        `json:"rank_code"`
+	Disciplines         []string      `json:"disciplines"`
+	Place               int           `json:"rating_place"`
+	Total               float64       `json:"rating"`
+	ResultPoints        float64       `json:"result_points"`
+	RankBase            float64       `json:"rank_base"`
+	Activity            float64       `json:"activity_factor"`
+	RankPoints          float64       `json:"rank_points"`
+	Results             []Result      `json:"results"`
+	RulesVersion        string        `json:"rules_version"`
+	AvatarURL           string        `json:"avatar_url"`
+	Achievements        []Achievement `json:"achievements"`
+	FeaturedAchievement *Achievement  `json:"featured_achievement"`
+	FeaturedCode        string        `json:"-"`
+}
+
+func achievements(results []Result) []Achievement {
+	items := []Achievement{}
+	ordered := append([]Result(nil), results...)
+	sort.Slice(ordered, func(i, j int) bool { return ordered[i].EndsAt.Before(ordered[j].EndsAt) })
+	if len(ordered) == 0 {
+		return items
+	}
+	items = append(items, Achievement{Code: "first-start", Title: "Первый старт", Description: "Участие в официальном соревновании", Kind: "first", Date: ordered[0].EndsAt})
+	for _, result := range ordered {
+		if result.Stage == "qualification" {
+			continue
+		}
+		if result.Points > 0 && result.Place == 1 {
+			items = append(items, Achievement{Code: fmt.Sprintf("win-%d", result.CompetitionID), Title: "Победа", Description: result.Competition, Kind: "win", Date: result.EndsAt})
+		}
+		if result.Points > 0 && result.Place > 1 && result.Place <= 3 {
+			items = append(items, Achievement{Code: fmt.Sprintf("podium-%d", result.CompetitionID), Title: "Призовое место", Description: result.Competition, Kind: "podium", Date: result.EndsAt})
+		}
+		if result.Points > 0 && result.Stage == "final" {
+			items = append(items, Achievement{Code: fmt.Sprintf("final-%d", result.CompetitionID), Title: "Финалист", Description: result.Competition, Kind: "final", Date: result.EndsAt})
+		}
+	}
+	for milestone := 5; milestone <= len(ordered); milestone += 5 {
+		items = append(items, Achievement{Code: fmt.Sprintf("starts-%d", milestone), Title: fmt.Sprintf("%d стартов", milestone), Description: "Опубликованные результаты", Kind: "series", Date: ordered[milestone-1].EndsAt})
+	}
+	return items
 }
 
 func round(v float64) float64 { return math.Round(v*100) / 100 }
@@ -153,13 +194,21 @@ func Calculate(a Athlete, asOf time.Time) Athlete {
 	if a.Results == nil {
 		a.Results = []Result{}
 	}
+	a.Achievements = achievements(a.Results)
+	for i := range a.Achievements {
+		if a.Achievements[i].Code == a.FeaturedCode {
+			copy := a.Achievements[i]
+			a.FeaturedAchievement = &copy
+			break
+		}
+	}
 	return a
 }
 
 type Service struct{ DB *pgxpool.Pool }
 
 func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
-	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.city,a.organization,a.rank_code FROM athletes a ORDER BY a.user_id`)
+	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.city,a.organization,a.rank_code,a.avatar_url,a.featured_achievement_code FROM athletes a ORDER BY a.user_id`)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +216,7 @@ func (s Service) All(ctx context.Context, asOf time.Time) ([]Athlete, error) {
 	byID := map[int64]int{}
 	for rows.Next() {
 		var a Athlete
-		if err := rows.Scan(&a.ID, &a.FullName, &a.City, &a.Organization, &a.RankCode); err != nil {
+		if err := rows.Scan(&a.ID, &a.FullName, &a.City, &a.Organization, &a.RankCode, &a.AvatarURL, &a.FeaturedCode); err != nil {
 			rows.Close()
 			return nil, err
 		}

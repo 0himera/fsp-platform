@@ -1,0 +1,1 @@
+export { RegistrationList } from "./RegistrationList";

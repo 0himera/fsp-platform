@@ -1,8 +1,8 @@
 export {
   competitionKeys,
-  getCompetitions,
   useCompetitionsQuery,
-  getCompetitionDetail,
   useCompetitionDetailQuery,
+  useCompetitionParticipantsQuery,
+  useResultPublicationsQuery,
   useMyRegistrationsQuery,
 } from "./api/competitionApi";

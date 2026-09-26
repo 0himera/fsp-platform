@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api";
-import type { Competition, CompetitionDetail } from "@/shared/api";
+import type { Competition, CompetitionDetail, CompetitionParticipant, ResultPublication } from "@/shared/api";
 
 export const competitionKeys = {
   all: ["competitions"] as const,
@@ -12,36 +12,35 @@ export const competitionKeys = {
     [...competitionKeys.all, "my-registrations"] as const,
 };
 
-export async function getCompetitions(params?: {
-  status?: string;
-  phase?: string;
-  q?: string;
-}): Promise<Competition[]> {
-  return apiClient.get<Competition[]>("/api/competitions", { params });
-}
-
-export function useCompetitionsQuery(params?: {
-  status?: string;
-  phase?: string;
-  q?: string;
-}) {
+export function useCompetitionsQuery(params?: { status?: string; phase?: string; q?: string }) {
   return useQuery({
     queryKey: competitionKeys.list(params),
-    queryFn: () => getCompetitions(params),
+    queryFn: () => apiClient.get<Competition[]>("/api/competitions", { params }),
     staleTime: 1000 * 30,
   });
-}
-
-export async function getCompetitionDetail(
-  id: string | number
-): Promise<CompetitionDetail> {
-  return apiClient.get<CompetitionDetail>(`/api/competitions/${id}`);
 }
 
 export function useCompetitionDetailQuery(id: string | number) {
   return useQuery({
     queryKey: competitionKeys.detail(id),
-    queryFn: () => getCompetitionDetail(id),
+    queryFn: () => apiClient.get<CompetitionDetail>(`/api/competitions/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useCompetitionParticipantsQuery(id: string | number) {
+  return useQuery({
+    queryKey: [...competitionKeys.detail(id), "participants"],
+    queryFn: () => apiClient.get<CompetitionParticipant[]>(`/api/competitions/${id}/participants`),
+    enabled: Boolean(id),
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useResultPublicationsQuery(id: string | number) {
+  return useQuery({
+    queryKey: [...competitionKeys.detail(id), "publications"],
+    queryFn: () => apiClient.get<ResultPublication[]>(`/api/competitions/${id}/publications`),
     enabled: Boolean(id),
   });
 }

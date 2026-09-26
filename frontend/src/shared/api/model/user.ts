@@ -1,4 +1,5 @@
 import type { UserRole, RankCode } from "./base";
+import type { Achievement } from "./achievement";
 
 export interface User {
   id: number;
@@ -44,6 +45,9 @@ export interface Athlete {
   rank_points: number;
   results: AthleteResult[];
   rules_version: string;
+  avatar_url?: string;
+  achievements?: Achievement[];
+  featured_achievement?: Achievement | null;
 }
 
 export interface MeResponse {

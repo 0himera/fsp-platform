@@ -1,16 +1,17 @@
-import * as React from "react";
 import Link from "next/link";
-import { APP_CONFIG } from "@/shared/config";
 import styles from "./HeaderBrand.module.css";
 
-export const HeaderBrand: React.FC = () => {
+export function HeaderBrand() {
   return (
-    <Link href="/" className={styles.brandWrapper}>
-      <div className={styles.logoBadge}>ФСП</div>
-      <div className={styles.titleBlock}>
-        <span className={styles.title}>{APP_CONFIG.shortName}</span>
-        <span className={styles.subtitle}>{APP_CONFIG.festival}</span>
-      </div>
+    <Link href="/" className={styles.brand} aria-label="ФСП Республики Дагестан">
+      <span className={styles.mark} role="img" aria-label="Логотип Федерации спортивного программирования Дагестана" />
+      <span className={styles.copy}>
+        <span className={styles.wordmark} role="img" aria-label="ФСП" />
+        <span className={styles.description}>
+          <b>РЕСПУБЛИКИ</b>
+          <b>ДАГЕСТАН</b>
+        </span>
+      </span>
     </Link>
   );
-};
+}

@@ -1,52 +1,68 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
+:root { --background:#f4f7fc; --foreground:#1b1c21; --card:#fff; --card-foreground:#1b1c21; --popover:#fff; --popover-foreground:#1b1c21; --primary:#402fff; --primary-foreground:#fff; --secondary:#edf1fb; --secondary-foreground:#0f4c81; --muted:#edf1f7; --muted-foreground:#656c76; --accent:#fcebed; --accent-foreground:#a51c31; --destructive:#c51630; --destructive-foreground:#fff; --border:#e1e7f0; --input:#e1e7f0; --ring:#7164ff; --radius:.75rem; --ink:#1b1c21; --muted-ink:#656c76; --paper:#fff; --wine:#c51630; --wine-dark:#a91429; --brand-blue:#402fff; --classic-blue:#0f4c81; --brand-red:#ec1d35; --mountain-stone:#e2e8f0; --mountain-green:#4b796e; --gold:#b9955a; --line:#e1e7f0; --site-gutter:clamp(36px,4.5vw,160px); --site-width:75%; }
+@theme inline { --color-background:var(--background); --color-foreground:var(--foreground); --color-primary:var(--primary); --color-primary-foreground:var(--primary-foreground); --color-secondary:var(--secondary); --color-secondary-foreground:var(--secondary-foreground); --color-destructive:var(--destructive); --color-destructive-foreground:var(--destructive-foreground); --color-border:var(--border); --color-input:var(--input); --color-ring:var(--ring); }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; overflow-x:clip; }
+body { min-width:320px; min-height:100vh; margin:0; background:var(--background); color:var(--foreground); font-family:"JetBrains Mono",monospace; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4,h5,h6 { font-family:Helvetica,Arial,sans-serif!important; }
+button,input,select,textarea { font:inherit; }
+input,select,textarea { max-width:100%; }
+button { cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+img { display:block; max-width:100%; }
+main { min-width:0; }
+dialog[open] { position:fixed; inset:50% auto auto 50%; margin:0; transform:translate(-50%,-50%); }
+::selection { background:#ead3d9; color:#57172a; }
+.site-shell { display:flex; flex-direction:column; min-height:100vh; }
+.site-content-width { width:min(var(--site-width),3200px); margin:clamp(2rem,2.5vw,4rem) auto; }
+.site-footer { display:flex; justify-content:space-between; gap:16px; width:min(var(--site-width),3200px); margin:auto auto 0; padding:clamp(18px,2.2vw,72px) 0; color:#89909a; font:clamp(11px,.58vw,16px)/1.5 "JetBrains Mono",monospace; }
+@media (max-width:1180px) { .site-footer { width:100%; padding-right:var(--site-gutter); padding-left:var(--site-gutter); } }
+@media (max-width:1180px) { .site-content-width { width:100%; padding-right:var(--site-gutter); padding-left:var(--site-gutter); } }
+@media (max-width:700px) { .site-footer { flex-direction:column; gap:8px; padding:18px; } }
+@media (min-width:2000px) { html { font-size:clamp(17px,.82vw,22px); } }
+@media (max-width:780px) { :root { --site-gutter:18px; } }
+@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
 
-:root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #141416;
-  --card-foreground: #fafafa;
-  --popover: #141416;
-  --popover-foreground: #fafafa;
-  --primary: #f4f4f5;
-  --primary-foreground: #18181b;
-  --secondary: #202023;
-  --secondary-foreground: #e4e4e7;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #71717a;
-  --radius: 0.75rem;
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --background:#111721;
+  --foreground:#edf1f7;
+  --card:var(--background);
+  --card-foreground:var(--foreground);
+  --popover:var(--background);
+  --popover-foreground:var(--foreground);
+  --secondary:var(--background);
+  --secondary-foreground:var(--foreground);
+  --muted:var(--background);
+  --muted-foreground:#c1c9d5;
+  --accent:var(--background);
+  --accent-foreground:var(--foreground);
+  --border:#303b4b;
+  --input:#303b4b;
+  --ring:#7164ff;
+  --ink:var(--foreground);
+  --muted-ink:#c1c9d5;
+  --paper:var(--background);
+  --line:#303b4b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-}
+html[data-theme="dark"] body,
+html[data-theme="dark"] main { background:var(--background); color:var(--foreground); }
+html[data-theme="dark"] .site-footer { color:var(--foreground); }
+html[data-theme="dark"] main :is(article,[class*="panel"],[class*="Panel"],[class*="card"],[class*="Card"],[class*="editor"],[class*="Editor"],[class*="messageCard"],[class*="dialog"],[class*="Dialog"],[class*="section"],[class*="Section"],[class*="metric"],[class*="Metric"],[class*="documents"],[class*="upload"],[class*="search"],[class*="Search"],[class*="empty"],[class*="Empty"],[class*="filters"],[class*="Filters"],[class*="tabs"],[class*="Tabs"],[class*="hero"],[class*="Hero"],[class*="method"],[class*="Method"],[class*="note"],[class*="Note"],[class*="next"],[class*="Next"],[class*="top"],[class*="Top"],[class*="close"],[class*="Close"]) { border-color:var(--border); background:var(--background); color:var(--foreground); box-shadow:none; }
+html[data-theme="dark"] main :is(h1,h2,h3,h4,h5,h6,p,strong,small,span,th,td,label,summary,li,a,button) { color:var(--foreground); }
+html[data-theme="dark"] main :is(input,select,textarea) { border-color:var(--border); background-color:var(--background); color:var(--foreground); }
+html[data-theme="dark"] main :is(input,textarea)::placeholder { color:var(--muted-foreground); }
+html[data-theme="dark"] main [class*="stage"] { background:var(--background); }
+html[data-theme="dark"] main [class*="caption"] { border-top:1px solid var(--border); color:var(--foreground); }
+html[data-theme="dark"] main button[aria-pressed="true"],
+html[data-theme="dark"] main [class*="row"]:hover,
+html[data-theme="dark"] main [aria-pressed="true"] { background:var(--background); color:var(--foreground); box-shadow:none; }
+html[data-theme="dark"] main [class*="own"]:hover { background:var(--background)!important; }
+html[data-theme="dark"] main [class*="status"] { background:rgba(17,23,33,.9); color:var(--foreground); }
+html[data-theme="dark"] main table,
+html[data-theme="dark"] main tr,
+html[data-theme="dark"] main th,
+html[data-theme="dark"] main td { border-color:var(--border); }
+html[data-theme="dark"] ::selection { background:#5144a6; color:#fff; }

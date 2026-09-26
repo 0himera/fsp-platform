@@ -32,7 +32,7 @@ export const CompetitionsSection: React.FC = () => {
               key={c.id}
               competition={c}
               isRegistered={registeredIds.has(c.id)}
-              canRegister={isAthlete && c.registration_open && !registeredIds.has(c.id)}
+              canRegister={Boolean(isAthlete && c.registration_open && !registeredIds.has(c.id))}
               onRegister={(id) => registerMutation.mutate(id)}
               isRegistering={registerMutation.isPending}
             />

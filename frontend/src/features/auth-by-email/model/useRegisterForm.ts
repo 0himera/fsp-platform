@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useRegisterMutation } from "../api/authApi";
+import type { UserRole } from "@/shared/api";
 
 export function useRegisterForm() {
   const [fullName, setFullName] = React.useState("");
@@ -7,6 +8,7 @@ export function useRegisterForm() {
   const [password, setPassword] = React.useState("");
   const [city, setCity] = React.useState("");
   const [organization, setOrganization] = React.useState("");
+  const [role, setRole] = React.useState<UserRole>("athlete");
 
   const registerMutation = useRegisterMutation();
 
@@ -19,6 +21,7 @@ export function useRegisterForm() {
       password,
       city: city.trim() || undefined,
       organization: organization.trim() || undefined,
+      role,
     });
   };
 
@@ -28,6 +31,7 @@ export function useRegisterForm() {
     password, setPassword,
     city, setCity,
     organization, setOrganization,
+    role, setRole,
     handleSubmit,
     registerMutation,
   };

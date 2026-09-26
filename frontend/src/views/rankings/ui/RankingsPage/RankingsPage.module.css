@@ -1,0 +1,12 @@
+.page { width:min(var(--site-width),3200px); margin:0 auto; padding:clamp(28px,2.2vw,76px) 0 clamp(48px,4vw,120px); }
+.heading { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:25px; }
+.heading > div > span { color:var(--wine); font:700 10px "JetBrains Mono",monospace; letter-spacing:.14em; text-transform:uppercase; }
+.heading h1 { margin:8px 0; color:#142033; font-size:clamp(38px,3.2vw,82px); line-height:1; }
+.heading p { max-width:740px; margin:0; color:#77808c; font:13px/1.55 "JetBrains Mono",monospace; }
+.heading time { padding-bottom:4px; color:#717b89; font:11px "JetBrains Mono",monospace; white-space:nowrap; }
+.layout { display:grid; grid-template-columns:minmax(0,1fr) clamp(315px,21vw,520px); gap:clamp(18px,1.5vw,38px); align-items:start; }
+.main { min-width:0; }
+@media (max-width:1120px) { .layout { grid-template-columns:minmax(0,1fr) 280px; } }
+@media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+@media (max-width:1180px) { .page { width:100%; padding-right:var(--site-gutter); padding-left:var(--site-gutter); } }
+@media (max-width:680px) { .heading { align-items:start; flex-direction:column; gap:12px; } .heading h1 { font-size:clamp(32px,8vw,40px); } .heading time { white-space:normal; } }

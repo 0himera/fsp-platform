@@ -2,6 +2,10 @@ const app = document.getElementById('app');
 const toast = document.getElementById('toast');
 
 const state = { me: null, competitions: [], rankings: [], disciplines: [], detail: null };
+let homeSlides = [];
+let homeSlideIndex = 0;
+let homeCarouselTimer = null;
+const homeCarouselDelay = 6500;
 const levels = {
   rf_championship: 'Чемпионат / Кубок России',
   all_russian: 'Всероссийское соревнование',
@@ -72,19 +76,23 @@ async function refresh() {
 function layout(content, title) {
   const user = state.me?.user;
   const path = location.pathname;
+  const isHome = path === '/' || path === '/competitions';
   const nav = [
-    ['/', 'Соревнования'],
+    ['/', 'События'],
+    ['/calendar', 'Календарь'],
     ['/rankings', 'Рейтинг'],
-    ['/info', 'Информация'],
-    [user?.role === 'organizer' ? '/admin' : '/profile', user?.role === 'organizer' ? 'Организатор' : 'Мой профиль']
+    ['/info', 'Материалы']
   ];
   return `<div class="site">
-    <header class="site-header"><div class="header-inner">
-      <a href="/" data-link class="brand"><span class="brand-mark">{ }</span><span><strong>АРЕНА</strong><small>ФСП ДАГЕСТАНА</small></span></a>
-      <nav aria-label="Основная навигация">${nav.map(([url, label]) => `<a href="${url}" data-link class="${path === url || (url === '/' && path.startsWith('/competitions')) ? 'active' : ''}">${label}</a>`).join('')}</nav>
-      <div class="account">${user ? `<span>${h(user.full_name || 'Организатор')}</span><button type="button" class="link-button" data-action="logout">Выйти</button>` : `<a href="/login" data-link>Войти</a>`}</div>
+    <header class="site-header fsp-site-header"><div class="header-inner">
+      <a href="/" data-link class="fsp-brand" aria-label="ФСП Республики Дагестан — главная">
+        <svg class="fsp-brand-symbol" viewBox="0 0 52 52" aria-hidden="true"><path d="M26 7 11 20l9 14 17-2 4-16-15-9ZM11 20l4 20 18 4 8-12M20 34l13 10M26 7l7 37" fill="none" stroke="#c9ced7" stroke-width="2.6"/><circle cx="26" cy="7" r="5" fill="#e63356"/><circle cx="11" cy="20" r="4.5" fill="#ec3153"/><circle cx="20" cy="34" r="4.5" fill="#2746d8"/><circle cx="37" cy="32" r="4.5" fill="#2849e5"/><circle cx="41" cy="16" r="4.5" fill="#ed3150"/><circle cx="15" cy="40" r="4" fill="#a9b0be"/><circle cx="33" cy="44" r="4" fill="#2850e9"/></svg>
+        <span class="fsp-brand-copy"><strong>ФСП</strong><span>Федерация спортивного<br>программирования<br>Республики Дагестан</span></span>
+      </a>
+      <nav class="fsp-nav" aria-label="Основная навигация">${nav.map(([url, label]) => `<a href="${url}" data-link class="${path === url || (url === '/' && isHome) ? 'active' : ''}" ${path === url || (url === '/' && isHome) ? 'aria-current="page"' : ''}>${label}</a>`).join('')}</nav>
+      <div class="account fsp-account">${user ? `<a href="${user.role === 'organizer' ? '/admin' : '/profile'}" data-link class="account-profile">${h(user.full_name || 'Кабинет')}</a><button type="button" class="link-button" data-action="logout">Выйти</button>` : `<a href="/login" data-link class="header-login">Войти</a>`}</div>
     </div></header>
-    <main class="container"><div class="page-title"><h1>${h(title)}</h1></div>${content}</main>
+    <main class="${isHome ? 'home-main' : 'container'}">${isHome ? '' : `<div class="page-title"><h1>${h(title)}</h1></div>`}${content}</main>
     <footer>Арена ФСП РД · Внутренний рейтинг не заменяет официальные спортивные разряды.</footer>
   </div>`;
 }
@@ -99,15 +107,58 @@ function competitionCard(c) {
   </article>`;
 }
 
-function competitionsPage() {
-  const list = [...state.competitions].sort((a, b) => {
-    const order = { open: 0, running: 1, completed: 2, draft: 3 };
-    return (order[a.status] - order[b.status]) || new Date(b.starts_at) - new Date(a.starts_at);
+function orderedCompetitions() {
+  const order = { open: 0, running: 1, completed: 2, draft: 3 };
+  return state.competitions.filter(c => c.status !== 'draft').sort((a, b) => {
+    const byStatus = order[a.status] - order[b.status];
+    if (byStatus) return byStatus;
+    return a.status === 'completed' ? new Date(b.starts_at) - new Date(a.starts_at) : new Date(a.starts_at) - new Date(b.starts_at);
   });
-  return `<div class="intro"><p>Соревнования, заявки и опубликованные результаты в одном месте.</p>
-    ${state.me?.user.role === 'organizer' ? '<a class="button primary" href="/admin" data-link>Управление соревнованиями</a>' : ''}</div>
-    <div class="toolbar"><input id="event-search" type="search" placeholder="Найти соревнование" aria-label="Найти соревнование"><span class="subtle">${list.length} соревнований</span></div>
-    <div class="cards" id="competition-list">${list.length ? list.map(competitionCard).join('') : '<div class="empty">Пока нет соревнований.</div>'}</div>`;
+}
+
+function featureArtwork(code) {
+  if (code === 'product' || code === 'security') return '/assets/media/slide-product.png';
+  if (code === 'robotics' || code === 'uav') return '/assets/media/slide-robotics.png';
+  return '/assets/media/slide-algorithmic.png';
+}
+
+function featuredSlide(c) {
+  return `<div class="feature-art"><img src="${featureArtwork(c.discipline_code)}" alt="" loading="eager"></div>
+    <div class="feature-caption"><span class="feature-label">${h(statuses[c.status] || 'Событие')} · ${h(discipline(c.discipline_code))}</span>
+      <h1><a href="/competitions/${c.id}" data-link>${h(c.title)}</a></h1>
+      <div class="feature-caption-bottom"><span>${h(fmtDate(c.starts_at))} · ${h(c.location || 'Онлайн')}</span><a href="/competitions/${c.id}" data-link>Открыть событие <span aria-hidden="true">↗</span></a></div>
+    </div>`;
+}
+
+function competitionsPage() {
+  const list = orderedCompetitions();
+  homeSlides = list.filter(c => c.status === 'open' || c.status === 'running').slice(0, 4);
+  if (!homeSlides.length) homeSlides = list.slice(0, 4);
+  homeSlideIndex = 0;
+  const sideEvents = list.slice(0, 5);
+  return `<section class="feature-stage" id="home-feature" aria-label="Главные события">
+    <div class="feature-inner">
+      <div class="feature-column">${homeSlides.length ? `<article class="feature-poster" id="feature-slide">${featuredSlide(homeSlides[0])}</article>
+        <div class="feature-controls" aria-label="Управление слайдами"><button type="button" class="carousel-arrow" data-carousel="prev" aria-label="Предыдущее событие">←</button>
+          <div class="carousel-steps">${homeSlides.map((_, index) => `<button type="button" class="carousel-step ${index === 0 ? 'active' : ''}" data-carousel="${index}" aria-label="Показать событие ${index + 1}" aria-pressed="${index === 0}"><span></span></button>`).join('')}</div>
+          <button type="button" class="carousel-arrow" data-carousel="next" aria-label="Следующее событие">→</button></div>` : '<div class="feature-empty">События скоро появятся</div>'}</div>
+      <aside class="events-panel"><div class="events-panel-head"><h2>События</h2><span>Ближайшие соревнования</span></div>
+        <div class="events-panel-list">${sideEvents.length ? sideEvents.map((c, index) => `<a href="/competitions/${c.id}" data-link class="event-line ${index === 0 ? 'active' : ''}" data-feature-event-id="${c.id}"><span class="event-line-index">${String(index + 1).padStart(2, '0')}</span><span class="event-line-main"><strong>${h(c.title)}</strong><small>${h(fmtDate(c.starts_at))} <span aria-hidden="true">·</span> ${h(c.format === 'team' ? 'Командный' : 'Личный')} <span aria-hidden="true">·</span> ${h(c.location || 'Онлайн')}</small></span><span class="event-line-arrow" aria-hidden="true">↗</span></a>`).join('') : '<p>Пока нет соревнований.</p>'}</div>
+        <a href="/calendar" data-link class="all-calendar">Весь календарь <span aria-hidden="true">→</span></a>
+      </aside>
+    </div>
+  </section>
+  <section class="home-links" aria-label="Разделы платформы"><div class="home-links-inner">
+    <a href="/calendar" data-link><span>01 / Календарь</span><strong>Найдите следующий старт</strong><span aria-hidden="true">↗</span></a>
+    <a href="/rankings" data-link><span>02 / Рейтинг</span><strong>${state.rankings.length} спортсменов в рейтинге</strong><span aria-hidden="true">↗</span></a>
+    <a href="/info" data-link><span>03 / Материалы</span><strong>Правила и методика</strong><span aria-hidden="true">↗</span></a>
+  </div></section>`;
+}
+
+function calendarPage() {
+  const list = orderedCompetitions();
+  return `<p class="intro-text">Даты соревнований, открытые заявки и опубликованные результаты.</p>
+    <div class="calendar-list">${list.length ? list.map(c => `<a href="/competitions/${c.id}" data-link class="calendar-item"><span class="calendar-item-date">${h(fmtDate(c.starts_at))}</span><span><strong>${h(c.title)}</strong><small>${h(discipline(c.discipline_code))} · ${h(c.location || 'Онлайн')}</small></span><span class="tag ${h(c.status)}">${h(statuses[c.status] || c.status)}</span><span aria-hidden="true">↗</span></a>`).join('') : '<div class="empty">Соревнований пока нет.</div>'}</div>`;
 }
 
 function rankingPage() {
@@ -281,15 +332,42 @@ function emailActionPage(reset = false) {
     <button class="button primary" type="submit">${reset ? 'Сохранить пароль' : 'Подтвердить адрес'}</button></form></div>`;
 }
 
+function setHomeSlide(index) {
+  if (!homeSlides.length) return;
+  const poster = document.getElementById('feature-slide');
+  if (!poster) return;
+  homeSlideIndex = (index + homeSlides.length) % homeSlides.length;
+  const current = homeSlides[homeSlideIndex];
+  poster.innerHTML = featuredSlide(current);
+  document.querySelectorAll('.carousel-step').forEach((step, stepIndex) => {
+    const active = stepIndex === homeSlideIndex;
+    step.classList.toggle('active', active);
+    step.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('.event-line').forEach(line => line.classList.toggle('active', line.dataset.featureEventId === String(current.id)));
+}
+
+function startHomeCarousel() {
+  clearInterval(homeCarouselTimer);
+  if (homeSlides.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  homeCarouselTimer = setInterval(() => {
+    const stage = document.getElementById('home-feature');
+    if (!stage || document.hidden || stage.matches(':hover') || stage.matches(':focus-within')) return;
+    setHomeSlide(homeSlideIndex + 1);
+  }, homeCarouselDelay);
+}
+
 let renderId = 0;
 async function render() {
+  clearInterval(homeCarouselTimer);
   const id = ++renderId;
   const path = location.pathname;
   try {
     let content, title;
     if (path === '/' || path === '/competitions') { title = 'Соревнования'; content = competitionsPage(); }
+    else if (path === '/calendar') { title = 'Календарь соревнований'; content = calendarPage(); }
     else if (path === '/rankings') { title = 'Рейтинг спортсменов'; content = rankingPage(); }
-    else if (path === '/info') { title = 'Информация'; content = informationPage(); }
+    else if (path === '/info') { title = 'Материалы'; content = informationPage(); }
     else if (path === '/admin') { title = 'Кабинет организатора'; content = adminPage(); }
     else if (path === '/login') { title = 'Вход'; content = authPage(false); }
     else if (path === '/register') { title = 'Регистрация'; content = authPage(true); }
@@ -316,6 +394,7 @@ async function render() {
     if (id !== renderId) return;
     document.title = `${title} · Арена ФСП РД`;
     app.innerHTML = layout(content, title);
+    if (path === '/' || path === '/competitions') startHomeCarousel();
     if (path === '/profile') {
       api('/api/me/registrations').then(items => {
         const target = document.getElementById('my-registrations');
@@ -343,6 +422,13 @@ document.addEventListener('click', async event => {
   const link = event.target.closest('a[data-link]');
   if (link && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
     event.preventDefault(); go(link.getAttribute('href')); return;
+  }
+  const carouselButton = event.target.closest('button[data-carousel]');
+  if (carouselButton) {
+    const direction = carouselButton.dataset.carousel;
+    setHomeSlide(direction === 'prev' ? homeSlideIndex - 1 : direction === 'next' ? homeSlideIndex + 1 : Number(direction));
+    startHomeCarousel();
+    return;
   }
   const button = event.target.closest('[data-action]');
   if (!button) return;

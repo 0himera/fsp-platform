@@ -14,6 +14,7 @@ export interface Competition {
   level_code: string;
   discipline_code: string;
   format: CompetitionFormat;
+  max_team_size?: number;
   starts_at: string;
   ends_at: string;
   registration_deadline: string;
@@ -34,6 +35,7 @@ export interface CreateCompetitionInput {
   level_code: string;
   discipline_code: string;
   format: CompetitionFormat;
+  max_team_size?: number;
   starts_at: string;
   ends_at: string;
   registration_deadline: string;

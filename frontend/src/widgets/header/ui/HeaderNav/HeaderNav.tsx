@@ -1,47 +1,48 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./HeaderNav.module.css";
 
 const navItems = [
-  { label: "Главная", href: "/#" },
-  { label: "Соревнования", href: "/#competitions" },
-  { label: "Рейтинг РД", href: "/#ratings" },
-  { label: "Документы", href: "/#docs" },
+  { label: "Главная", href: "/", matches: (path: string) => path === "/" },
+  { label: "Соревнования", href: "/events", matches: (path: string) => path === "/events" || path.startsWith("/competitions") },
+  { label: "Календарь", href: "/calendar", matches: (path: string) => path === "/calendar" },
+  { label: "Рейтинг", href: "/rankings", matches: (path: string) => path === "/rankings" },
+  { label: "Специалисты", href: "/coaches", matches: (path: string) => path === "/coaches" },
+  { label: "Документы", href: "/info", matches: (path: string) => path === "/info" },
 ];
 
-export const HeaderNav: React.FC = () => {
-  const [activeHash, setActiveHash] = React.useState("");
+interface HeaderNavProps {
+  profileHref: string;
+}
 
-  React.useEffect(() => {
-    const handleHash = () => {
-      setActiveHash(window.location.hash || "");
-    };
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
+export const HeaderNav: React.FC<HeaderNavProps> = ({ profileHref }) => {
+  const pathname = usePathname();
 
   return (
-    <nav className={styles.nav}>
+    <nav className={styles.nav} aria-label="Основная навигация">
       {navItems.map((item) => {
-        const hash = item.href.replace("/#", "#");
-        const isActive =
-          (!activeHash && (item.href === "/" || item.href === "/#")) ||
-          (Boolean(activeHash) && hash === activeHash);
-
+        const active = item.matches(pathname);
         return (
-          <a
-            key={item.label}
+          <Link
+            key={item.href}
             href={item.href}
-            onClick={() => setActiveHash(hash === "#" ? "" : hash)}
-            className={`${styles.link} ${isActive ? styles.active : ""}`}
+            className={`${styles.link} ${active ? styles.active : ""}`}
+            aria-current={active ? "page" : undefined}
           >
             {item.label}
-          </a>
+          </Link>
         );
       })}
+      <Link
+        href={profileHref}
+        className={`${styles.link} ${pathname === "/profile" || pathname.startsWith("/athletes/") || pathname === "/admin" ? styles.active : ""}`}
+        aria-current={pathname === "/profile" || pathname.startsWith("/athletes/") || pathname === "/admin" ? "page" : undefined}
+      >
+        Профиль
+      </Link>
     </nav>
   );
 };
-

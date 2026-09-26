@@ -1,0 +1,7 @@
+.panel { display:grid; gap:14px; padding:18px; border:1px solid #e2e7f0; border-radius:8px; background:#fff; }
+.panel h2 { margin:0; color:#18263a; font-size:18px; }
+.panel form { display:flex; align-items:end; flex-wrap:wrap; gap:10px; }
+.panel label { display:grid; gap:5px; color:#697586; font:11px "JetBrains Mono",monospace; }
+.panel input { min-width:210px; padding:9px; border:1px solid #d9d6d2; border-radius:4px; }
+.panel button { padding:9px 12px; border:0; border-radius:4px; background:#84243b; color:#fff; cursor:pointer; }
+.panel small { align-self:center; color:#52745f; }

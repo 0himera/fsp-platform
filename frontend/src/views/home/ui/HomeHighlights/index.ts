@@ -1,0 +1,1 @@
+export { HomeHighlights } from "./HomeHighlights";

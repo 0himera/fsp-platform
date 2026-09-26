@@ -1,0 +1,8 @@
+.page { display:grid; place-items:start center; flex:1; padding:56px 20px 72px; }
+.panel { width:min(100%,500px); padding:29px; border:1px solid #e2e7f0; border-radius:10px; background:#fff; box-shadow:0 12px 36px rgba(30,35,43,.05); }
+.panel > span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.13em; }
+.panel h1 { margin:9px 0; color:#17243a; font-size:31px; }
+.panel p { color:#7b8490; font:12px/1.5 "JetBrains Mono",monospace; }
+.tabs { display:flex; gap:6px; margin:18px 0; padding:4px; border-radius:7px; background:#edf1f8; }
+.tabs button { flex:1; }
+@media (max-width:560px) { .page { padding:28px 14px 50px; } .panel { padding:22px 18px; } .panel h1 { font-size:27px; } }
