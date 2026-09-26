@@ -3,4 +3,5 @@ export interface UpdateProfileInput {
   organization: string;
   city: string;
   disciplines: string[];
+  codeforces_handle?: string;
 }

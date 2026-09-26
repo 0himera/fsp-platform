@@ -22,3 +22,5 @@
 .total strong { font-size:34px!important; line-height:1; }
 @media (max-width:1080px) { .hero { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(3,minmax(0,1fr)); padding:15px 0 0; border-top:1px solid #e5dfd8; border-left:0; } .rank { grid-column:auto; border-right:1px solid #e9e4de; border-bottom:0; padding-bottom:0; } }
 @media (max-width:600px) { .hero { gap:18px; padding:16px; } .identity { align-items:start; gap:13px; } .identity h1 { font-size:29px; } .identity p { font-size:12px; } .stats { grid-template-columns:1fr 1fr; gap:10px; } .rank { grid-column:1/-1; min-height:60px; border:0; border-bottom:1px solid #e9e4de; padding-bottom:10px; } .rank b { width:44px; height:50px; font-size:12px; } .total strong { font-size:28px!important; } }
+.cfBadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.3); color: #2563eb; border-radius: 4px; font: 700 11px "JetBrains Mono", monospace; text-decoration: none; }
+.cfBadge:hover { background: rgba(37, 99, 235, 0.2); }

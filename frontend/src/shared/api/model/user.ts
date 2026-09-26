@@ -48,6 +48,7 @@ export interface Athlete {
   avatar_url?: string;
   achievements?: Achievement[];
   featured_achievement?: Achievement | null;
+  codeforces_handle?: string;
 }
 
 export interface MeResponse {
