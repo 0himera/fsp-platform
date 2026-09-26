@@ -7,6 +7,7 @@
 .articleHeader p { margin:0; color:#727985; font:12px/1.5 "JetBrains Mono",monospace; }
 .closeArticle { display:grid; place-items:center; width:34px; height:34px; flex:none; border:1px solid #e1e7f0; border-radius:6px; background:#fff; color:#1b1c21; cursor:pointer; }
 .closeArticle:hover { background:#edf1f7; }
+:global([data-theme="dark"]) .closeArticle:hover { background:rgba(255,255,255,.1); }
 .articleContent { display:grid; gap:18px; padding:24px 26px 28px; font-size:14px; line-height:1.65; }
 .articleContent > p { margin:0; color:#3f4857; }
 .articleContent section { display:grid; gap:8px; padding-top:15px; border-top:1px solid #e1e7f0; }
