@@ -9,6 +9,7 @@ RUN CGO_ENABLED=0 go build -o /arena ./cmd/server \
 
 FROM alpine:3.21
 WORKDIR /app
+RUN apk add --no-cache python3
 COPY --from=build /arena /app/arena
 COPY --from=build /contest-worker /app/contest-worker
 COPY --from=build /contest-engine /app/contest-engine

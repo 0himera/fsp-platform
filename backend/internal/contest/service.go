@@ -268,10 +268,39 @@ func (s Service) SubmitCode(ctx context.Context, competitionID, taskID, athleteI
 	if err := s.canSubmit(ctx, competitionID, athleteID, taskID, "algorithm"); err != nil {
 		return Submission{}, err
 	}
+	var maxPoints float64
+	var labelsRaw []byte
+	err := s.DB.QueryRow(ctx, `SELECT max_points, expected_labels FROM contest_tasks WHERE id=$1 AND competition_id=$2`, taskID, competitionID).Scan(&maxPoints, &labelsRaw)
+	if err != nil {
+		return Submission{}, err
+	}
+	status := "submitted"
+	verdict := "Ожидает проверки организатором"
+	feedback := ""
+	var score *float64
+	var autoScore *float64
+	var reviewedAt *time.Time
+	if language == "python" {
+		var tests map[string]string
+		if len(labelsRaw) > 0 {
+			_ = json.Unmarshal(labelsRaw, &tests)
+		}
+		res := EvaluatePythonCode(ctx, source, tests, maxPoints)
+		status = "graded"
+		verdict = res.Verdict
+		feedback = res.Feedback
+		scoreVal := res.Score
+		score = &scoreVal
+		autoScore = &scoreVal
+		now := time.Now()
+		reviewedAt = &now
+	}
 	var submission Submission
-	err := s.DB.QueryRow(ctx, `INSERT INTO contest_submissions(competition_id,task_id,athlete_id,language,source_code,status,verdict)
-		VALUES($1,$2,$3,$4,$5,'submitted','Ожидает проверки организатором') RETURNING id,task_id,athlete_id,language,status,verdict,submitted_at`, competitionID, taskID, athleteID, language, source).
-		Scan(&submission.ID, &submission.TaskID, &submission.AthleteID, &submission.Language, &submission.Status, &submission.Verdict, &submission.SubmittedAt)
+	err = s.DB.QueryRow(ctx, `INSERT INTO contest_submissions(competition_id,task_id,athlete_id,language,source_code,status,verdict,feedback,score,automatic_score,reviewed_at)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		RETURNING id,task_id,athlete_id,language,status,verdict,feedback,score,automatic_score,submitted_at`,
+		competitionID, taskID, athleteID, language, source, status, verdict, feedback, score, autoScore, reviewedAt).
+		Scan(&submission.ID, &submission.TaskID, &submission.AthleteID, &submission.Language, &submission.Status, &submission.Verdict, &submission.Feedback, &submission.Score, &submission.AutomaticScore, &submission.SubmittedAt)
 	return submission, err
 }
 
@@ -313,14 +342,13 @@ func filepathBase(name string) string {
 }
 
 func (s Service) Submissions(ctx context.Context, competitionID int64, athleteID int64, organizer bool) ([]Submission, error) {
-	var competitionStatus string
-	if err := s.DB.QueryRow(ctx, `SELECT status FROM competitions WHERE id=$1`, competitionID).Scan(&competitionStatus); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
-		}
+	var exists bool
+	if err := s.DB.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM competitions WHERE id=$1)`, competitionID).Scan(&exists); err != nil {
 		return nil, err
 	}
-	hideScores := !organizer && competitionStatus != "completed"
+	if !exists {
+		return nil, ErrNotFound
+	}
 	query := `SELECT s.id,s.task_id,t.title,s.athlete_id,COALESCE(a.full_name,''),s.language,s.source_code,s.file_name,s.file_content,s.status,s.automatic_score,s.score,s.verdict,s.feedback,s.submitted_at,s.reviewed_at
 		FROM contest_submissions s JOIN contest_tasks t ON t.id=s.task_id JOIN athletes a ON a.user_id=s.athlete_id WHERE s.competition_id=$1`
 	args := []any{competitionID}
@@ -344,12 +372,7 @@ func (s Service) Submissions(ctx context.Context, competitionID int64, athleteID
 		if item.FileName != "" {
 			item.FileContent = strings.ToValidUTF8(string(fileContent), "�")
 		}
-		if hideScores && item.Status == "graded" {
-			item.AutomaticScore = nil
-			item.Score = nil
-			item.Feedback = ""
-			item.Verdict = "Оценка сохранена; итог будет показан после завершения контеста"
-		}
+
 		items = append(items, item)
 	}
 	return items, rows.Err()
@@ -474,7 +497,6 @@ func (s Service) MarkFinalized(ctx context.Context, competitionID int64) error {
 	return nil
 }
 
-// ProcessOne claims and scores a queued CSV submission. Multiple worker processes can safely call it.
 func (s Service) ProcessOne(ctx context.Context) (bool, error) {
 	tx, err := s.DB.Begin(ctx)
 	if err != nil {
