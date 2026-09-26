@@ -1,0 +1,58 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.paragraph {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.bold {
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.code {
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.8em;
+}
+
+.list {
+  margin: 0.2rem 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.listItem {
+  line-height: 1.45;
+}
+
+.numItem {
+  display: flex;
+  gap: 0.35rem;
+  line-height: 1.45;
+}
+
+.numPrefix {
+  font-weight: 700;
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.h3, .h4 {
+  margin: 0.4rem 0 0.1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.spacing {
+  height: 0.35rem;
+}

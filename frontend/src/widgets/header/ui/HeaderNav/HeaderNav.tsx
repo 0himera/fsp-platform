@@ -10,7 +10,6 @@ const navItems = [
   { label: "Соревнования", href: "/events", matches: (path: string) => path === "/events" || path.startsWith("/competitions") },
   { label: "Календарь", href: "/calendar", matches: (path: string) => path === "/calendar" },
   { label: "Рейтинг", href: "/rankings", matches: (path: string) => path === "/rankings" },
-  { label: "Специалисты", href: "/coaches", matches: (path: string) => path === "/coaches" },
   { label: "Документы", href: "/info", matches: (path: string) => path === "/info" },
 ];
 

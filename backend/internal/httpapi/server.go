@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/0himera/fsp-platform/internal/ai"
 	"github.com/0himera/fsp-platform/internal/athletes"
 	"github.com/0himera/fsp-platform/internal/auth"
 	"github.com/0himera/fsp-platform/internal/competitions"
@@ -36,12 +37,25 @@ type Server struct {
 	PublicURL   string
 	UploadDir   string
 	ExportToken string
+	AI          *ai.Service
 }
 
 func New(db *pgxpool.Pool, frontendDir string, mailer interface {
 	Send(context.Context, string, string, string) error
-}, publicURL string, exportToken string) *Server {
-	return &Server{DB: db, Auth: auth.Service{DB: db}, Athletes: athletes.Service{DB: db}, Competitions: competitions.Service{DB: db}, Rating: rating.Service{DB: db}, FrontendDir: frontendDir, Mailer: mailer, PublicURL: strings.TrimRight(publicURL, "/"), UploadDir: envUploadDir(), ExportToken: exportToken}
+}, publicURL string, exportToken string, geminiKey string) *Server {
+	return &Server{
+		DB:           db,
+		Auth:         auth.Service{DB: db},
+		Athletes:     athletes.Service{DB: db},
+		Competitions: competitions.Service{DB: db},
+		Rating:       rating.Service{DB: db},
+		FrontendDir:  frontendDir,
+		Mailer:       mailer,
+		PublicURL:    strings.TrimRight(publicURL, "/"),
+		UploadDir:    envUploadDir(),
+		ExportToken:  exportToken,
+		AI:           ai.New(db, geminiKey),
+	}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -103,6 +117,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/notifications", s.listNotifications)
 	mux.HandleFunc("POST /api/notifications/{id}/read", s.readNotification)
 	mux.HandleFunc("POST /api/notifications/read-all", s.readAllNotifications)
+	mux.HandleFunc("POST /api/ai/chat", s.aiChat)
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(s.FrontendDir))))
 	mux.HandleFunc("GET /media/avatars/{name}", s.serveAvatar)
 	mux.HandleFunc("GET /media/documents/{name}", s.serveDocument)
