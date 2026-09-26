@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../features/auth/auth.dart';
+import '../../shared/api/api.dart';
 import '../../shared/ui/ui.dart';
 import '../../shared/utils/utils.dart';
 
@@ -63,6 +64,64 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
+  }
+
+  void _showServerDialog() {
+    final controller = TextEditingController(text: ApiConfig.currentBaseUrl);
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Адрес сервера', style: TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: controller,
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+              decoration: const InputDecoration(
+                labelText: 'URL API',
+                hintText: 'http://10.8.1.8:3000',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                ActionChip(
+                  label: const Text('VPN: 10.8.1.8:3000', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://10.8.1.8:3000',
+                ),
+                ActionChip(
+                  label: const Text('Wi-Fi: 192.168.1.44:3000', style: TextStyle(fontSize: 11)),
+                  onPressed: () => controller.text = 'http://192.168.1.44:3000',
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final newUrl = controller.text.trim();
+              if (newUrl.isNotEmpty) {
+                setState(() {
+                  ApiConfig.setBaseUrl(newUrl);
+                });
+              }
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Сохранить'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _fillDemo(String email, String password) {
@@ -356,6 +415,34 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Center(
+                        child: InkWell(
+                          onTap: _showServerDialog,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppTheme.border),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.dns_outlined, size: 14, color: AppTheme.textTertiary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Сервер: ${ApiConfig.currentBaseUrl}',
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary, fontFamily: 'monospace'),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.edit_outlined, size: 12, color: AppTheme.textTertiary),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],

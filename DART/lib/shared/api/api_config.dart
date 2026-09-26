@@ -1,43 +1,27 @@
-/// Адрес Федерации.
-///
-/// Слой `shared`: про транспорт (HTTP, сессия, таймауты) не должен знать никто,
-/// кроме этого слоя и сервисов. Контроллеры и UI работают с абстрактными
-/// сервисами и не подозревают, откуда прилетел JSON.
 library;
 
-/// Куда стучится клиент.
-///
-/// ЗНАЧЕНИЕ ПО УМОЛЧАНИЮ — `http://127.0.0.1:8080`: так поднят локальный
-/// бэкенд из `test-server/fsp-platform` (Go + PostgreSQL).
-///
-/// ВАЖНО ПРО `localhost`: сервер бэкенда слушает IPv4 (`:8080`), а на некоторых
-/// машинах `localhost` резолвится в `::1` (IPv6) — запрос «не доходит» и выглядит
-/// как падение сети. Поэтому в конфиге зашит именно IP, а не имя хоста.
-///
-/// Как переопределить без правки кода (приложение пересобирается, не перезапускается):
-/// ```
-/// flutter run --dart-define=API_BASE_URL=http://192.168.0.10:8080
-/// ```
-/// Шпаргалка по адресам для разных платформ:
-///  • Linux/macOS/Windows (десктоп)  -> http://127.0.0.1:8080
-///  • Android-эмулятор               -> http://10.0.2.2:8080 (хост-машина)
-///  • физический телефон             -> `http://<IP компьютера>:8080`
 class ApiConfig {
   const ApiConfig({
-    this.baseUrl = defaultBaseUrl,
+    String? baseUrl,
     this.timeout = const Duration(seconds: 15),
-  });
+  }) : instanceBaseUrl = baseUrl;
 
-  /// Значение из `--dart-define`, либо локальный бэкенд.
   static const String defaultBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: 'http://10.8.1.8:3000',
   );
 
-  /// Базовый адрес БЕЗ завершающего слэша.
-  final String baseUrl;
+  static String? customBaseUrl;
 
-  /// Сколько ждём ответ. Держим соединение на коротком поводке: без таймаута
-  /// «сервер уснул» превращается в вечно крутящийся индикатор в UI.
+  static String get currentBaseUrl => customBaseUrl ?? defaultBaseUrl;
+
+  static void setBaseUrl(String url) {
+    customBaseUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+  }
+
+  final String? instanceBaseUrl;
+
+  String get baseUrl => instanceBaseUrl ?? currentBaseUrl;
+
   final Duration timeout;
 }
