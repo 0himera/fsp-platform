@@ -64,7 +64,18 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Доступ к локальной сети необходим для подключения к серверу соревнований Федерации.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+		<string>_bonjour._tcp</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>
