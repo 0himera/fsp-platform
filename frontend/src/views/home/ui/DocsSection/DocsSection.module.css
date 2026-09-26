@@ -34,7 +34,12 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 260px;
+  transition: border-color 150ms ease, transform 150ms ease;
+  cursor:pointer;
 }
+.card:hover { transform:translateY(-2px); border-color:var(--wine); }
+.card:focus-visible { outline:2px solid var(--ring); outline-offset:3px; }
 
 .cardTitle {
   font-size: 1.125rem;
@@ -46,6 +51,24 @@
   color: var(--muted-foreground, #71717a);
   line-height: 1.5;
 }
+.openArticle { display:inline-flex; align-items:center; gap:8px; padding:7px 0; border:0; background:transparent; color:var(--wine); font:700 11px "JetBrains Mono",monospace; cursor:pointer; }
+.openArticle:hover { text-decoration:underline; text-underline-offset:4px; }
+.articleDialog { width:min(760px,calc(100% - 28px)); max-width:none; max-height:min(88dvh,900px); padding:0; overflow:auto; border:1px solid #e1e7f0; border-radius:12px; background:#fff; color:#1b1c21; box-shadow:0 24px 90px rgba(5,12,24,.28); }
+.articleDialog::backdrop { background:rgba(12,19,31,.62); backdrop-filter:blur(3px); }
+.articleHeader { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:start; gap:18px; padding:22px 26px; border-bottom:1px solid #e1e7f0; background:#fff; }
+.articleHeader > div { min-width:0; }
+.articleHeader span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.13em; text-transform:uppercase; }
+.articleHeader h2 { margin:7px 0; font-size:clamp(22px,3vw,30px); }
+.articleHeader p { margin:0; color:#727985; font:12px/1.5 "JetBrains Mono",monospace; }
+.closeArticle { display:grid; place-items:center; width:34px; height:34px; flex:none; border:1px solid #e1e7f0; border-radius:6px; background:#fff; color:#1b1c21; cursor:pointer; }
+.closeArticle:hover { background:#edf1f7; }
+.articleContent { display:grid; gap:18px; padding:24px 26px 28px; font-size:14px; line-height:1.65; }
+.articleContent > p { margin:0; color:#3f4857; }
+.articleContent section { display:grid; gap:8px; padding-top:15px; border-top:1px solid #e1e7f0; }
+.articleContent h3 { margin:0; font-size:16px; }
+.articleContent section p { margin:0; color:#536074; }
+.articleContent ul { display:grid; gap:7px; margin:0; padding-left:20px; color:#536074; }
+.articleEmail { display:inline-flex; align-items:center; gap:6px; width:max-content; color:var(--wine); font-weight:700; }
 
 .link {
   color: #2563eb;
@@ -59,3 +82,4 @@
 .documents button,.upload button { width:max-content; padding:.5rem .75rem; border:0; border-radius:4px; background:#84243b; color:#fff; cursor:pointer; }
 .upload { grid-template-columns:repeat(2,minmax(0,1fr)); }
 .upload h3 { grid-column:1/-1; }
+@media (max-width:560px) { .articleHeader { padding:17px; } .articleContent { padding:18px 17px 22px; } }

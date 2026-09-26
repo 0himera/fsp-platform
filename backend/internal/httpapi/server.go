@@ -33,14 +33,15 @@ type Server struct {
 	Mailer       interface {
 		Send(context.Context, string, string, string) error
 	}
-	PublicURL string
-	UploadDir string
+	PublicURL   string
+	UploadDir   string
+	ExportToken string
 }
 
 func New(db *pgxpool.Pool, frontendDir string, mailer interface {
 	Send(context.Context, string, string, string) error
-}, publicURL string) *Server {
-	return &Server{DB: db, Auth: auth.Service{DB: db}, Athletes: athletes.Service{DB: db}, Competitions: competitions.Service{DB: db}, Rating: rating.Service{DB: db}, FrontendDir: frontendDir, Mailer: mailer, PublicURL: strings.TrimRight(publicURL, "/"), UploadDir: envUploadDir()}
+}, publicURL string, exportToken string) *Server {
+	return &Server{DB: db, Auth: auth.Service{DB: db}, Athletes: athletes.Service{DB: db}, Competitions: competitions.Service{DB: db}, Rating: rating.Service{DB: db}, FrontendDir: frontendDir, Mailer: mailer, PublicURL: strings.TrimRight(publicURL, "/"), UploadDir: envUploadDir(), ExportToken: exportToken}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -92,6 +93,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/competitions/{id}/publications/{publication_id}/restore", s.restorePublication)
 	mux.HandleFunc("POST /api/team-invitations/{token}/accept", s.acceptTeamInvite)
 	mux.HandleFunc("PUT /api/competitions/{id}/results", s.publishResults)
+	mux.HandleFunc("GET /api/competitions/{id}/export", s.exportCompetition)
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(s.FrontendDir))))
 	mux.HandleFunc("GET /media/avatars/{name}", s.serveAvatar)
 	mux.HandleFunc("GET /media/documents/{name}", s.serveDocument)

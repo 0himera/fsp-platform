@@ -70,7 +70,7 @@ func TestRegistrationWhenMailFails(t *testing.T) {
 	if err := platform.Migrate(ctx, db, "../../migrations"); err != nil {
 		t.Fatal(err)
 	}
-	server := New(db, "../../../frontend", failingMailer{}, "http://localhost:8080")
+	server := New(db, "../../../frontend", failingMailer{}, "http://localhost:8080", "")
 	fullName := strings.Repeat("Я", 100)
 	request := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(fmt.Sprintf(`{"email":"mail-failed@example.org","password":"long-password","full_name":%q,"city":"Махачкала","organization":"ДГУ"}`, fullName)))
 	request.Header.Set("Content-Type", "application/json")

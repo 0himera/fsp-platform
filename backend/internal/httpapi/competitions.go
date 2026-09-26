@@ -449,3 +449,52 @@ func (s *Server) publishResults(w http.ResponseWriter, r *http.Request) {
 	}
 	s.competitionDetail(w, r)
 }
+
+// exportCompetition отдаёт полный дамп соревнования (метаданные + участники + результаты)
+// для интеграции сторонних площадок проведения.
+// Доступ — Bearer-токен через заголовок Authorization.
+func (s *Server) exportCompetition(w http.ResponseWriter, r *http.Request) {
+	if s.ExportToken == "" {
+		writeError(w, http.StatusServiceUnavailable, "Export API не настроен")
+		return
+	}
+	auth := r.Header.Get("Authorization")
+	const prefix = "Bearer "
+	if len(auth) <= len(prefix) || auth[:len(prefix)] != prefix || auth[len(prefix):] != s.ExportToken {
+		w.Header().Set("WWW-Authenticate", `Bearer realm="fsp-export"`)
+		writeError(w, http.StatusUnauthorized, "Неверный или отсутствующий API-токен")
+		return
+	}
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	competition, err := s.Competitions.Get(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	registrations, err := s.Competitions.Registrations(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	results, err := s.Competitions.Results(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	teams, err := s.Competitions.Teams(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"competition":   competition,
+		"registrations": registrations,
+		"teams":         teams,
+		"results":       results,
+	})
+}
+
