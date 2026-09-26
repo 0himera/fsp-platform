@@ -200,53 +200,69 @@ func (s *Service) Ask(ctx context.Context, userQuery string, history []Message) 
 		},
 	})
 
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=%s", s.APIKey)
+	models := []string{"gemini-flash-latest", "gemini-3.1-flash-lite-preview", "gemini-3.8-flash"}
+	var lastErr error
+	var answer string
 
-	reqPayload := map[string]any{
-		"contents": contents,
-		"generationConfig": map[string]any{
-			"temperature":     0.3,
-			"maxOutputTokens": 1024,
-		},
-	}
+	for _, modelName := range models {
+		url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", modelName, s.APIKey)
+		reqPayload := map[string]any{
+			"contents": contents,
+			"generationConfig": map[string]any{
+				"temperature":     0.3,
+				"maxOutputTokens": 1024,
+			},
+		}
 
-	payloadBytes, _ := json.Marshal(reqPayload)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payloadBytes))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
+		payloadBytes, _ := json.Marshal(reqPayload)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payloadBytes))
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
 
-	resp, err := s.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+		resp, err := s.HTTPClient.Do(req)
+		if err != nil {
+			lastErr = err
+			continue
+		}
 
-	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("gemini generate error (%d): %s", resp.StatusCode, string(body))
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("gemini %s error (%d): %s", modelName, resp.StatusCode, string(body))
+			continue
+		}
+
+		var geminiResp struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+
+		if err := json.Unmarshal(body, &geminiResp); err != nil {
+			lastErr = err
+			continue
+		}
+
+		if len(geminiResp.Candidates) > 0 && len(geminiResp.Candidates[0].Content.Parts) > 0 {
+			answer = geminiResp.Candidates[0].Content.Parts[0].Text
+			break
+		}
 	}
 
-	var geminiResp struct {
-		Candidates []struct {
-			Content struct {
-				Parts []struct {
-					Text string `json:"text"`
-				} `json:"parts"`
-			} `json:"content"`
-		} `json:"candidates"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&geminiResp); err != nil {
-		return nil, err
-	}
-
-	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+	if answer == "" {
+		if lastErr != nil {
+			return nil, lastErr
+		}
 		return nil, fmt.Errorf("модель не вернула ответа")
 	}
-
-	answer := geminiResp.Candidates[0].Content.Parts[0].Text
 
 	return &ChatResult{
 		Answer:  answer,
