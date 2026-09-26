@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { tokenizePython } from "./lib/pythonTokenizer";
 import styles from "./EditorTextarea.module.css";
 
 interface Props {
@@ -9,43 +10,49 @@ interface Props {
 }
 
 export function EditorTextarea({ code, onChange }: Props) {
+  const preRef = React.useRef<HTMLPreElement>(null);
   const lineCount = React.useMemo(() => Math.max(1, code.split("\n").length), [code]);
-  const lines = React.useMemo(
-    () => Array.from({ length: lineCount }, (_, i) => i + 1),
-    [lineCount]
-  );
+  const lines = React.useMemo(() => Array.from({ length: lineCount }, (_, i) => i + 1), [lineCount]);
+  const tokens = React.useMemo(() => tokenizePython(code), [code]);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (preRef.current) {
+      preRef.current.scrollTop = e.currentTarget.scrollTop;
+      preRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Tab") {
       e.preventDefault();
-      const target = e.currentTarget;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-      const newCode = code.substring(0, start) + "    " + code.substring(end);
-      onChange(newCode);
-      requestAnimationFrame(() => {
-        target.selectionStart = target.selectionEnd = start + 4;
-      });
+      const s = e.currentTarget.selectionStart;
+      onChange(code.substring(0, s) + "    " + code.substring(e.currentTarget.selectionEnd));
+      requestAnimationFrame(() => { if (e.currentTarget) e.currentTarget.selectionStart = e.currentTarget.selectionEnd = s + 4; });
     }
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.lineNumbers}>
-        {lines.map((n) => (
-          <div key={n}>{n}</div>
-        ))}
+      <div className={styles.lineNumbers}>{lines.map((n) => <div key={n}>{n}</div>)}</div>
+      <div className={styles.editorWrap}>
+        <pre ref={preRef} className={styles.highlightPre}>
+          <code>
+            {tokens.map((t, i) => <span key={i} className={styles[t.type]}>{t.text}</span>)}
+            {code.endsWith("\n") && " "}
+          </code>
+        </pre>
+        <textarea
+          className={styles.textarea}
+          value={code}
+          onChange={(e) => onChange(e.target.value)}
+          onScroll={handleScroll}
+          onKeyDown={handleKeyDown}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+        />
       </div>
-      <textarea
-        className={styles.textarea}
-        value={code}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        spellCheck={false}
-        autoCapitalize="off"
-        autoComplete="off"
-        autoCorrect="off"
-      />
     </div>
   );
 }

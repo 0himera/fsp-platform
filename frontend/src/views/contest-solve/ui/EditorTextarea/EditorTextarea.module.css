@@ -1,35 +1,30 @@
 .container {
-  display: flex;
-  flex: 1;
-  min-height: 240px;
-  background: #020617;
-  overflow: hidden;
-  position: relative;
+  display: flex; flex: 1; min-height: 240px; background: #020617;
+  overflow: hidden; position: relative;
 }
-
 .lineNumbers {
-  padding: 16px 12px 16px 16px;
-  color: #475569;
+  padding: 16px 12px 16px 16px; color: #475569;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  line-height: 20px;
-  text-align: right;
-  user-select: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  background: #020617;
+  font-size: 13px; line-height: 20px; text-align: right; user-select: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.05); background: #020617;
 }
-
+.editorWrap { position: relative; flex: 1; height: 100%; overflow: hidden; }
+.highlightPre,
 .textarea {
-  flex: 1;
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
   padding: 16px 16px 16px 12px;
-  background: transparent;
-  color: #f8fafc;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
-  line-height: 20px;
-  border: none;
-  outline: none;
-  resize: none;
-  white-space: pre;
-  tab-size: 4;
+  font-size: 13px; line-height: 20px; white-space: pre; tab-size: 4; box-sizing: border-box;
 }
+.highlightPre { overflow: hidden; pointer-events: none; background: transparent; }
+.textarea {
+  overflow: auto; border: none; outline: none; resize: none;
+  background: transparent; color: transparent; caret-color: #38bdf8;
+}
+.keyword { color: #c084fc; font-weight: 600; }
+.builtin { color: #38bdf8; }
+.string { color: #4ade80; }
+.comment { color: #64748b; font-style: italic; }
+.number { color: #fb923c; }
+.punct { color: #94a3b8; }
+.plain { color: #f8fafc; }
