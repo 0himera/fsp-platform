@@ -11,6 +11,7 @@ interface AdminCreateTabProps {
 
 export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => {
   const [title, setTitle] = React.useState("");
+  const [format, setFormat] = React.useState<"individual" | "team">("individual");
   const [level, setLevel] = React.useState("rd_championship");
   const [customDiscipline, setCustomDiscipline] = React.useState<string | null>(null);
   const [location, setLocation] = React.useState("Махачкала, ДГТУ");
@@ -22,12 +23,8 @@ export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const now = Date.now();
-    const starts_at = new Date(now + 7 * 86400000).toISOString();
-    const ends_at = new Date(now + 8 * 86400000).toISOString();
-    const registration_deadline = new Date(now + 6 * 86400000).toISOString();
-
     createMutation.mutate(
-      { title, level_code: level, discipline_code: discipline, format: "individual", starts_at, ends_at, registration_deadline, location, description: title, status: "open", stage: "standalone" },
+      { title, level_code: level, discipline_code: discipline, format, starts_at: new Date(now + 7 * 86400000).toISOString(), ends_at: new Date(now + 8 * 86400000).toISOString(), registration_deadline: new Date(now + 6 * 86400000).toISOString(), location, description: title, status: "open", stage: "standalone", max_team_size: format === "team" ? 5 : undefined },
       { onSuccess }
     );
   };
@@ -39,6 +36,10 @@ export const AdminCreateTab: React.FC<AdminCreateTabProps> = ({ onSuccess }) => 
         <form className={styles.form} onSubmit={handleSubmit}>
           <Input placeholder="Название турнира" required value={title} onChange={(e) => setTitle(e.target.value)} />
           <div className={styles.row}>
+            <select value={format} onChange={(e) => setFormat(e.target.value as "individual" | "team")} className={styles.select}>
+              <option value="individual">Личный зачёт</option>
+              <option value="team">Командный зачёт (до 5 чел)</option>
+            </select>
             <select value={level} onChange={(e) => setLevel(e.target.value)} className={styles.select}>
               {Object.entries(COMPETITION_LEVELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>

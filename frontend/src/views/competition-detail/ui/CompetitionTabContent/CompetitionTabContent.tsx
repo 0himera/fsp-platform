@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { DetailTab } from "../CompetitionDetailTabs";
-import type { Registration, Team, CompetitionResult } from "@/shared/api";
+import type { Competition, Registration, Team, CompetitionResult } from "@/shared/api";
 import { CompetitionRegistrationsTab } from "../CompetitionRegistrationsTab";
 import { CompetitionTeamsTab } from "../CompetitionTeamsTab";
 import { CompetitionResultsTab } from "../CompetitionResultsTab";
@@ -8,24 +8,28 @@ import { CompetitionAdminTab } from "../CompetitionAdminTab";
 
 interface CompetitionTabContentProps {
   tab: DetailTab;
-  competitionId: number;
+  competition: Competition;
   registrations: Registration[];
   teams: Team[];
   results: CompetitionResult[];
   isOrganizer: boolean;
-  onDeleteTeam: (teamId: number) => void;
-  isDeletingTeam: boolean;
+  canRegister: boolean;
+  userTeam?: Team;
+  currentUserId?: number;
+  onOpenCreateTeam: () => void;
 }
 
 export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
   tab,
-  competitionId,
+  competition,
   registrations,
   teams,
   results,
   isOrganizer,
-  onDeleteTeam,
-  isDeletingTeam,
+  canRegister,
+  userTeam,
+  currentUserId,
+  onOpenCreateTeam,
 }) => {
   if (tab === "registrations") {
     return <CompetitionRegistrationsTab registrations={registrations} />;
@@ -33,23 +37,19 @@ export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
   if (tab === "teams") {
     return (
       <CompetitionTeamsTab
+        competitionId={competition.id}
         teams={teams}
-        isOrganizer={isOrganizer}
-        onDeleteTeam={onDeleteTeam}
-        isDeleting={isDeletingTeam}
+        userTeam={userTeam}
+        maxTeamSize={competition.max_team_size || 5}
+        currentUserId={currentUserId}
+        canRegister={canRegister}
+        onOpenCreateTeam={onOpenCreateTeam}
       />
     );
   }
-  if (tab === "results") {
-    return <CompetitionResultsTab results={results} />;
-  }
+  if (tab === "results") return <CompetitionResultsTab results={results} />;
   if (tab === "admin" && isOrganizer) {
-    return (
-      <CompetitionAdminTab
-        competitionId={competitionId}
-        registrations={registrations}
-      />
-    );
+    return <CompetitionAdminTab competition={competition} registrations={registrations} teams={teams} />;
   }
   return null;
 };

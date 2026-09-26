@@ -1,8 +1,8 @@
 "use client";
-
 import * as React from "react";
 import { useParams } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/shared/ui";
+import { Card, CardHeader, CardTitle } from "@/shared/ui";
+import { TeamRegistrationDialog } from "@/features/manage-teams";
 import { CompetitionDetailHeader } from "../CompetitionDetailHeader";
 import { CompetitionDetailTabs } from "../CompetitionDetailTabs";
 import { CompetitionTabContent } from "../CompetitionTabContent";
@@ -15,11 +15,7 @@ export const CompetitionDetailView: React.FC = () => {
 
   if (vm.isLoading) return <div className={styles.loading}>Загрузка турнира...</div>;
   if (vm.error || !vm.data) {
-    return (
-      <div className={styles.notFound}>
-        <Card><CardHeader><CardTitle>Турнир не найден</CardTitle><CardDescription>Проверьте номер</CardDescription></CardHeader></Card>
-      </div>
-    );
+    return <div className={styles.notFound}><Card><CardHeader><CardTitle>Турнир не найден</CardTitle></CardHeader></Card></div>;
   }
 
   const { competition, registrations, teams, results, registered } = vm.data;
@@ -30,8 +26,10 @@ export const CompetitionDetailView: React.FC = () => {
         competition={competition}
         isRegistered={registered}
         canRegister={vm.canRegister}
-        onRegister={vm.actions.onRegister}
-        onUnregister={vm.actions.onUnregister}
+        userTeam={vm.userTeam}
+        onRegister={vm.actions.onRegister} onUnregister={vm.actions.onUnregister}
+        onOpenCreateTeam={vm.openCreateTeam}
+        onGoToTeams={() => vm.setTab("teams")}
         isPending={vm.actions.isPending}
       />
       <CompetitionDetailTabs
@@ -44,14 +42,17 @@ export const CompetitionDetailView: React.FC = () => {
       />
       <CompetitionTabContent
         tab={vm.tab}
-        competitionId={competition.id}
+        competition={competition}
         registrations={registrations}
         teams={teams}
         results={results}
         isOrganizer={vm.isOrganizer}
-        onDeleteTeam={vm.actions.onDeleteTeam}
-        isDeletingTeam={vm.actions.isDeletingTeam}
+        canRegister={vm.canRegister}
+        userTeam={vm.userTeam}
+        currentUserId={vm.currentUserId}
+        onOpenCreateTeam={vm.openCreateTeam}
       />
+      {vm.isCreateTeamOpen && <TeamRegistrationDialog competition={competition} onClose={vm.closeCreateTeam} />}
     </div>
   );
 };

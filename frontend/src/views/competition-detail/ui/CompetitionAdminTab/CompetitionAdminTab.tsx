@@ -1,19 +1,25 @@
 import * as React from "react";
-import type { Registration } from "@/shared/api";
-import { CreateTeamCard } from "../CreateTeamCard";
+import type { Competition, Registration, Team } from "@/shared/api";
+import { PublicationHistory } from "@/features/manage-publications";
+import { CompetitionDocuments } from "@/features/manage-documents";
 import { PublishProtocolCard } from "../PublishProtocolCard";
+import { CompetitionJudges } from "../CompetitionJudges";
 
 interface CompetitionAdminTabProps {
-  competitionId: number;
+  competition: Competition;
   registrations: Registration[];
+  teams: Team[];
 }
 
 export const CompetitionAdminTab: React.FC<CompetitionAdminTabProps> = ({
-  competitionId,
+  competition,
   registrations,
+  teams,
 }) => (
   <div>
-    <CreateTeamCard competitionId={competitionId} registrations={registrations} />
-    <PublishProtocolCard competitionId={competitionId} registrations={registrations} />
+    <PublishProtocolCard competition={competition} registrations={registrations} teams={teams} />
+    <PublicationHistory competitionId={competition.id} editable={true} />
+    <CompetitionDocuments id={competition.id} editable={true} />
+    <CompetitionJudges competitionId={competition.id} />
   </div>
 );

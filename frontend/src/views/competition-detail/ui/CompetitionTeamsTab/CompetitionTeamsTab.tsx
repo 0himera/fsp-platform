@@ -1,56 +1,55 @@
 import * as React from "react";
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from "@/shared/ui";
+import { Card, CardHeader, CardTitle, CardContent, Button } from "@/shared/ui";
+import { TeamManager } from "@/features/manage-teams";
 import type { Team } from "@/shared/api";
+import { TeamCardItem } from "./ui/TeamCardItem";
 import styles from "./CompetitionTeamsTab.module.css";
 
 interface CompetitionTeamsTabProps {
+  competitionId: number;
   teams: Team[];
-  isOrganizer: boolean;
-  onDeleteTeam: (teamId: number) => void;
-  isDeleting: boolean;
+  userTeam?: Team;
+  maxTeamSize?: number;
+  currentUserId?: number;
+  canRegister: boolean;
+  onOpenCreateTeam: () => void;
 }
 
 export const CompetitionTeamsTab: React.FC<CompetitionTeamsTabProps> = ({
+  competitionId,
   teams,
-  isOrganizer,
-  onDeleteTeam,
-  isDeleting,
+  userTeam,
+  maxTeamSize = 5,
+  currentUserId = 0,
+  canRegister,
+  onOpenCreateTeam,
 }) => (
-  <Card className={styles.card}>
-    <CardHeader>
-      <CardTitle>Командные составы ({teams.length})</CardTitle>
-    </CardHeader>
-    <CardContent>
-      {teams.length === 0 ? (
-        <p className={styles.empty}>Команды пока не сформированы</p>
-      ) : (
-        <div className={styles.teamsList}>
-          {teams.map((t) => (
-            <div key={t.id} className={styles.teamItem}>
-              <div className={styles.teamHeader}>
-                <span className={styles.teamName}>{t.name}</span>
-                {isOrganizer && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onDeleteTeam(t.id)}
-                    disabled={isDeleting}
-                  >
-                    Удалить
-                  </Button>
-                )}
-              </div>
-              <div className={styles.members}>
-                {t.members.map((m) => (
-                  <Badge key={m.athlete_id} variant="secondary">
-                    {m.full_name} ({m.city || m.organization || "Дагестан"})
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          ))}
+  <div>
+    {userTeam && (
+      <div className={styles.myTeamWrapper}>
+        <TeamManager competitionId={competitionId} team={userTeam} maxSize={maxTeamSize} athleteId={currentUserId} />
+      </div>
+    )}
+    <Card className={styles.card}>
+      <CardHeader>
+        <div className={styles.topAction}>
+          <CardTitle>Все команды ({teams.length})</CardTitle>
+          {canRegister && !userTeam && (
+            <Button size="sm" onClick={onOpenCreateTeam}>Создать команду</Button>
+          )}
         </div>
-      )}
-    </CardContent>
-  </Card>
+      </CardHeader>
+      <CardContent>
+        {teams.length === 0 ? (
+          <p className={styles.empty}>Команды пока не сформированы</p>
+        ) : (
+          <div className={styles.teamsList}>
+            {teams.map((t) => (
+              <TeamCardItem key={t.id} team={t} isMyTeam={t.id === userTeam?.id} />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </div>
 );
