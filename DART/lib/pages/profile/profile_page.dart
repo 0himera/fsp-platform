@@ -1,12 +1,3 @@
-/// Личный кабинет спортсмена (п.1 ТЗ) и короткая страница организатора.
-///
-/// Кабинет показывает то, что посчитал СЕРВЕР: `GET /api/me` приносит анкету,
-/// рейтинг и историю выступлений с разложением по коэффициентам. Здесь мы только
-/// читаем и объясняем числа — пересчёт на клиенте дал бы вторую версию правды.
-///
-/// Правка доступна в рамках `PATCH /api/me`: ФИО, организация, город,
-/// дисциплины. Разряд — не наша прерогатива: его назначает организатор
-/// отдельным эндпоинтом, поэтому в форме его поля нет сознательно.
 library;
 
 import 'package:flutter/material.dart';
@@ -20,127 +11,242 @@ import '../../features/rating/rating.dart';
 import '../../shared/ui/ui.dart';
 import '../../shared/utils/utils.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  @override
-  void initState() {
-    super.initState();
-    // Справочник дисциплин нужен форме редактирования, а живёт он в
-    // контроллере турниров. Заодно список турниров будет готов, когда
-    // пользователь переключится на соседнюю вкладку.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final competitions = context.read<CompetitionsController>();
-      if (competitions.disciplines.isEmpty) competitions.load();
-    });
-  }
-
-  Future<void> _edit(Athlete athlete) async {
-    final update = await showModalBottomSheet<AthleteProfileUpdate>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) => _ProfileForm(athlete: athlete),
-    );
-    if (update == null || !mounted) return;
-    final auth = context.read<AuthController>();
-    final saved = await auth.updateProfile(update);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(saved ? 'Профиль обновлён' : auth.error ?? 'Не вышло'),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final user = auth.user;
-    final athlete = auth.athlete;
 
     if (user == null) {
-      return const EmptyNotice(text: 'Сессия не найдена — войдите заново');
+      return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(AppTheme.textPrimary)));
     }
 
-    // Организатор: анкету спортсмена сервер не отдаёт, это не ошибка.
-    if (athlete == null) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
+    final athlete = auth.athlete;
+
+    return RefreshIndicator(
+      backgroundColor: AppTheme.surfaceElevated,
+      color: AppTheme.textPrimary,
+      onRefresh: () => context.read<AuthController>().restore(),
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         children: [
-          Text('Организатор', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          Text(user.email),
-          const SizedBox(height: 24),
-          const Text(
-            'Учётная запись организатора не имеет спортивной анкеты: разряды, '
-            'заявки и рейтинг относятся к спортсменам. Управление турнирами — '
-            'во вкладке «Админка».',
-          ),
-        ],
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                athlete.fullName,
-                style: Theme.of(context).textTheme.titleLarge,
+          _UserHeader(user: user, athlete: athlete),
+          const SizedBox(height: 16),
+          if (athlete != null) ...[
+            _RatingCard(athlete: athlete),
+            const SizedBox(height: 20),
+            Text(
+              'История выступлений (${athlete.results.length})',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: AppTheme.textPrimary,
               ),
             ),
-            IconButton(
-              tooltip: 'Править анкету',
-              onPressed: () => _edit(athlete),
-              icon: const Icon(Icons.edit_outlined),
+            const SizedBox(height: 8),
+            if (athlete.results.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: EmptyNotice(
+                  text: 'Зачётных стартов пока нет',
+                  icon: Icons.history_rounded,
+                ),
+              )
+            else
+              for (final result in athlete.results)
+                _ResultCard(result: result),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: const Text(
+                'Профиль организатора турниров. Для управления турнирами используйте вкладку «Админка».',
+                style: TextStyle(fontSize: 13.5, color: AppTheme.textSecondary, height: 1.45),
+              ),
             ),
           ],
-        ),
-        Text(user.email),
-        const SizedBox(height: 8),
-        Text(
-          '${athlete.city.isEmpty ? 'Город не указан' : athlete.city}'
-          ' · ${athlete.organization.isEmpty ? 'организация не указана' : athlete.organization}',
-        ),
-        Text('Разряд: ${athlete.rank?.label ?? 'не присвоен'}'),
-        Text('Дисциплины: ${_disciplines(athlete.disciplineCodes)}'),
-        const SizedBox(height: 16),
-        _RatingCard(athlete: athlete),
-        const SizedBox(height: 16),
-        Text(
-          'История выступлений (${athlete.results.length})',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        if (athlete.results.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text('Зачётных стартов пока нет.'),
+        ],
+      ),
+    );
+  }
+}
+
+class _UserHeader extends StatelessWidget {
+  const _UserHeader({required this.user, required this.athlete});
+
+  final AuthUser user;
+  final Athlete? athlete;
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return 'СП';
+    if (parts.length == 1) return parts[0].substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = athlete?.fullName.isNotEmpty == true ? athlete!.fullName : user.email;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.border),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.borderLight),
+                ),
+                child: Text(
+                  _initials(name),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: AppTheme.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTheme.tagBg,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppTheme.borderLight),
+                ),
+                child: Text(
+                  user.isOrganizer ? 'Организатор' : 'Спортсмен',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+            ],
           ),
-        for (final result in athlete.results) _ResultTile(result: result),
-      ],
+          if (athlete != null) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 14),
+            _infoRow(Icons.military_tech_outlined, 'Разряд', athlete!.rank?.label ?? 'не присвоен'),
+            _infoRow(Icons.school_outlined, 'Организация', athlete!.organization.isEmpty ? 'не указана' : athlete!.organization),
+            _infoRow(Icons.location_city_outlined, 'Город', athlete!.city.isEmpty ? 'не указан' : athlete!.city),
+            _infoRow(Icons.code_rounded, 'Дисциплины', _disciplines(context, athlete!.disciplineCodes)),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.tune_rounded, size: 16),
+                label: const Text('Редактировать анкету', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textPrimary,
+                  side: const BorderSide(color: AppTheme.borderLight),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                ),
+                onPressed: () => _edit(context, athlete!),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
-  /// Человеческие названия дисциплин по их кодам.
-  String _disciplines(List<String> codes) {
+  Widget _infoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.5),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: AppTheme.textTertiary),
+          const SizedBox(width: 8),
+          Text('$label: ', style: const TextStyle(fontSize: 12.5, color: AppTheme.textTertiary)),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _disciplines(BuildContext context, List<String> codes) {
     if (codes.isEmpty) return 'не выбраны';
     final names = context.read<CompetitionsController>();
     return [for (final code in codes) names.disciplineName(code)].join(', ');
   }
+
+  Future<void> _edit(BuildContext context, Athlete athlete) async {
+    final update = await showModalBottomSheet<AthleteProfileUpdate>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ProfileForm(athlete: athlete),
+    );
+    if (update == null || !context.mounted) return;
+    final done = await context.read<AuthController>().updateProfile(update);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(done ? 'Анкета обновлена' : 'Ошибка сохранения'),
+        backgroundColor: AppTheme.surfaceElevated,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: AppTheme.border),
+        ),
+      ),
+    );
+  }
 }
 
-/// Карточка рейтинга: место, сумма и ПОЛНОЕ разложение.
-///
-/// П.4 ТЗ требует не только посчитать, но и обосновать. Поэтому здесь лежат
-/// и «четыре лучших», и бонус разряда с коэффициентом активности — спортсмен
-/// может проверить любую строку руками.
 class _RatingCard extends StatelessWidget {
   const _RatingCard({required this.athlete});
 
@@ -148,87 +254,198 @@ class _RatingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${athlete.rating}',
-                  style: Theme.of(context).textTheme.displaySmall,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.border),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Рейтинг спортсмена',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textTertiary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${athlete.rating}',
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.borderLight),
                 ),
-                const SizedBox(width: 12),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    athlete.ratingPlace > 0
-                        ? '${athlete.ratingPlace}-е место в рейтинге'
-                        : 'места в рейтинге нет',
+                child: Text(
+                  athlete.ratingPlace > 0
+                      ? '${athlete.ratingPlace}-е место'
+                      : 'вне рейтинга',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF101217),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('За турниры', style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
+                      const SizedBox(height: 2),
+                      Text('${athlete.resultPoints}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    ],
+                  ),
+                ),
+                Container(width: 1, height: 26, color: AppTheme.border),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Бонус разряда', style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
+                      const SizedBox(height: 2),
+                      Text('${athlete.rankPoints}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    ],
+                  ),
+                ),
+                Container(width: 1, height: 26, color: AppTheme.border),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Активность', style: TextStyle(fontSize: 11, color: AppTheme.textTertiary)),
+                      const SizedBox(height: 2),
+                      Text('${athlete.activityFactor}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    ],
                   ),
                 ),
               ],
             ),
-            const Divider(height: 24),
-            Text('Очки за старты: ${athlete.resultPoints}'),
-            Text(
-              'Бонус разряда: ${athlete.rankBase} × активность '
-              '${athlete.activityFactor} = ${athlete.rankPoints}',
-            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            RatingController.explain(athlete),
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+          ),
+          if (athlete.rulesVersion.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(RatingController.explain(athlete)),
-            if (athlete.rulesVersion.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Правила расчёта: ${athlete.rulesVersion}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
+            Text(
+              'Правила расчёта: ${athlete.rulesVersion}',
+              style: const TextStyle(fontSize: 11, color: AppTheme.textTertiary),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Одна строка истории: старт, место, очки и «попал ли в четыре лучших».
-class _ResultTile extends StatelessWidget {
-  const _ResultTile({required this.result});
+class _ResultCard extends StatelessWidget {
+  const _ResultCard({required this.result});
 
   final AthleteResult result;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        child: Text(
-          result.included ? '${result.place}' : '${result.place}?',
-          style: const TextStyle(fontSize: 12),
-        ),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.border),
       ),
-      title: Text(result.competitionTitle),
-      subtitle: Text(
-        '${result.level.label} · ${result.stage.label} · '
-        '${result.place} из ${result.finishers} · ${formatDate(result.endsAt)}',
-      ),
-      // Точка с плавающей запятой в подписи — это очки, а не «номер строки»,
-      // поэтому подпись развёрнута: 0 означает «не зачтено», и это надо
-      // видеть сразу.
-      trailing: Text(
-        result.points > 0 ? '+${result.points}' : '—',
-        style: Theme.of(context).textTheme.titleSmall,
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: result.included ? AppTheme.surfaceElevated : const Color(0xFF101217),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: result.included ? AppTheme.borderLight : AppTheme.border,
+              ),
+            ),
+            child: Text(
+              '${result.place}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: result.included ? AppTheme.textPrimary : AppTheme.textTertiary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  result.competitionTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${result.level.label} · ${result.stage.label} · ${result.place} из ${result.finishers} · ${formatDate(result.endsAt)}',
+                  style: const TextStyle(fontSize: 11.5, color: AppTheme.textTertiary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            result.points > 0 ? '+${result.points}' : '—',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: result.points > 0 ? AppTheme.textPrimary : AppTheme.textTertiary,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Форма правки анкеты — `PATCH /api/me`.
 class _ProfileForm extends StatefulWidget {
   const _ProfileForm({required this.athlete});
 
@@ -259,38 +476,59 @@ class _ProfileFormState extends State<_ProfileForm> {
     final disciplines = context.watch<CompetitionsController>().disciplines;
     return Padding(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        // Клавиатура не должна перекрывать поля.
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.borderLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
             'Анкета спортсмена',
-            style: Theme.of(context).textTheme.titleLarge,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _fullName,
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+            decoration: const InputDecoration(labelText: 'ФИО'),
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: _fullName,
-            decoration: const InputDecoration(labelText: 'ФИО'),
-          ),
-          TextField(
             controller: _city,
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
             decoration: const InputDecoration(labelText: 'Город'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _organization,
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
             decoration: const InputDecoration(labelText: 'Учебная организация'),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Дисциплины (не больше пяти — так проверяет сервер)',
-            style: Theme.of(context).textTheme.bodySmall,
+          const SizedBox(height: 12),
+          const Text(
+            'Дисциплины (не более 5)',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textTertiary),
           ),
+          const SizedBox(height: 6),
           Flexible(
             child: ListView(
               shrinkWrap: true,
@@ -298,8 +536,11 @@ class _ProfileFormState extends State<_ProfileForm> {
                 for (final discipline in disciplines)
                   CheckboxListTile(
                     dense: true,
-                    title: Text(discipline.name),
-                    subtitle: Text(discipline.code),
+                    contentPadding: EdgeInsets.zero,
+                    activeColor: AppTheme.textPrimary,
+                    checkColor: AppTheme.background,
+                    title: Text(discipline.name, style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13.5)),
+                    subtitle: Text(discipline.code, style: const TextStyle(color: AppTheme.textTertiary, fontSize: 11.5)),
                     value: _codes.contains(discipline.code),
                     onChanged: (checked) => setState(() {
                       if (checked ?? false) {
@@ -312,9 +553,9 @@ class _ProfileFormState extends State<_ProfileForm> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           AppButton(
-            text: 'Сохранить',
+            text: 'Сохранить изменения',
             onPressed: () => Navigator.of(context).pop(
               AthleteProfileUpdate(
                 fullName: _fullName.text,
