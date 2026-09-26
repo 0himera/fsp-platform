@@ -24,38 +24,25 @@ export const CompetitionDetailView: React.FC = () => {
   return (
     <div className={styles.container}>
       <CompetitionDetailHeader
-        competition={competition}
-        registrationOpen={vm.registrationOpen}
-        isRegistered={registered}
-        canRegister={vm.canRegister}
-        userTeam={vm.userTeam}
-        onRegister={vm.actions.onRegister} onUnregister={vm.actions.onUnregister}
-        onOpenCreateTeam={vm.openCreateTeam}
-        onGoToTeams={() => vm.setTab("teams")}
-        isPending={vm.actions.isPending}
+        competition={competition} registrationOpen={vm.registrationOpen} isRegistered={registered}
+        canRegister={vm.canRegister} userTeam={vm.userTeam} onRegister={vm.actions.onRegister}
+        onUnregister={vm.actions.onUnregister} onOpenCreateTeam={vm.openCreateTeam}
+        onGoToTeams={() => vm.setTab("teams")} isPending={vm.actions.isPending}
       />
       <CompetitionDetailTabs
-        currentTab={vm.tab}
-        onTabChange={vm.setTab}
-        regCount={vm.participants.length}
-        teamsCount={teams.length}
-        resultsCount={results.length}
-        isOrganizer={vm.isOrganizer}
+        currentTab={vm.tab} onTabChange={vm.setTab} regCount={vm.participants.length}
+        teamsCount={teams.length} resultsCount={results.length} isOrganizer={vm.isOrganizer}
       />
       <CompetitionTabContent
-        tab={vm.tab}
-        competition={competition}
-        registrations={registrations}
-        participants={vm.participants}
-        teams={teams}
-        results={results}
-        isOrganizer={vm.isOrganizer}
-        canRegister={vm.canRegister}
-        userTeam={vm.userTeam}
-        currentUserId={vm.currentUserId}
+        tab={vm.tab} competition={competition} registrations={registrations}
+        participants={vm.participants} teams={teams} results={results} isOrganizer={vm.isOrganizer}
+        canRegister={vm.canRegister} userTeam={vm.userTeam} currentUserId={vm.currentUserId}
         onOpenCreateTeam={vm.openCreateTeam}
       />
-      <ContestPanel competition={competition} isOrganizer={vm.isOrganizer} isRegistered={registered} />
+      <ContestPanel
+        competition={competition} isOrganizer={vm.isOrganizer} isRegistered={registered}
+        canRegister={vm.canRegister} onRegister={vm.actions.onRegister} isRegisterPending={vm.actions.isPending}
+      />
       {vm.isCreateTeamOpen && <TeamRegistrationDialog competition={competition} onClose={vm.closeCreateTeam} />}
     </div>
   );

@@ -1,0 +1,1 @@
+export { ContestBody } from "./ContestBody";

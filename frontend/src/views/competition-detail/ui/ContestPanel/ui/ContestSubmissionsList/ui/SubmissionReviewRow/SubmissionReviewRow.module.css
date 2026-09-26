@@ -1,0 +1,40 @@
+.submission {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-background, #fff);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.meta {
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.feedback {
+  margin: 0;
+  font-size: 13px;
+}
+
+.code {
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--color-muted-background, #f3f4f6);
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}

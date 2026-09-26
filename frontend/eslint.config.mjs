@@ -45,12 +45,6 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  {
-    files: ["src/views/competition-detail/ui/ContestPanel/ContestPanel.tsx"],
-    rules: {
-      "max-lines": ["error", { max: 250, skipBlankLines: true, skipComments: false }],
-    },
-  },
   ...fsdBoundaryConfigs,
 ]);
 

@@ -1,0 +1,27 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--color-muted-background, #f9fafb);
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #4b5563);
+}
+
+.select,
+.textarea {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #d1d5db);
+  background: var(--color-background, #fff);
+  color: var(--color-text, #111827);
+  font-size: 14px;
+  font-family: monospace;
+}

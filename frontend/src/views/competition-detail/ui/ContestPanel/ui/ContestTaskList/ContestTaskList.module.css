@@ -1,0 +1,51 @@
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task {
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-background, #fff);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.points {
+  font-size: 13px;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.statement {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.fileDetails {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.code {
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--color-muted-background, #f3f4f6);
+  font-size: 12px;
+  overflow-x: auto;
+}

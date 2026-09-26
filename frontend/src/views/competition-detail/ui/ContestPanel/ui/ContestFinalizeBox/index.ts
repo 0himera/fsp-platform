@@ -1,0 +1,1 @@
+export { ContestFinalizeBox } from "./ContestFinalizeBox";

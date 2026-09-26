@@ -1,0 +1,29 @@
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.mode {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary, #2563eb);
+}
+
+.instructions {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text, #1f2937);
+  white-space: pre-wrap;
+}
+
+.notice {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary, #6b7280);
+}
