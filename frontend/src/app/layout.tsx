@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Header } from "@/widgets/header";
+import { AiAssistant } from "@/widgets/ai-assistant";
 import { QueryProvider } from "./providers";
 import "./globals.css";
 
@@ -22,6 +23,7 @@ export default function RootLayout({
             <Header />
             {children}
             <footer className="site-footer"><span>ФСП Республики Дагестан · Внутренний рейтинг не заменяет официальные спортивные разряды.</span></footer>
+            <AiAssistant />
           </div>
         </QueryProvider>
       </body>
