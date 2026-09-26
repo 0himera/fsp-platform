@@ -66,8 +66,8 @@ class AuthController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      session = await _athletes.me();
-    } on Exception catch (_) {
+      session = await _athletes.me().timeout(const Duration(milliseconds: 1500));
+    } on Object catch (_) {
       session = null;
     } finally {
       restored = true;

@@ -163,7 +163,49 @@ class _AuthGateState extends State<AuthGate> {
     // в момент, когда login()/logout() вызывают notifyListeners().
     final auth = context.watch<AuthController>();
     if (!auth.restored) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: const Icon(
+                  Icons.sports_esports_outlined,
+                  size: 30,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Федерация СП',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppTheme.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     return auth.isLoggedIn ? const HomePage() : const LoginPage();
   }
