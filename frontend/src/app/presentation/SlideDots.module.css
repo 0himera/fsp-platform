@@ -1,0 +1,21 @@
+.dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-border, #3b3b47);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.activeDot {
+  background: var(--color-primary, #3b82f6);
+  transform: scale(1.25);
+}

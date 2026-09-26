@@ -11,6 +11,7 @@ const navItems = [
   { label: "Календарь", href: "/calendar", matches: (path: string) => path === "/calendar" },
   { label: "Рейтинг", href: "/rankings", matches: (path: string) => path === "/rankings" },
   { label: "Документы", href: "/info", matches: (path: string) => path === "/info" },
+  { label: "Презентация", href: "/presentation", matches: (path: string) => path === "/presentation" },
 ];
 
 interface HeaderNavProps {
