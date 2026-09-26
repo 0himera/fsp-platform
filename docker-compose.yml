@@ -32,7 +32,7 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       SMTP_FROM: "Арена ФСП РД <noreply@arena.local>"
-      PUBLIC_BASE_URL: http://localhost:3000
+      PUBLIC_BASE_URL: https://psychaos.art
       EXPORT_API_TOKEN: ${EXPORT_API_TOKEN:-a0915aba3191bc0399466376ddcb88fe5e7146867537eccfae8828d1cfcec072}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports: ["8080:8080"]
