@@ -1,0 +1,1 @@
+export { EditorBottomTabs } from "./EditorBottomTabs";

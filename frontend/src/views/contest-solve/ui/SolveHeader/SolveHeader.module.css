@@ -1,0 +1,16 @@
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: #0f172a; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 16px; min-height: 52px;
+}
+.left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.backLink {
+  display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 13px;
+  text-decoration: none; padding: 6px 10px; border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03);
+  transition: all 0.15s ease; white-space: nowrap;
+}
+.backLink:hover { background: rgba(255, 255, 255, 0.08); color: #f8fafc; }
+.title { font-size: 14px; font-weight: 600; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.leaderboardBtn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }

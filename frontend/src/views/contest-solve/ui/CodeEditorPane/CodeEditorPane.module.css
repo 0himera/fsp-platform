@@ -1,0 +1,24 @@
+.pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #020617;
+  overflow: hidden;
+}
+
+.editorArea {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bottomArea {
+  display: flex;
+  flex-direction: column;
+  height: 240px;
+  min-height: 180px;
+  background: #090d16;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}

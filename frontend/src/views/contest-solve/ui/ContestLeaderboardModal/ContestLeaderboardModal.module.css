@@ -1,0 +1,24 @@
+.backdrop {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.modal {
+  background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+  width: 100%; max-width: 560px; display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.title { margin: 0; font-size: 16px; font-weight: 700; color: #f8fafc; }
+.closeBtn { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; }
+.closeBtn:hover { color: #ffffff; }
+.body { padding: 16px 20px; max-height: 400px; overflow-y: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.th { text-align: left; padding: 8px 12px; color: #64748b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-weight: 600; }
+.td { padding: 10px 12px; color: #cbd5e1; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.placeBadge { font-weight: 700; color: #fbbf24; }
+.score { font-weight: 700; color: #34d399; }
+.alignRight { text-align: right; }

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import type { ContestTask } from "@/shared/api";
+import { Button } from "@/shared/ui";
 import { TaskSubmission } from "../TaskSubmission";
 import styles from "./ContestTaskList.module.css";
 
@@ -29,19 +31,18 @@ export function ContestTaskList({ tasks, competitionId, mode, isOrganizer, ...su
             <span className={styles.points}>{task.max_points} баллов</span>
           </div>
           <p className={styles.statement}>{task.statement}</p>
-          {task.public_csv && (
-            <details className={styles.fileDetails}>
-              <summary>Открытые данные задания</summary>
-              <pre className={styles.code}>{task.public_csv}</pre>
-            </details>
+          {!isOrganizer && mode === "algorithm" && submissionProps.canSubmitNow && (
+            <Link href={`/competitions/${competitionId}/contest`} className={styles.solveLink}>
+              Решать задачу онлайн →
+            </Link>
           )}
-          {!isOrganizer && (
-            <TaskSubmission
-              competitionId={competitionId}
-              taskId={task.id}
-              mode={mode}
-              {...submissionProps}
-            />
+          {!isOrganizer && mode === "algorithm" && !submissionProps.canSubmitNow && submissionProps.canRegister && (
+            <Button size="sm" onClick={submissionProps.onRegister} disabled={submissionProps.isRegisterPending}>
+              {submissionProps.isRegisterPending ? "Регистрация…" : "Зарегистрироваться для участия"}
+            </Button>
+          )}
+          {!isOrganizer && mode === "csv_metric" && (
+            <TaskSubmission competitionId={competitionId} taskId={task.id} mode={mode} {...submissionProps} />
           )}
         </article>
       ))}

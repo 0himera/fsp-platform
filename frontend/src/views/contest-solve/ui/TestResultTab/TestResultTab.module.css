@@ -1,0 +1,14 @@
+.container { padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 220px; }
+.empty { color: #64748b; font-size: 13px; text-align: center; padding: 24px 0; }
+.banner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 8px; border: 1px solid; }
+.bannerAccepted { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #34d399; }
+.bannerWrong { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #f87171; }
+.bannerOther { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #fbbf24; }
+.verdictTitle { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.scoreBadge { font-size: 14px; font-weight: 700; }
+.feedbackBox {
+  padding: 10px 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px; color: #cbd5e1; white-space: pre-wrap; word-break: break-all;
+}
