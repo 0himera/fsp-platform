@@ -1,5 +1,5 @@
 import styles from "./HomeIntro.module.css";
 
 export function HomeIntro() {
-  return <div className={styles.intro}><span>Федерация спортивного программирования</span><h1>Сильные решения.<br /><em>Сильный Дагестан.</em></h1><p>Соревнования, результаты и рейтинг спортсменов в одной системе.</p></div>;
+  return <div className={styles.intro}><span>ФСП Республики Дагестан</span><h1>Спортивное программирование Дагестана</h1><p>Календарь соревнований, результаты и рейтинг спортсменов.</p></div>;
 }

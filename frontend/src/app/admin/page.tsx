@@ -84,7 +84,7 @@ export default function AdminPage() {
 
   if (userLoading) {
     return (
-      <div style={{ maxWidth: "1000px", margin: "3rem auto", padding: "0 1.5rem" }}>
+      <div className="site-content-width">
         <p>Проверка прав доступа...</p>
       </div>
     );
@@ -93,7 +93,7 @@ export default function AdminPage() {
   const user = me?.user;
   if (!user || user.role !== "organizer") {
     return (
-      <div style={{ maxWidth: "600px", margin: "4rem auto", padding: "0 1.5rem" }}>
+      <div className="site-content-width">
         <Card>
           <CardHeader>
             <CardTitle>Доступ ограничен</CardTitle>
@@ -169,7 +169,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main style={{ maxWidth: "1100px", margin: "2.5rem auto", padding: "0 1.5rem" }}>
+    <main className="site-content-width">
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "0.5rem" }}>

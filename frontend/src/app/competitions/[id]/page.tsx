@@ -80,7 +80,7 @@ export default function CompetitionDetailPage() {
 
   if (isLoading) {
     return (
-      <div style={{ maxWidth: "1000px", margin: "3rem auto", padding: "0 1.5rem" }}>
+      <div className="site-content-width">
         <p>Загрузка данных соревнования...</p>
       </div>
     );
@@ -88,7 +88,7 @@ export default function CompetitionDetailPage() {
 
   if (error || !competition) {
     return (
-      <div style={{ maxWidth: "1000px", margin: "3rem auto", padding: "0 1.5rem" }}>
+      <div className="site-content-width">
         <Card>
           <CardHeader>
             <CardTitle>Соревнование не найдено</CardTitle>
@@ -129,7 +129,7 @@ export default function CompetitionDetailPage() {
   };
 
   return (
-    <main style={{ maxWidth: "1100px", margin: "2.5rem auto", padding: "0 1.5rem" }}>
+    <main className="site-content-width">
       {/* Navigation breadcrumb */}
       <div style={{ marginBottom: "1.5rem" }}>
         <a

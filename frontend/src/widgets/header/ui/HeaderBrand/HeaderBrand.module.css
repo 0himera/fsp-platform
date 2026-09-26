@@ -1,42 +1,10 @@
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-  color: #111d31;
-}
+.brand { display:flex; align-items:center; gap:clamp(8px,.8vw,14px); flex:0 1 auto; min-width:0; color:#fff; }
+.mark { display:block; flex:none; width:clamp(50px,3.2vw,78px); aspect-ratio:1; background:transparent url("/brand/fsp-dagestan-logo.png") center / contain no-repeat; }
+.copy { display:flex; align-items:center; gap:clamp(1px,.12vw,2px); min-width:0; }
+.wordmark { display:block; flex:none; width:clamp(76px,4.5vw,104px); height:clamp(29px,1.9vw,42px); background:url("/brand/fsp-wordmark.svg") left center / contain no-repeat; }
+.description { display:flex; flex-direction:column; justify-content:center; gap:2px; height:clamp(29px,1.9vw,42px); min-width:0; }
+.description b { color:#fff; font-family:"JetBrains Mono",monospace; font-size:clamp(11px,.75vw,16px); font-weight:700; letter-spacing:.035em; line-height:1.05; white-space:nowrap; }
 
-.mark {
-  width: 62px;
-  height: 44px;
-  fill: none;
-  stroke: #93243e;
-  stroke-width: 4.2;
-  stroke-linecap: square;
-  stroke-linejoin: miter;
-}
-
-.copy { display: grid; gap: 4px; }
-.copy strong { font-size: 15px; line-height: 1; white-space: nowrap; }
-.copy small {
-  color: #858b95;
-  font: 10px/1.1 Arial, sans-serif;
-  letter-spacing: 0.12em;
-  white-space: nowrap;
-}
-
-@media (max-width: 1000px) {
-  .copy strong { font-size: 13px; }
-  .mark { width: 50px; }
-}
-
-@media (max-width: 760px) {
-  .brand { gap: 7px; }
-  .mark { width: 42px; height: 35px; }
-  .copy strong { font-size: 12px; }
-  .copy small { font-size: 8px; }
-}
-
-@media (max-width: 380px) {
-  .copy strong { font-size: 10px; }
-}
+@media (max-width:1000px) { .mark { width:50px; } .wordmark { width:82px; height:32px; } .description { height:32px; } .description b { font-size:12px; } }
+@media (max-width:760px) { .brand { gap:7px; max-width:calc(100% - 105px); } .mark { width:42px; } .copy { gap:1px; } .wordmark { width:74px; height:29px; } .description { height:29px; } .description b { font-size:10px; } }
+@media (max-width:380px) { .mark { width:38px; } .wordmark { width:66px; height:26px; } .description { height:26px; } .description b { font-size:9px; } }

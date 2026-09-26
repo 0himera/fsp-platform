@@ -11,7 +11,7 @@ export function Podium({ athletes }: { athletes: Athlete[] }) {
   return <section className={styles.podium} aria-label="Три лидера рейтинга">
     {athletes.slice(0, 3).map((athlete, index) => <article className={`${styles.card} ${positions[index]}`} key={athlete.id}>
       <span className={styles.place}><Medal size={25} strokeWidth={1.5} /><strong>{athlete.rating_place}</strong></span>
-      <Link href={`/athletes/${athlete.id}`} className={styles.identity}><AthleteAvatar name={athlete.full_name} /><span><strong>{athlete.full_name}</strong><small>{athlete.city || athlete.organization || "Республика Дагестан"}</small></span></Link>
+      <Link href={`/athletes/${athlete.id}`} className={styles.identity}><AthleteAvatar name={athlete.full_name} src={athlete.avatar_url} /><span><strong>{athlete.full_name}</strong><small>{athlete.city || athlete.organization || "Республика Дагестан"}</small></span></Link>
       <div className={styles.score}><span>Рейтинг</span><strong>{formatPoints(athlete.rating)}</strong></div>
       <div className={styles.rank}><span>Спортивный разряд</span><strong>{SPORT_RANKS_MAP[athlete.rank_code] || athlete.rank_code || "Без разряда"}</strong></div>
     </article>)}

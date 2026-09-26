@@ -5,6 +5,7 @@ import { Card, CardContent, Input, Badge } from "@/shared/ui";
 
 import { useRankingsQuery } from "@/entities/ranking";
 import { SPORT_RANKS_MAP } from "@/shared/config";
+import { formatPoints } from "@/shared/lib";
 import styles from "./RankingSection.module.css";
 
 export const RankingSection: React.FC = () => {
@@ -92,13 +93,13 @@ export const RankingSection: React.FC = () => {
                       </Badge>
                     </td>
                     <td className={styles.numberCol}>
-                      {a.result_points.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}
+                      {formatPoints(a.result_points)}
                     </td>
                     <td className={styles.numberCol}>
-                      +{a.rank_points.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}
+                      +{formatPoints(a.rank_points)}
                     </td>
                     <td className={`${styles.numberCol} ${styles.totalCol}`}>
-                      {a.rating.toLocaleString("ru-RU", { maximumFractionDigits: 1 })}
+                      {formatPoints(a.rating)}
                     </td>
                   </tr>
                 ))}

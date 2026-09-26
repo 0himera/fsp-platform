@@ -1,2 +1,3 @@
-.page { width:min(100%,1260px); margin:0 auto; padding:48px 28px 70px; }
-@media (max-width:650px) { .page { padding:30px 16px 50px; } }
+.page { width:min(var(--site-width),3200px); margin:0 auto; padding:clamp(32px,3vw,96px) 0 clamp(48px,4vw,120px); }
+@media (max-width:1180px) { .page { width:100%; padding-right:var(--site-gutter); padding-left:var(--site-gutter); } }
+@media (max-width:650px) { .page { padding-top:30px; padding-bottom:50px; } }

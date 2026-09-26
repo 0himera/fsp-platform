@@ -6,6 +6,5 @@ export function HomeHighlights({ activeEvents, athletes }: { activeEvents: numbe
   return <section className={styles.highlights} aria-label="Разделы платформы">
     <Link href="/events"><span><CalendarDays /></span><span><small>Календарь</small><strong>{activeEvents} активных события</strong></span><ArrowRight /></Link>
     <Link href="/rankings"><span><Trophy /></span><span><small>Рейтинг</small><strong>{athletes} спортсменов</strong></span><ArrowRight /></Link>
-    <div className={styles.note}><span>АРЕНА · ФСП ДАГЕСТАНА</span><strong>Спорт. Люди. Развитие.</strong></div>
   </section>;
 }

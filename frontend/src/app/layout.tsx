@@ -4,7 +4,7 @@ import { QueryProvider } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Арена · ФСП Республики Дагестан",
+  title: "ФСП Республики Дагестан",
   description:
     "Цифровая платформа Федерации спортивного программирования Республики Дагестан для спортсменов, соревнований и рейтинга.",
 };
@@ -21,7 +21,7 @@ export default function RootLayout({
           <div className="site-shell">
             <Header />
             {children}
-            <footer className="site-footer"><span>Арена ФСП РД · Внутренний рейтинг не заменяет официальные спортивные разряды.</span><span>Спорт. Люди. Развитие.</span></footer>
+            <footer className="site-footer"><span>ФСП Республики Дагестан · Внутренний рейтинг не заменяет официальные спортивные разряды.</span></footer>
           </div>
         </QueryProvider>
       </body>

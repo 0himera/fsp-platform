@@ -1,13 +1,12 @@
-.highlights { display:grid; grid-template-columns:1fr 1fr 1fr; max-width:1560px; margin:0 auto; padding:0 30px; }
-.highlights > a { display:flex; align-items:center; gap:14px; padding:22px 20px; border-right:1px solid #e5dfd7; color:#202c40; }
-.highlights > a:first-child { border-left:1px solid #e5dfd7; }
-.highlights > a:hover { background:#f1ece5; }
-.highlights > a > span:first-child { display:grid; place-items:center; width:38px; height:38px; border:1px solid #e0d5d0; border-radius:50%; color:#92243e; }
+.highlights { display:grid; grid-template-columns:1fr 1fr; width:min(var(--site-width),3200px); margin:0 auto; padding:0; }
+.highlights > a { display:flex; align-items:center; gap:14px; padding:22px 20px; border-right:1px solid #e3e8f0; color:#202c40; }
+.highlights > a:first-child { border-left:1px solid #e3e8f0; }
+.highlights > a:hover { background:#edf2fa; }
+.highlights > a > span:first-child { display:grid; place-items:center; width:38px; height:38px; border:1px solid #e0d5d0; border-radius:50%; color:var(--wine); }
 .highlights > a > span:nth-child(2) { display:grid; flex:1; gap:3px; }
-.highlights small,.note span { color:#838a94; font:9px Arial,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
+.highlights small { color:#838a94; font:9px "JetBrains Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
 .highlights strong { font-size:14px; font-weight:400; }
-.highlights > a > svg { width:17px; color:#92243e; }
-.note { display:grid; align-content:center; gap:5px; padding:20px 28px; color:#8a8e94; }
-.note strong { color:#344056; font-size:16px; font-style:italic; }
-@media (max-width:780px) { .highlights { padding:0 18px; } .highlights > a { gap:9px; padding:18px 12px; } .note { padding:18px 14px; } }
-@media (max-width:560px) { .highlights { grid-template-columns:1fr; padding:0 15px; } .highlights > a,.highlights > a:first-child { border:0; border-bottom:1px solid #e5dfd7; padding:16px 8px; } .note { min-height:84px; padding-left:8px; } }
+.highlights > a > svg { width:17px; color:var(--wine); }
+@media (max-width:1180px) { .highlights { width:100%; padding-inline:var(--site-gutter); } }
+@media (max-width:780px) { .highlights > a { gap:9px; padding:18px 12px; } }
+@media (max-width:560px) { .highlights { grid-template-columns:1fr; } .highlights > a,.highlights > a:first-child { border:0; border-bottom:1px solid #e3e8f0; padding:16px 8px; } }

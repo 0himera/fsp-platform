@@ -52,7 +52,7 @@
   text-decoration: underline;
 }
 
-.documents,.upload { display:grid; gap:.65rem; padding:1rem; border:1px solid #e7e2dc; border-radius:8px; background:#fff; }
+.documents,.upload { display:grid; gap:.65rem; padding:1rem; border:1px solid #e2e7f0; border-radius:8px; background:#fff; }
 .documents h3,.upload h3 { margin:0; font-size:1rem; }
 .documents > div { display:flex; justify-content:space-between; gap:1rem; padding:.55rem 0; border-top:1px solid #eeeae5; }
 .documents a { color:#84243b; }

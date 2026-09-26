@@ -1,4 +1,4 @@
-export function formatPoints(value: number, maximumFractionDigits = 1): string {
+export function formatPoints(value: number, maximumFractionDigits = 0): string {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits }).format(value || 0);
 }
 

@@ -1,18 +1,11 @@
 .aside { display:grid; gap:14px; }
-.banner { position:relative; display:grid; align-content:end; gap:7px; min-height:175px; overflow:hidden; padding:18px; border:1px solid #e2e5e5; border-radius:9px; background:linear-gradient(145deg,#e2e7e9,#f7f3ee); }
-.banner svg { position:absolute; inset:0; width:100%; height:100%; fill:none; stroke:#85919c; stroke-width:1; opacity:.28; }
-.banner span,.banner strong,.banner small { position:relative; }
-.banner span { color:#727e8d; font:9px Arial,sans-serif; letter-spacing:.1em; }
-.banner strong { color:#16253c; font-size:23px; font-weight:400; line-height:1.08; }
-.banner small { color:#707b8b; font-size:13px; }
-.method { padding:17px 18px 14px; border:1px solid #e7e2dc; border-radius:9px; background:#fff; }
+.method { padding:17px 18px 14px; border:1px solid #e2e7f0; border-radius:9px; background:#fff; }
 .method h2 { margin:0 0 18px; color:#18263a; font-size:19px; }
 .item { display:grid; grid-template-columns:33px minmax(0,1fr); gap:10px; margin-bottom:18px; }
 .item > span { display:grid; place-items:center; width:31px; height:31px; border:1px solid #e1d6d7; border-radius:50%; color:var(--wine); }
 .item strong { color:#18263a; font-size:12px; }
-.item p { margin:5px 0 0; color:#77808c; font:10px/1.5 Arial,sans-serif; }
-.method a { display:flex; align-items:center; gap:8px; padding:12px 0; border-top:1px solid #ece8e2; color:var(--wine); font:12px Arial,sans-serif; }
+.item p { margin:5px 0 0; color:#77808c; font:10px/1.5 "JetBrains Mono",monospace; }
+.method a { display:flex; align-items:center; gap:8px; padding:12px 0; border-top:1px solid #ece8e2; color:var(--wine); font:12px "JetBrains Mono",monospace; }
 .method a:hover { text-decoration:underline; text-underline-offset:4px; }
-.method > small { display:block; padding-top:10px; border-top:1px solid #ece8e2; color:#9a9fa6; font:9px/1.45 Arial,sans-serif; }
-@media (max-width:900px) { .aside { grid-template-columns:1fr 1fr; } .banner { min-height:100%; } }
-@media (max-width:680px) { .aside { grid-template-columns:1fr; } .banner { min-height:170px; } }
+.method > small { display:block; padding-top:10px; border-top:1px solid #ece8e2; color:#9a9fa6; font:9px/1.45 "JetBrains Mono",monospace; }
+@media (max-width:900px) { .aside { grid-template-columns:1fr; } }
