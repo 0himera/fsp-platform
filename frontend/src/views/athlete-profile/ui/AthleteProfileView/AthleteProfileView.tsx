@@ -26,6 +26,6 @@ export function AthleteProfileView({ athlete, own = false, email, editor, rankEd
     <div className={styles.breadcrumb}><Link href="/rankings">Рейтинг</Link><span>/</span><span>{own ? "Мой профиль" : "Профиль спортсмена"}</span></div>
     <ProfileHero athlete={athlete} own={own} email={email} disciplines={names} />
     {(editor || rankEditor) && <div className={styles.editors}>{editor}{rankEditor}</div>}
-    <div className={styles.columns}><div className={styles.primary}><RatingMetrics athlete={athlete} /><AchievementSection results={athlete.results} /><ResultsHistory results={athlete.results} disciplines={names} />{own && <RegistrationList items={registrations} />}</div><ProfileSidebar nextEvent={upcoming(competitions)[0]} leaders={rankings?.athletes.slice(0,3) || []} own={own} /></div>
+    <div className={styles.columns}><div className={styles.primary}><RatingMetrics athlete={athlete} /><AchievementSection results={athlete.results} items={athlete.achievements || []} own={own} selected={athlete.featured_achievement} /><ResultsHistory results={athlete.results} disciplines={names} />{own && <RegistrationList items={registrations} />}</div><ProfileSidebar nextEvent={upcoming(competitions)[0]} leaders={rankings?.athletes.slice(0,3) || []} own={own} /></div>
   </div></main>;
 }

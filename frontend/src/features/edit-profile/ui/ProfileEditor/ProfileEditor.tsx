@@ -3,6 +3,7 @@
 import * as React from "react";
 import type { Athlete, Discipline } from "@/shared/api";
 import type { UpdateProfileInput } from "@/entities/user";
+import { useAvatarMutation } from "@/entities/user";
 import { Button, Input } from "@/shared/ui";
 import styles from "./ProfileEditor.module.css";
 
@@ -13,6 +14,7 @@ export function ProfileEditor({ athlete, disciplines, saving, onSave }: Props) {
   const [city, setCity] = React.useState(athlete.city);
   const [organization, setOrganization] = React.useState(athlete.organization);
   const [selected, setSelected] = React.useState(athlete.disciplines);
+  const avatar = useAvatarMutation();
   React.useEffect(() => { setName(athlete.full_name); setCity(athlete.city); setOrganization(athlete.organization); setSelected(athlete.disciplines); }, [athlete]);
   const toggle = (code: string) => setSelected((values) => values.includes(code) ? values.filter((item) => item !== code) : values.length < 5 ? [...values, code] : values);
   const submit = (event: React.FormEvent) => { event.preventDefault(); onSave({ full_name: name.trim(), city: city.trim(), organization: organization.trim(), disciplines: selected }); };
@@ -21,6 +23,8 @@ export function ProfileEditor({ athlete, disciplines, saving, onSave }: Props) {
     <details className={styles.editor}>
       <summary>Редактировать профиль</summary>
       <form className={styles.form} onSubmit={submit}>
+        <label className={styles.wide}>Фото профиля<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) avatar.mutate(file); }} /></label>
+        {athlete.avatar_url && <button type="button" onClick={() => avatar.mutate(null)} disabled={avatar.isPending}>Удалить фото</button>}
         <label>ФИО<Input required value={name} onChange={(event) => setName(event.target.value)} /></label>
         <label>Город<Input value={city} onChange={(event) => setCity(event.target.value)} /></label>
         <label className={styles.wide}>Организация<Input value={organization} onChange={(event) => setOrganization(event.target.value)} /></label>

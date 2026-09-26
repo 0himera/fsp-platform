@@ -22,7 +22,7 @@ export function EventCard({ event, discipline, registered, canRegister, register
         <h2><Link href={`/competitions/${event.id}`}>{event.title}</Link></h2>
         {event.description && <p className={styles.description}>{event.description}</p>}
         <div className={styles.meta}><span><CalendarDays />{formatDate(event.starts_at)}</span><span><MapPin />{event.location || "Онлайн"}</span><span><Users />{event.registrations_count} заявок</span></div>
-        <div className={styles.bottom}><span className={styles.discipline}>{discipline} · {event.format === "team" ? "Командный зачёт" : "Личный зачёт"}</span>{registered ? <span className={styles.registered}><Check />Заявка подана</span> : canRegister ? <Button size="sm" disabled={registering} onClick={onRegister}>{registering ? "Отправка…" : "Подать заявку"}</Button> : <Link href={`/competitions/${event.id}`} className={styles.details}>Подробнее <ArrowRight /></Link>}</div>
+        <div className={styles.bottom}><span className={styles.discipline}>{discipline} · {event.format === "team" ? "Командный зачёт" : "Личный зачёт"}</span>{registered ? <span className={styles.registered}><Check />Заявка подана</span> : canRegister && event.format === "team" ? <Link href={`/competitions/${event.id}`} className={styles.details}>Создать команду <ArrowRight /></Link> : canRegister ? <Button size="sm" disabled={registering} onClick={onRegister}>{registering ? "Отправка…" : "Подать заявку"}</Button> : <Link href={`/competitions/${event.id}`} className={styles.details}>Подробнее <ArrowRight /></Link>}</div>
       </div>
     </article>
   );

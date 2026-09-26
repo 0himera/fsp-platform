@@ -23,6 +23,7 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrEmailUnverified = errors.New("email not verified")
 var ErrInvalidToken = errors.New("invalid or expired token")
 var ErrTooSoon = errors.New("request sent too recently")
+var ErrEmailInUse = errors.New("email address is already used")
 
 type User struct {
 	ID       int64  `json:"id"`
@@ -147,6 +148,32 @@ func (s Service) Logout(ctx context.Context, token string) error {
 	hash := sha256.Sum256([]byte(token))
 	_, err := s.DB.Exec(ctx, `DELETE FROM sessions WHERE token_hash=$1`, hash[:])
 	return err
+}
+
+func (s Service) ChangePassword(ctx context.Context, userID int64, current, next string) error {
+	var encoded string
+	if err := s.DB.QueryRow(ctx, `SELECT password_hash FROM users WHERE id=$1`, userID).Scan(&encoded); err != nil {
+		return err
+	}
+	if !verifyPassword(encoded, current) {
+		return ErrInvalidCredentials
+	}
+	hash, err := hashPassword(next)
+	if err != nil {
+		return err
+	}
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err := tx.Exec(ctx, `UPDATE users SET password_hash=$2 WHERE id=$1`, userID, hash); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM sessions WHERE user_id=$1`, userID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (s Service) EnsureOrganizer(ctx context.Context, email, password string) error {

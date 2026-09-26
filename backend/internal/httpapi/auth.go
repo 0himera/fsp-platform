@@ -56,6 +56,9 @@ func (s *Server) sendAuthMail(r *http.Request, email, purpose, token string) err
 	if purpose == "reset_password" {
 		page, subject, body = "reset-password", "Сброс пароля · Арена ФСП РД", "Для смены пароля откройте ссылку:\n"
 	}
+	if purpose == "change_email" {
+		page, subject, body = "verify-email-change", "Подтвердите новую почту · Арена ФСП РД", "Для подтверждения нового адреса откройте ссылку:\n"
+	}
 	link := s.PublicURL + "/" + page + "?token=" + url.QueryEscape(token)
 	return s.Mailer.Send(r.Context(), email, subject, body+link+"\n\nЕсли вы не запрашивали это письмо, просто проигнорируйте его.\n")
 }
@@ -192,4 +195,74 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.me(w, r)
+}
+
+func (s *Server) changePassword(w http.ResponseWriter, r *http.Request) {
+	user, ok := s.requireUser(w, r, "")
+	if !ok {
+		return
+	}
+	var input struct {
+		Current string `json:"current_password"`
+		Next    string `json:"new_password"`
+	}
+	if err := decodeJSON(r, &input); err != nil || utf8.RuneCountInString(input.Next) < 8 || utf8.RuneCountInString(input.Next) > 128 {
+		writeError(w, 400, "Новый пароль должен содержать от 8 до 128 символов")
+		return
+	}
+	if err := s.Auth.ChangePassword(r.Context(), user.ID, input.Current, input.Next); err != nil {
+		handleError(w, err)
+		return
+	}
+	clearSessionCookie(w, r)
+	writeJSON(w, 200, map[string]bool{"ok": true, "reauthenticate": true})
+}
+
+func (s *Server) requestEmailChange(w http.ResponseWriter, r *http.Request) {
+	user, ok := s.requireUser(w, r, "")
+	if !ok {
+		return
+	}
+	if s.Mailer == nil {
+		writeError(w, 503, "Отправка писем пока недоступна")
+		return
+	}
+	var input struct {
+		Email string `json:"email"`
+	}
+	if err := decodeJSON(r, &input); err != nil || !validEmail(input.Email) {
+		writeError(w, 400, "Укажите корректную почту")
+		return
+	}
+	token, err := s.Auth.RequestEmailChange(r.Context(), user.ID, input.Email)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	if token == "" {
+		writeJSON(w, 202, map[string]bool{"check_email": true})
+		return
+	}
+	if err := s.sendAuthMail(r, strings.ToLower(strings.TrimSpace(input.Email)), "change_email", token); err != nil {
+		slog.Error("email change message failed", "error", err)
+		writeError(w, 503, "Не удалось отправить письмо")
+		return
+	}
+	writeJSON(w, 202, map[string]bool{"check_email": true})
+}
+
+func (s *Server) verifyEmailChange(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Token string `json:"token"`
+	}
+	if err := decodeJSON(r, &input); err != nil || len(input.Token) < 30 || len(input.Token) > 200 {
+		writeError(w, 400, "Неверная ссылка")
+		return
+	}
+	if err := s.Auth.VerifyEmailChange(r.Context(), input.Token); err != nil {
+		handleError(w, err)
+		return
+	}
+	clearSessionCookie(w, r)
+	writeJSON(w, 200, map[string]bool{"ok": true, "reauthenticate": true})
 }

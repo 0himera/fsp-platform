@@ -26,9 +26,9 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
   const url = buildUrl(endpoint, params);
 
   const defaultHeaders = new Headers({
-    "Content-Type": "application/json",
     Accept: "application/json",
   });
+  if (!(restOptions.body instanceof FormData)) defaultHeaders.set("Content-Type", "application/json");
 
   if (token) {
     defaultHeaders.set("Authorization", `Bearer ${token}`);
@@ -64,4 +64,3 @@ export async function request<T>(endpoint: string, options: RequestOptions = {})
 
   return response.status === 204 ? (null as unknown as T) : response.json();
 }
-

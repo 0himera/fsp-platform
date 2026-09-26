@@ -20,7 +20,7 @@ func TestValidateProtocolBronzeTie(t *testing.T) {
 func TestUnicodeInputLengths(t *testing.T) {
 	now := time.Now().UTC()
 	input := Input{
-		Title: strings.Repeat("Я", 160), LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", Status: "open", Stage: "standalone",
+		Title: strings.Repeat("Я", 160), LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", Status: "open", Stage: "standalone", MaxTeamSize: 5,
 		StartsAt: now, EndsAt: now.Add(time.Hour), RegistrationDeadline: now.Add(30 * time.Minute),
 		Location: strings.Repeat("Я", 160), Description: strings.Repeat("Я", 3000),
 	}

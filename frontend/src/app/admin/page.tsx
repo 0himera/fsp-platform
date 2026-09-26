@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [levelCode, setLevelCode] = React.useState("rd_championship");
   const [disciplineCode, setDisciplineCode] = React.useState("");
   const [format, setFormat] = React.useState<CompetitionFormat>("individual");
+  const [maxTeamSize, setMaxTeamSize] = React.useState(5);
   const [stage, setStage] = React.useState<CompetitionStage>("standalone");
   const [qualifyingId, setQualifyingId] = React.useState<number | undefined>(undefined);
   const [qualifyingLimit, setQualifyingLimit] = React.useState<number | undefined>(undefined);
@@ -118,6 +119,7 @@ export default function AdminPage() {
         level_code: levelCode,
         discipline_code: disciplineCode,
         format,
+        max_team_size: maxTeamSize,
         stage,
         qualifying_competition_id: stage === "final" ? qualifyingId : null,
         qualifying_place_limit: stage === "final" ? qualifyingLimit : null,
@@ -362,6 +364,8 @@ export default function AdminPage() {
                     <option value="team">Командный</option>
                   </select>
                 </div>
+
+                {format === "team" && <div><label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.3rem", fontWeight: 500 }}>Максимум участников в команде</label><select value={maxTeamSize} onChange={(event) => setMaxTeamSize(Number(event.target.value))} style={{ width: "100%", padding: ".6rem", borderRadius: 6 }}><option value={2}>2 участника</option><option value={3}>3 участника</option><option value={4}>4 участника</option><option value={5}>5 участников</option></select></div>}
 
                 <div>
                   <label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.3rem", fontWeight: 500 }}>

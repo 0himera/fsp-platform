@@ -42,6 +42,36 @@ export function useCompetitionDetailQuery(id: string | number) {
   });
 }
 
+export function useCompetitionParticipantsQuery(id: string | number) {
+  return useQuery({
+    queryKey: [...competitionKeys.detail(id), "participants"],
+    queryFn: () => apiClient.get<import("@/shared/api").CompetitionParticipant[]>(`/api/competitions/${id}/participants`),
+    enabled: Boolean(id),
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useResultPublicationsQuery(id: string | number) {
+  return useQuery({
+    queryKey: [...competitionKeys.detail(id), "publications"],
+    queryFn: () => apiClient.get<import("@/shared/api").ResultPublication[]>(`/api/competitions/${id}/publications`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useRestorePublicationMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ competitionId, publicationId }: { competitionId: number; publicationId: number }) =>
+      apiClient.post(`/api/competitions/${competitionId}/publications/${publicationId}/restore`),
+    onSuccess: (_, { competitionId }) => {
+      client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+      client.invalidateQueries({ queryKey: ["rankings"] });
+      client.invalidateQueries({ queryKey: [...competitionKeys.detail(competitionId), "publications"] });
+    },
+  });
+}
+
 export function useRegisterCompetitionMutation() {
   const queryClient = useQueryClient();
 
@@ -107,18 +137,10 @@ export function useCreateTeamMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      competitionId,
-      name,
-      memberIds,
-    }: {
-      competitionId: string | number;
-      name: string;
-      memberIds: number[];
-    }) =>
-      apiClient.post<import("@/shared/api").Team>(`/api/competitions/${competitionId}/teams`, {
+    mutationFn: ({ competitionId, name, description }: { competitionId: number; name: string; description: string }) =>
+      apiClient.post<import("@/shared/api").CreateTeamResponse>(`/api/competitions/${competitionId}/teams`, {
         name,
-        member_ids: memberIds,
+        description,
       }),
     onSuccess: (_, { competitionId }) => {
       queryClient.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
@@ -134,6 +156,53 @@ export function useDeleteTeamMutation() {
       apiClient.delete(`/api/competitions/${competitionId}/teams/${teamId}`),
     onSuccess: (_, { competitionId }) => {
       queryClient.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+    },
+  });
+}
+
+export function useUpdateTeamMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ competitionId, teamId, name, description }: { competitionId: number; teamId: number; name: string; description: string }) =>
+      apiClient.patch(`/api/competitions/${competitionId}/teams/${teamId}`, { name, description }),
+    onSuccess: (_, { competitionId }) => client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) }),
+  });
+}
+
+export function useCreateTeamInviteLinkMutation() {
+  return useMutation({
+    mutationFn: ({ competitionId, teamId }: { competitionId: number; teamId: number }) =>
+      apiClient.post<{ invite_url: string }>(`/api/competitions/${competitionId}/teams/${teamId}/invite-link`),
+  });
+}
+
+export function useInviteTeamMembersMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ competitionId, teamId, emails }: { competitionId: number; teamId: number; emails: string[] }) =>
+      apiClient.post<{ sent: string[]; failed: string[] }>(`/api/competitions/${competitionId}/teams/${teamId}/invites`, { emails }),
+    onSuccess: (_, { competitionId }) => client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) }),
+  });
+}
+
+export function useRemoveTeamMemberMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ competitionId, teamId, athleteId }: { competitionId: number; teamId: number; athleteId: number }) =>
+      apiClient.delete(`/api/competitions/${competitionId}/teams/${teamId}/members/${athleteId}`),
+    onSuccess: (_, { competitionId }) => client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) }),
+  });
+}
+
+export function useAcceptTeamInviteMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (token: string) => apiClient.post<{ team: import("@/shared/api").Team; joined: boolean }>(`/api/team-invitations/${token}/accept`),
+    onSuccess: (data) => {
+      client.invalidateQueries({ queryKey: competitionKeys.all });
+      client.invalidateQueries({ queryKey: competitionKeys.detail(data.team.competition_id) });
+      client.invalidateQueries({ queryKey: competitionKeys.myRegistrations() });
+      client.invalidateQueries({ queryKey: ["users"] });
     },
   });
 }
@@ -154,6 +223,7 @@ export function usePublishResultsMutation() {
       }),
     onSuccess: (_, { competitionId }) => {
       queryClient.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+      queryClient.invalidateQueries({ queryKey: [...competitionKeys.detail(competitionId), "publications"] });
       queryClient.invalidateQueries({ queryKey: competitionKeys.all });
       queryClient.invalidateQueries({ queryKey: ["rankings"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });

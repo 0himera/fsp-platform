@@ -14,12 +14,16 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("competition not found")
-	ErrClosed       = errors.New("competition is closed")
-	ErrConflict     = errors.New("already registered or assigned")
-	ErrInvalid      = errors.New("invalid competition data")
-	ErrNotQualified = errors.New("athlete did not qualify for final")
-	ErrNotFinished  = errors.New("competition has not finished")
+	ErrNotFound      = errors.New("competition not found")
+	ErrClosed        = errors.New("competition is closed")
+	ErrConflict      = errors.New("already registered or assigned")
+	ErrInvalid       = errors.New("invalid competition data")
+	ErrNotQualified  = errors.New("athlete did not qualify for final")
+	ErrNotFinished   = errors.New("competition has not finished")
+	ErrTeamRequired  = errors.New("team entry must be submitted as a team")
+	ErrTeamFull      = errors.New("team has reached its size limit")
+	ErrInvalidInvite = errors.New("team invitation is invalid or expired")
+	ErrNotCaptain    = errors.New("only the team captain can manage it")
 )
 
 type Competition struct {
@@ -41,6 +45,7 @@ type Competition struct {
 	QualifyingPlaceLimit *int      `json:"qualifying_place_limit"`
 	RegistrationsCount   int       `json:"registrations_count"`
 	ResultsCount         int       `json:"results_count"`
+	MaxTeamSize          int       `json:"max_team_size"`
 }
 
 type Input struct {
@@ -57,20 +62,26 @@ type Input struct {
 	Stage                string    `json:"stage"`
 	QualifyingID         *int64    `json:"qualifying_competition_id"`
 	QualifyingPlaceLimit *int      `json:"qualifying_place_limit"`
+	MaxTeamSize          int       `json:"max_team_size"`
 }
 
 type Registration struct {
-	AthleteID    int64     `json:"athlete_id"`
-	FullName     string    `json:"full_name"`
-	Organization string    `json:"organization"`
-	City         string    `json:"city"`
-	CreatedAt    time.Time `json:"created_at"`
+	AthleteID           int64     `json:"athlete_id"`
+	FullName            string    `json:"full_name"`
+	Organization        string    `json:"organization"`
+	City                string    `json:"city"`
+	CreatedAt           time.Time `json:"created_at"`
+	AvatarURL           string    `json:"avatar_url"`
+	FeaturedAchievement any       `json:"featured_achievement,omitempty"`
 }
 
 type Team struct {
-	ID      int64          `json:"id"`
-	Name    string         `json:"name"`
-	Members []Registration `json:"members"`
+	CompetitionID int64          `json:"competition_id"`
+	ID            int64          `json:"id"`
+	Name          string         `json:"name"`
+	Description   string         `json:"description"`
+	CaptainID     int64          `json:"captain_id"`
+	Members       []Registration `json:"members"`
 }
 
 type Result struct {
@@ -84,7 +95,7 @@ type Result struct {
 
 type Service struct{ DB *pgxpool.Pool }
 
-const selectCompetition = `SELECT c.id,c.title,c.level_code,c.discipline_code,c.format,c.starts_at,c.ends_at,c.registration_deadline,c.location,c.description,c.status,c.stage,c.qualifying_competition_id,c.qualifying_place_limit,
+const selectCompetition = `SELECT c.id,c.title,c.level_code,c.discipline_code,c.format,c.starts_at,c.ends_at,c.registration_deadline,c.location,c.description,c.status,c.stage,c.qualifying_competition_id,c.qualifying_place_limit,c.max_team_size,
   (SELECT count(*)::integer FROM registrations x WHERE x.competition_id=c.id),
   (SELECT count(*)::integer FROM results x WHERE x.competition_id=c.id)
   FROM competitions c`
@@ -93,7 +104,7 @@ type scanner interface{ Scan(...any) error }
 
 func scanCompetition(row scanner, now time.Time) (Competition, error) {
 	var c Competition
-	err := row.Scan(&c.ID, &c.Title, &c.LevelCode, &c.DisciplineCode, &c.Format, &c.StartsAt, &c.EndsAt, &c.RegistrationDeadline, &c.Location, &c.Description, &c.Status, &c.Stage, &c.QualifyingID, &c.QualifyingPlaceLimit, &c.RegistrationsCount, &c.ResultsCount)
+	err := row.Scan(&c.ID, &c.Title, &c.LevelCode, &c.DisciplineCode, &c.Format, &c.StartsAt, &c.EndsAt, &c.RegistrationDeadline, &c.Location, &c.Description, &c.Status, &c.Stage, &c.QualifyingID, &c.QualifyingPlaceLimit, &c.MaxTeamSize, &c.RegistrationsCount, &c.ResultsCount)
 	if err == nil {
 		c = withPhase(c, now)
 	}
@@ -151,6 +162,7 @@ func (s Service) Get(ctx context.Context, id int64) (Competition, error) {
 func validInput(in Input) bool {
 	levels := map[string]bool{"rf_championship": true, "all_russian": true, "interregional": true, "rd_championship": true, "regional": true}
 	return utf8.RuneCountInString(strings.TrimSpace(in.Title)) >= 3 && utf8.RuneCountInString(in.Title) <= 160 && utf8.RuneCountInString(in.Location) <= 160 && utf8.RuneCountInString(in.Description) <= 3000 && levels[in.LevelCode] && in.DisciplineCode != "" &&
+		(in.MaxTeamSize >= 2 && in.MaxTeamSize <= 5) &&
 		(in.Format == "individual" || in.Format == "team") && (in.Status == "draft" || in.Status == "open" || in.Status == "running" || in.Status == "completed") &&
 		(in.Stage == "standalone" || in.Stage == "qualification" || in.Stage == "final") && ((in.Stage == "final") == (in.QualifyingID != nil)) &&
 		((in.Stage == "final") == (in.QualifyingPlaceLimit != nil)) && (in.QualifyingPlaceLimit == nil || (*in.QualifyingPlaceLimit > 0 && *in.QualifyingPlaceLimit <= 10000)) &&
@@ -160,6 +172,9 @@ func validInput(in Input) bool {
 func normalizeInput(in *Input) {
 	if in.Stage == "" {
 		in.Stage = "standalone"
+	}
+	if in.MaxTeamSize == 0 {
+		in.MaxTeamSize = 5
 	}
 }
 
@@ -186,8 +201,8 @@ func (s Service) Create(ctx context.Context, in Input, organizerID int64) (Compe
 		return Competition{}, err
 	}
 	var id int64
-	err := s.DB.QueryRow(ctx, `INSERT INTO competitions (title,level_code,discipline_code,format,starts_at,ends_at,registration_deadline,location,description,status,stage,qualifying_competition_id,qualifying_place_limit,created_by)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`, strings.TrimSpace(in.Title), in.LevelCode, in.DisciplineCode, in.Format, in.StartsAt, in.EndsAt, in.RegistrationDeadline, strings.TrimSpace(in.Location), strings.TrimSpace(in.Description), in.Status, in.Stage, in.QualifyingID, in.QualifyingPlaceLimit, organizerID).Scan(&id)
+	err := s.DB.QueryRow(ctx, `INSERT INTO competitions (title,level_code,discipline_code,format,starts_at,ends_at,registration_deadline,location,description,status,stage,qualifying_competition_id,qualifying_place_limit,max_team_size,created_by)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`, strings.TrimSpace(in.Title), in.LevelCode, in.DisciplineCode, in.Format, in.StartsAt, in.EndsAt, in.RegistrationDeadline, strings.TrimSpace(in.Location), strings.TrimSpace(in.Description), in.Status, in.Stage, in.QualifyingID, in.QualifyingPlaceLimit, in.MaxTeamSize, organizerID).Scan(&id)
 	if err != nil {
 		return Competition{}, err
 	}
@@ -206,7 +221,7 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 		}
 		if current.Status != "completed" || current.LevelCode != in.LevelCode || current.DisciplineCode != in.DisciplineCode || current.Format != in.Format ||
 			!current.StartsAt.Equal(in.StartsAt) || !current.EndsAt.Equal(in.EndsAt) || !current.RegistrationDeadline.Equal(in.RegistrationDeadline) ||
-			current.Stage != in.Stage || !equalID(current.QualifyingID, in.QualifyingID) || !equalInt(current.QualifyingPlaceLimit, in.QualifyingPlaceLimit) {
+			current.Stage != in.Stage || !equalID(current.QualifyingID, in.QualifyingID) || !equalInt(current.QualifyingPlaceLimit, in.QualifyingPlaceLimit) || current.MaxTeamSize != in.MaxTeamSize {
 			return Competition{}, ErrClosed
 		}
 		command, err := s.DB.Exec(ctx, `UPDATE competitions SET title=$2,location=$3,description=$4,updated_at=now() WHERE id=$1 AND status='completed'`,
@@ -222,7 +237,7 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 	if err := s.validateQualifier(ctx, in); err != nil {
 		return Competition{}, err
 	}
-	command, err := s.DB.Exec(ctx, `UPDATE competitions SET title=$2,level_code=$3,discipline_code=$4,format=$5,starts_at=$6,ends_at=$7,registration_deadline=$8,location=$9,description=$10,status=$11,stage=$12,qualifying_competition_id=$13,qualifying_place_limit=$14,updated_at=now()
+	command, err := s.DB.Exec(ctx, `UPDATE competitions SET title=$2,level_code=$3,discipline_code=$4,format=$5,starts_at=$6,ends_at=$7,registration_deadline=$8,location=$9,description=$10,status=$11,stage=$12,qualifying_competition_id=$13,qualifying_place_limit=$14,max_team_size=$15,updated_at=now()
 		WHERE id=$1 AND status<>'completed' AND NOT EXISTS (SELECT 1 FROM results WHERE competition_id=$1)
 			AND (NOT EXISTS (SELECT 1 FROM registrations WHERE competition_id=$1) OR
 				(discipline_code=$4 AND format=$5 AND stage=$12
@@ -232,7 +247,7 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 		AND NOT EXISTS (SELECT 1 FROM teams WHERE competition_id=$1 AND $5='individual')
 		AND NOT EXISTS (SELECT 1 FROM competitions child WHERE child.qualifying_competition_id=$1
 			AND ($12<>'qualification' OR $4<>child.discipline_code OR $5<>child.format OR $7>child.starts_at))`,
-		id, strings.TrimSpace(in.Title), in.LevelCode, in.DisciplineCode, in.Format, in.StartsAt, in.EndsAt, in.RegistrationDeadline, strings.TrimSpace(in.Location), strings.TrimSpace(in.Description), in.Status, in.Stage, in.QualifyingID, in.QualifyingPlaceLimit)
+		id, strings.TrimSpace(in.Title), in.LevelCode, in.DisciplineCode, in.Format, in.StartsAt, in.EndsAt, in.RegistrationDeadline, strings.TrimSpace(in.Location), strings.TrimSpace(in.Description), in.Status, in.Stage, in.QualifyingID, in.QualifyingPlaceLimit, in.MaxTeamSize)
 	if err != nil {
 		return Competition{}, err
 	}
@@ -259,11 +274,11 @@ func (s Service) Register(ctx context.Context, competitionID, athleteID int64) e
 		return err
 	}
 	defer tx.Rollback(ctx)
-	var status, stage string
+	var status, stage, format string
 	var deadline time.Time
 	var qualifierID *int64
 	var placeLimit *int
-	err = tx.QueryRow(ctx, `SELECT status,registration_deadline,stage,qualifying_competition_id,qualifying_place_limit FROM competitions WHERE id=$1 FOR SHARE`, competitionID).Scan(&status, &deadline, &stage, &qualifierID, &placeLimit)
+	err = tx.QueryRow(ctx, `SELECT status,registration_deadline,stage,qualifying_competition_id,qualifying_place_limit,format FROM competitions WHERE id=$1 FOR SHARE`, competitionID).Scan(&status, &deadline, &stage, &qualifierID, &placeLimit, &format)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
@@ -272,6 +287,9 @@ func (s Service) Register(ctx context.Context, competitionID, athleteID int64) e
 	}
 	if status != "open" || time.Now().After(deadline) {
 		return ErrClosed
+	}
+	if format == "team" {
+		return ErrTeamRequired
 	}
 	if stage == "final" {
 		var qualified bool
@@ -310,7 +328,7 @@ func (s Service) Unregister(ctx context.Context, competitionID, athleteID int64)
 }
 
 func (s Service) Registrations(ctx context.Context, competitionID int64) ([]Registration, error) {
-	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.organization,a.city,r.created_at FROM registrations r JOIN athletes a ON a.user_id=r.athlete_id WHERE r.competition_id=$1 ORDER BY r.created_at,a.full_name`, competitionID)
+	rows, err := s.DB.Query(ctx, `SELECT a.user_id,a.full_name,a.organization,a.city,r.created_at,a.avatar_url FROM registrations r JOIN athletes a ON a.user_id=r.athlete_id WHERE r.competition_id=$1 ORDER BY r.created_at,a.full_name`, competitionID)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +336,7 @@ func (s Service) Registrations(ctx context.Context, competitionID int64) ([]Regi
 	list := []Registration{}
 	for rows.Next() {
 		var r Registration
-		if err := rows.Scan(&r.AthleteID, &r.FullName, &r.Organization, &r.City, &r.CreatedAt); err != nil {
+		if err := rows.Scan(&r.AthleteID, &r.FullName, &r.Organization, &r.City, &r.CreatedAt, &r.AvatarURL); err != nil {
 			return nil, err
 		}
 		list = append(list, r)
@@ -373,7 +391,7 @@ func (s Service) CreateTeam(ctx context.Context, competitionID int64, name strin
 		return Team{}, ErrClosed
 	}
 	var id int64
-	if err := tx.QueryRow(ctx, `INSERT INTO teams (competition_id,name) VALUES ($1,$2) RETURNING id`, competitionID, name).Scan(&id); err != nil {
+	if err := tx.QueryRow(ctx, `INSERT INTO teams (competition_id,name,captain_id) VALUES ($1,$2,$3) RETURNING id`, competitionID, name, memberIDs[0]).Scan(&id); err != nil {
 		return Team{}, err
 	}
 	for _, athleteID := range memberIDs {
@@ -401,19 +419,84 @@ func (s Service) CreateTeam(ctx context.Context, competitionID int64, name strin
 	return Team{}, ErrNotFound
 }
 
-func (s Service) DeleteTeam(ctx context.Context, competitionID, teamID int64) error {
-	command, err := s.DB.Exec(ctx, `DELETE FROM teams t USING competitions c WHERE t.id=$2 AND t.competition_id=$1 AND c.id=$1 AND c.status<>'completed'`, competitionID, teamID)
+func (s Service) DeleteTeam(ctx context.Context, competitionID, teamID, captainID int64) error {
+	tx, err := s.DB.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	if command.RowsAffected() == 0 {
+	defer tx.Rollback(ctx)
+	var owner int64
+	var status string
+	var deadline time.Time
+	err = tx.QueryRow(ctx, `SELECT t.captain_id,c.status,c.registration_deadline FROM teams t JOIN competitions c ON c.id=t.competition_id WHERE t.id=$2 AND t.competition_id=$1 FOR UPDATE OF t,c`, competitionID, teamID).Scan(&owner, &status, &deadline)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
-	return nil
+	if err != nil {
+		return err
+	}
+	if owner != captainID {
+		return ErrNotCaptain
+	}
+	if status != "open" || !time.Now().Before(deadline) {
+		return ErrClosed
+	}
+	if _, err = tx.Exec(ctx, `DELETE FROM registrations r USING team_members m WHERE m.competition_id=$1 AND m.team_id=$2 AND r.competition_id=m.competition_id AND r.athlete_id=m.athlete_id`, competitionID, teamID); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `DELETE FROM teams WHERE competition_id=$1 AND id=$2`, competitionID, teamID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func (s Service) UpdateTeam(ctx context.Context, competitionID, teamID, captainID int64, name, description string) (Team, error) {
+	name = strings.TrimSpace(name)
+	description = strings.TrimSpace(description)
+	if utf8.RuneCountInString(name) < 2 || utf8.RuneCountInString(name) > 100 || utf8Len(description) > 500 {
+		return Team{}, ErrInvalid
+	}
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return Team{}, err
+	}
+	defer tx.Rollback(ctx)
+	var format, status string
+	var owner int64
+	var deadline time.Time
+	err = tx.QueryRow(ctx, `SELECT c.format,c.status,t.captain_id,c.registration_deadline FROM competitions c JOIN teams t ON t.competition_id=c.id WHERE c.id=$1 AND t.id=$2 FOR UPDATE OF c,t`, competitionID, teamID).Scan(&format, &status, &owner, &deadline)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Team{}, ErrNotFound
+	}
+	if err != nil {
+		return Team{}, err
+	}
+	if owner != captainID {
+		return Team{}, ErrNotCaptain
+	}
+	if format != "team" || status != "open" || !time.Now().Before(deadline) {
+		return Team{}, ErrClosed
+	}
+	if _, err := tx.Exec(ctx, `UPDATE teams SET name=$4,description=$5 WHERE competition_id=$1 AND id=$2 AND captain_id=$3`, competitionID, teamID, captainID, name, description); err != nil {
+		return Team{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Team{}, err
+	}
+	teams, err := s.Teams(ctx, competitionID)
+	if err != nil {
+		return Team{}, err
+	}
+	for _, team := range teams {
+		if team.ID == teamID {
+			return team, nil
+		}
+	}
+	return Team{}, ErrNotFound
 }
 
 func (s Service) Teams(ctx context.Context, competitionID int64) ([]Team, error) {
-	rows, err := s.DB.Query(ctx, `SELECT t.id,t.name,m.athlete_id,a.full_name,a.organization,a.city,r.created_at FROM teams t
+	rows, err := s.DB.Query(ctx, `SELECT t.id,t.name,t.description,t.captain_id,m.athlete_id,a.full_name,a.organization,a.city,r.created_at FROM teams t
 		LEFT JOIN team_members m ON m.team_id=t.id LEFT JOIN athletes a ON a.user_id=m.athlete_id
 		LEFT JOIN registrations r ON r.competition_id=t.competition_id AND r.athlete_id=m.athlete_id
 		WHERE t.competition_id=$1 ORDER BY t.id,a.full_name`, competitionID)
@@ -425,14 +508,20 @@ func (s Service) Teams(ctx context.Context, competitionID int64) ([]Team, error)
 	for rows.Next() {
 		var id int64
 		var name string
+		var description string
+		var captainID *int64
 		var athleteID *int64
 		var fullName, org, city *string
 		var createdAt *time.Time
-		if err := rows.Scan(&id, &name, &athleteID, &fullName, &org, &city, &createdAt); err != nil {
+		if err := rows.Scan(&id, &name, &description, &captainID, &athleteID, &fullName, &org, &city, &createdAt); err != nil {
 			return nil, err
 		}
 		if len(teams) == 0 || teams[len(teams)-1].ID != id {
-			teams = append(teams, Team{ID: id, Name: name, Members: []Registration{}})
+			team := Team{CompetitionID: competitionID, ID: id, Name: name, Description: description, Members: []Registration{}}
+			if captainID != nil {
+				team.CaptainID = *captainID
+			}
+			teams = append(teams, team)
 		}
 		if athleteID != nil {
 			teams[len(teams)-1].Members = append(teams[len(teams)-1].Members, Registration{AthleteID: *athleteID, FullName: *fullName, Organization: *org, City: *city, CreatedAt: *createdAt})

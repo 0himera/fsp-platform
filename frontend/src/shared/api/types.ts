@@ -53,6 +53,14 @@ export interface AthleteResult {
   included: boolean;
 }
 
+export interface Achievement {
+  code: string;
+  title: string;
+  description: string;
+  kind: "first" | "win" | "podium" | "final" | "series";
+  date: string;
+}
+
 export interface Athlete {
   id: number;
   full_name: string;
@@ -68,6 +76,9 @@ export interface Athlete {
   rank_points: number;
   results: AthleteResult[];
   rules_version: string;
+  avatar_url: string;
+  achievements: Achievement[];
+  featured_achievement?: Achievement | null;
 }
 
 export interface MeResponse {
@@ -81,6 +92,7 @@ export interface Competition {
   level_code: string;
   discipline_code: string;
   format: CompetitionFormat;
+  max_team_size: number;
   starts_at: string;
   ends_at: string;
   registration_deadline: string;
@@ -102,11 +114,34 @@ export interface Registration {
   organization: string;
   city: string;
   created_at: string;
+  avatar_url?: string;
+  featured_achievement?: Achievement | null;
+}
+
+export interface CompetitionParticipant {
+  athlete_id: number;
+  full_name: string;
+  avatar_url: string;
+  featured_achievement?: Achievement | null;
+}
+
+export interface CreateTeamResponse {
+  team: Team;
+  invite_url: string;
+}
+
+export interface ResultPublication {
+  id: number;
+  published_at: string;
+  publisher: string;
 }
 
 export interface Team {
+  competition_id: number;
   id: number;
   name: string;
+  description?: string;
+  captain_id: number;
   members: Registration[];
 }
 
@@ -137,11 +172,21 @@ export interface Discipline {
   name: string;
 }
 
+export interface DocumentItem {
+  id: number;
+  competition_id?: number | null;
+  title: string;
+  url: string;
+  file_size: number;
+  created_at: string;
+}
+
 export interface CreateCompetitionInput {
   title: string;
   level_code: string;
   discipline_code: string;
   format: CompetitionFormat;
+  max_team_size?: number;
   starts_at: string;
   ends_at: string;
   registration_deadline: string;
@@ -152,4 +197,3 @@ export interface CreateCompetitionInput {
   qualifying_competition_id?: number | null;
   qualifying_place_limit?: number | null;
 }
-

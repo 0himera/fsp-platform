@@ -14,14 +14,16 @@ import {
 } from "@/shared/ui";
 import {
   useCompetitionDetailQuery,
+  useCompetitionParticipantsQuery,
   useRegisterCompetitionMutation,
   useUnregisterCompetitionMutation,
   useUpdateCompetitionMutation,
-  useCreateTeamMutation,
-  useDeleteTeamMutation,
   usePublishResultsMutation,
 } from "@/entities/competition";
 import { useMeQuery } from "@/entities/user";
+import { PublicationHistory } from "@/features/manage-publications";
+import { CompetitionDocuments } from "@/features/manage-documents";
+import { TeamManager, TeamRegistrationDialog } from "@/features/manage-teams";
 import {
   COMPETITION_LEVELS,
   COMPETITION_STATUSES,
@@ -34,20 +36,17 @@ export default function CompetitionDetailPage() {
   const id = params?.id as string;
 
   const { data, isLoading, error } = useCompetitionDetailQuery(id);
+  const { data: participants = [] } = useCompetitionParticipantsQuery(id);
   const { data: me } = useMeQuery();
 
   const registerMutation = useRegisterCompetitionMutation();
   const unregisterMutation = useUnregisterCompetitionMutation();
   const updateCompetitionMutation = useUpdateCompetitionMutation();
-  const createTeamMutation = useCreateTeamMutation();
-  const deleteTeamMutation = useDeleteTeamMutation();
   const publishResultsMutation = usePublishResultsMutation();
 
   const [activeTab, setActiveTab] = React.useState<"registrations" | "teams" | "results" | "admin">("registrations");
 
-  // Team creation form state
-  const [teamName, setTeamName] = React.useState("");
-  const [selectedAthletes, setSelectedAthletes] = React.useState<number[]>([]);
+  const [showTeamDialog, setShowTeamDialog] = React.useState(false);
 
   // Results publish form state
   const [resultsList, setResultsList] = React.useState<
@@ -63,6 +62,7 @@ export default function CompetitionDetailPage() {
   const teams = data?.teams || [];
   const results = data?.results || [];
   const isRegistered = data?.registered;
+  const myTeam = isAthlete ? teams.find((team) => team.members.some((member) => member.athlete_id === user?.id)) : undefined;
 
   // Initialize resultsList when results arrive or change
   React.useEffect(() => {
@@ -103,28 +103,6 @@ export default function CompetitionDetailPage() {
       </div>
     );
   }
-
-  const handleToggleAthleteForTeam = (athleteId: number) => {
-    if (selectedAthletes.includes(athleteId)) {
-      setSelectedAthletes(selectedAthletes.filter((id) => id !== athleteId));
-    } else {
-      setSelectedAthletes([...selectedAthletes, athleteId]);
-    }
-  };
-
-  const handleCreateTeam = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!teamName.trim() || selectedAthletes.length === 0) return;
-    createTeamMutation.mutate(
-      { competitionId: id, name: teamName.trim(), memberIds: selectedAthletes },
-      {
-        onSuccess: () => {
-          setTeamName("");
-          setSelectedAthletes([]);
-        },
-      }
-    );
-  };
 
   const handleAddResultRow = () => {
     const nextPlace = resultsList.length + 1;
@@ -289,26 +267,20 @@ export default function CompetitionDetailPage() {
               {isAthlete && (
                 <>
                   {isRegistered ? (
-                    <Button
-                      variant="outline"
-                      disabled={unregisterMutation.isPending}
-                      onClick={() => unregisterMutation.mutate(competition.id)}
-                    >
-                      {unregisterMutation.isPending ? "Отмена..." : "Отменить заявку"}
-                    </Button>
+                    competition.format === "team" ? <span>Заявка команды подана</span> : <Button variant="outline" disabled={unregisterMutation.isPending} onClick={() => unregisterMutation.mutate(competition.id)}>{unregisterMutation.isPending ? "Отмена..." : "Отменить заявку"}</Button>
                   ) : competition.registration_open ? (
                     <Button
-                      disabled={registerMutation.isPending}
-                      onClick={() => registerMutation.mutate(competition.id)}
+                      disabled={competition.format === "individual" && registerMutation.isPending}
+                      onClick={() => competition.format === "team" ? setShowTeamDialog(true) : registerMutation.mutate(competition.id)}
                     >
-                      {registerMutation.isPending ? "Отправка..." : "Подать заявку на участие"}
+                      {competition.format === "team" ? "Создать команду и подать заявку" : registerMutation.isPending ? "Отправка..." : "Подать заявку на участие"}
                     </Button>
                   ) : null}
                 </>
               )}
 
               {!user && (
-                <a href="/#">
+                <a href={`/login?returnTo=${encodeURIComponent(`/competitions/${competition.id}`)}`}>
                   <Button>Войти для подачи заявки</Button>
                 </a>
               )}
@@ -317,6 +289,8 @@ export default function CompetitionDetailPage() {
         </CardContent>
       </Card>
 
+      <CompetitionDocuments id={competition.id} editable={isOrganizer} />
+
       {/* Navigation Tabs */}
       <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.1)", marginBottom: "1.5rem" }}>
         <Button
@@ -324,7 +298,7 @@ export default function CompetitionDetailPage() {
           size="sm"
           onClick={() => setActiveTab("registrations")}
         >
-          Заявки ({registrations.length})
+          Заявки ({participants.length})
         </Button>
         {competition.format === "team" && (
           <Button
@@ -357,13 +331,13 @@ export default function CompetitionDetailPage() {
       {activeTab === "registrations" && (
         <Card>
           <CardHeader>
-            <CardTitle>Список зарегистрированных участников ({registrations.length})</CardTitle>
+            <CardTitle>Список зарегистрированных участников ({participants.length})</CardTitle>
             <CardDescription>
               Спортсмены, подавшие заявку на участие в турнире
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {registrations.length === 0 ? (
+            {participants.length === 0 ? (
               <p style={{ opacity: 0.7 }}>Пока никто не зарегистрировался</p>
             ) : (
               <div style={{ overflowX: "auto" }}>
@@ -372,13 +346,11 @@ export default function CompetitionDetailPage() {
                     <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.1)", fontSize: "0.875rem", opacity: 0.7 }}>
                       <th style={{ padding: "0.75rem 0.5rem", width: "40px" }}>№</th>
                       <th style={{ padding: "0.75rem 0.5rem" }}>Спортсмен</th>
-                      <th style={{ padding: "0.75rem 0.5rem" }}>Организация</th>
-                      <th style={{ padding: "0.75rem 0.5rem" }}>Город</th>
-                      <th style={{ padding: "0.75rem 0.5rem" }}>Дата подачи</th>
+                      <th style={{ padding: "0.75rem 0.5rem" }}>Ключевое достижение</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {registrations.map((reg, idx) => (
+                    {participants.map((reg, idx) => (
                       <tr
                         key={reg.athlete_id}
                         style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}
@@ -389,14 +361,10 @@ export default function CompetitionDetailPage() {
                             href={`/athletes/${reg.athlete_id}`}
                             style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}
                           >
-                            {reg.full_name}
+                            {reg.avatar_url && <img src={reg.avatar_url} alt="" width={28} height={28} style={{ borderRadius: "50%", objectFit: "cover", verticalAlign: "middle", marginRight: 8 }} />}{reg.full_name}
                           </a>
                         </td>
-                        <td style={{ padding: "0.75rem 0.5rem", opacity: 0.8 }}>{reg.organization || "—"}</td>
-                        <td style={{ padding: "0.75rem 0.5rem", opacity: 0.8 }}>{reg.city || "—"}</td>
-                        <td style={{ padding: "0.75rem 0.5rem", opacity: 0.7, fontSize: "0.875rem" }}>
-                          {new Date(reg.created_at).toLocaleDateString("ru-RU")}
-                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem", opacity: 0.8 }}>{reg.featured_achievement?.title || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -427,18 +395,6 @@ export default function CompetitionDetailPage() {
                       <CardHeader style={{ padding: "1rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <CardTitle style={{ fontSize: "1.1rem" }}>{team.name}</CardTitle>
-                          {isOrganizer && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={deleteTeamMutation.isPending}
-                              onClick={() =>
-                                deleteTeamMutation.mutate({ competitionId: id, teamId: team.id })
-                              }
-                            >
-                              Удалить
-                            </Button>
-                          )}
                         </div>
                       </CardHeader>
                       <CardContent style={{ padding: "1rem" }}>
@@ -454,7 +410,7 @@ export default function CompetitionDetailPage() {
                               >
                                 {m.full_name}
                               </a>{" "}
-                              <span style={{ opacity: 0.6 }}>({m.city || m.organization})</span>
+                              <span style={{ opacity: 0.6 }}>({m.city || m.organization || m.featured_achievement?.title || "Участник"})</span>
                             </li>
                           ))}
                         </ul>
@@ -466,69 +422,8 @@ export default function CompetitionDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Organizer: Create Team Form */}
-          {isOrganizer && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Создать команду</CardTitle>
-                <CardDescription>
-                  Объедините зарегистрированных участников в команду
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateTeam} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.25rem", fontWeight: 500 }}>
-                      Название команды *
-                    </label>
-                    <Input
-                      required
-                      placeholder="Например: Сборная ДГТУ-1"
-                      value={teamName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500 }}>
-                      Выберите участников команды ({selectedAthletes.length} выбрано):
-                    </label>
-                    <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "6px", padding: "0.5rem" }}>
-                      {registrations.map((reg) => (
-                        <label
-                          key={reg.athlete_id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            padding: "0.4rem",
-                            cursor: "pointer",
-                            fontSize: "0.875rem",
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedAthletes.includes(reg.athlete_id)}
-                            onChange={() => handleToggleAthleteForTeam(reg.athlete_id)}
-                          />
-                          <span>
-                            {reg.full_name} ({reg.organization || reg.city || "Спортсмен"})
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={createTeamMutation.isPending || !teamName.trim() || selectedAthletes.length === 0}
-                  >
-                    {createTeamMutation.isPending ? "Создание..." : "Сформировать команду"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          )}
+          {myTeam && myTeam.captain_id === user?.id && <TeamManager competitionId={competition.id} team={myTeam} maxSize={competition.max_team_size} athleteId={user.id} />}
+          {isAthlete && !myTeam && <div><p>Станьте капитаном, создайте команду и отправьте участникам приглашения.</p><Button disabled={!competition.registration_open} onClick={() => setShowTeamDialog(true)}>Создать команду и подать заявку</Button></div>}
         </div>
       )}
 
@@ -601,6 +496,8 @@ export default function CompetitionDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <PublicationHistory competitionId={Number(id)} editable={isOrganizer} />
 
           {/* Organizer: Edit & Publish Results */}
           {isOrganizer && (
@@ -810,6 +707,7 @@ export default function CompetitionDetailPage() {
           </CardContent>
         </Card>
       )}
+      {showTeamDialog && <TeamRegistrationDialog competition={competition} onClose={() => setShowTeamDialog(false)} />}
     </main>
   );
 }

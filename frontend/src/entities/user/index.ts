@@ -6,6 +6,8 @@ export {
   getMe,
   useAthleteQuery,
   useUpdateProfileMutation,
+  useFeaturedAchievementMutation,
+  useAvatarMutation,
   useUpdateRankMutation,
   userKeys,
 } from "./api/userApi";

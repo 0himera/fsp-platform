@@ -68,3 +68,17 @@ func TestQualificationIsVisibleButDoesNotScore(t *testing.T) {
 		t.Fatalf("qualification alone must not activate rank bonus: %+v", qualifierOnly)
 	}
 }
+
+func TestAchievementSelectionUsesCompletedResults(t *testing.T) {
+	now := time.Date(2026, 9, 23, 0, 0, 0, 0, time.UTC)
+	athlete := Calculate(Athlete{FeaturedCode: "win-11", Results: []Result{
+		{CompetitionID: 10, Competition: "Сильный старт", Level: "regional", Place: 2, Finishers: 8, EndsAt: now.Add(-time.Hour)},
+		{CompetitionID: 11, Competition: "Кубок Дагестана", Level: "rd_championship", Place: 1, Finishers: 8, EndsAt: now},
+	}}, now)
+	if len(athlete.Achievements) != 3 || athlete.FeaturedAchievement == nil || athlete.FeaturedAchievement.Code != "win-11" {
+		t.Fatalf("unexpected achievements: %+v", athlete.Achievements)
+	}
+	if athlete.FeaturedAchievement.Title != "Победа" {
+		t.Fatalf("unexpected selected achievement: %+v", athlete.FeaturedAchievement)
+	}
+}

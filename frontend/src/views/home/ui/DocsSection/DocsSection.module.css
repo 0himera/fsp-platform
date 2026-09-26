@@ -51,3 +51,11 @@
   color: #2563eb;
   text-decoration: underline;
 }
+
+.documents,.upload { display:grid; gap:.65rem; padding:1rem; border:1px solid #e7e2dc; border-radius:8px; background:#fff; }
+.documents h3,.upload h3 { margin:0; font-size:1rem; }
+.documents > div { display:flex; justify-content:space-between; gap:1rem; padding:.55rem 0; border-top:1px solid #eeeae5; }
+.documents a { color:#84243b; }
+.documents button,.upload button { width:max-content; padding:.5rem .75rem; border:0; border-radius:4px; background:#84243b; color:#fff; cursor:pointer; }
+.upload { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.upload h3 { grid-column:1/-1; }

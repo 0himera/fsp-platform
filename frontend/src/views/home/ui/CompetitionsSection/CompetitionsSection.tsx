@@ -74,6 +74,8 @@ export const CompetitionsSection: React.FC = () => {
                     </a>
                     {isRegistered ? (
                       <span className={styles.registeredBadge}>✓ Заявка подана</span>
+                    ) : canRegister && c.format === "team" ? (
+                      <a href={`/competitions/${c.id}`}><Button size="sm">Создать команду</Button></a>
                     ) : canRegister ? (
                       <Button
                         size="sm"
