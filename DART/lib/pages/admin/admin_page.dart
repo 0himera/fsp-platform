@@ -1,13 +1,3 @@
-/// Кабинет организатора (п.5 ТЗ): турниры, разряды, справочник дисциплин.
-///
-/// Три вкладки — три группы управляемых данных. Списки намеренно берутся из
-/// уже существующих контроллеров: турниры отдаёт `CompetitionsController`
-/// (организатор видит в нём и черновики), разряды и справочник —
-/// `AdminController`. Дублировать состояние ради удобства вёрстки значило бы
-/// однажды показать организатору устаревшую таблицу.
-///
-/// Прав доступа здесь нет: сервер сам ответит 403 «Недостаточно прав» на
-/// любой админский вызов от спортсмена.
 library;
 
 import 'package:flutter/material.dart';
@@ -34,8 +24,6 @@ class _AdminPageState extends State<AdminPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AdminController>().load();
-      // Список турниров для вкладки «Турниры» живёт в другом контроллере —
-      // организатору нужны и черновики, которые сервер отдаёт только ему.
       final competitions = context.read<CompetitionsController>();
       if (competitions.items.isEmpty) competitions.load();
     });
@@ -46,22 +34,34 @@ class _AdminPageState extends State<AdminPage> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        backgroundColor: AppTheme.background,
         body: Column(
           children: [
-            const TabBar(
-              tabs: [
-                Tab(text: 'Турниры'),
-                Tab(text: 'Разряды'),
-                Tab(text: 'Дисциплины'),
-              ],
+            Container(
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppTheme.border)),
+              ),
+              child: const TabBar(
+                indicatorColor: AppTheme.textPrimary,
+                indicatorWeight: 2,
+                labelColor: AppTheme.textPrimary,
+                unselectedLabelColor: AppTheme.textTertiary,
+                labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                unselectedLabelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                tabs: [
+                  Tab(text: 'Турниры'),
+                  Tab(text: 'Разряды'),
+                  Tab(text: 'Дисциплины'),
+                ],
+              ),
             ),
             const _ErrorBar(),
-            Expanded(
+            const Expanded(
               child: TabBarView(
                 children: [
                   _CompetitionsTab(),
-                  const _RanksTab(),
-                  const _DisciplinesTab(),
+                  _RanksTab(),
+                  _DisciplinesTab(),
                 ],
               ),
             ),
@@ -69,11 +69,15 @@ class _AdminPageState extends State<AdminPage> {
         ),
         floatingActionButton: Builder(
           builder: (context) => FloatingActionButton(
+            backgroundColor: AppTheme.textPrimary,
+            foregroundColor: AppTheme.background,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const CompetitionFormPage()),
             ),
             tooltip: 'Новый турнир',
-            child: const Icon(Icons.add),
+            child: const Icon(Icons.add_rounded, size: 24),
           ),
         ),
       ),
@@ -81,8 +85,6 @@ class _AdminPageState extends State<AdminPage> {
   }
 }
 
-/// Строка ошибки текущей вкладки. Показываем текстом сервера: он объясняет
-/// отказ по-русски, и «Недостаточно прав» полезнее, чем «что-то пошло не так».
 class _ErrorBar extends StatelessWidget {
   const _ErrorBar();
 
@@ -90,11 +92,13 @@ class _ErrorBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final error = context.watch<AdminController>().error;
     if (error == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.all(12),
+    return Container(
+      width: double.infinity,
+      color: AppTheme.error.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(
         error,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
+        style: const TextStyle(color: AppTheme.error, fontSize: 13),
       ),
     );
   }
@@ -105,26 +109,26 @@ class _CompetitionsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final competitions = context.watch<CompetitionsController>().items;
-    if (competitions.isEmpty) {
+    final competitions = context.watch<CompetitionsController>();
+    if (competitions.items.isEmpty) {
       return const EmptyNotice(
-        text: 'Турниров нет. Создайте первый кнопкой снизу.',
+        text: 'Турниров пока нет. Создайте первый кнопкой «+».',
         icon: Icons.emoji_events_outlined,
       );
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: competitions.length,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+      itemCount: competitions.items.length,
       itemBuilder: (context, index) {
-        final competition = competitions[index];
+        final item = competitions.items[index];
         return CompetitionTile(
-          competition: competition,
+          competition: item,
           trailing: IconButton(
-            tooltip: 'Править',
-            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Редактировать',
+            icon: const Icon(Icons.edit_outlined, size: 20, color: AppTheme.textSecondary),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => CompetitionFormPage(competition: competition),
+                builder: (_) => CompetitionFormPage(competition: item),
               ),
             ),
           ),
@@ -134,10 +138,6 @@ class _CompetitionsTab extends StatelessWidget {
   }
 }
 
-/// Разряды спортсменов (п.5 ТЗ: «присвоение разрядов»).
-///
-/// Список — тот же, что у рейтинга: `/api/rankings` отдаёт анкету вместе с
-/// очками, и второго запроса за «просто анкетами» нет.
 class _RanksTab extends StatelessWidget {
   const _RanksTab();
 
@@ -154,7 +154,13 @@ class _RanksTab extends StatelessWidget {
         content: Text(
           updated == null
               ? admin.error ?? 'Не вышло'
-              : '${updated.fullName}: ${updated.rank?.label ?? 'разряд снят'}',
+              : '${updated.fullName}: ${updated.rank?.label ?? "разряд снят"}',
+        ),
+        backgroundColor: AppTheme.surfaceElevated,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: const BorderSide(color: AppTheme.border),
         ),
       ),
     );
@@ -164,32 +170,62 @@ class _RanksTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final admin = context.watch<AdminController>();
     if (admin.athletes.isEmpty) {
-      return const EmptyNotice(text: 'Спортсменов пока нет');
+      return const EmptyNotice(text: 'Спортсменов пока нет', icon: Icons.people_outline);
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
       itemCount: admin.athletes.length,
       itemBuilder: (context, index) {
         final athlete = admin.athletes[index];
-        return ListTile(
-          title: Text(athlete.fullName),
-          subtitle: Text('рейтинг ${athlete.rating}'),
-          trailing: DropdownButton<AthleteRank?>(
-            value: athlete.rank,
-            hint: const Text('—'),
-            // null = «без разряда»: сервер понимает это как снятие разряда.
-            items: [
-              const DropdownMenuItem<AthleteRank?>(
-                value: null,
-                child: Text('без разряда'),
-              ),
-              for (final rank in AthleteRank.values)
-                DropdownMenuItem<AthleteRank?>(
-                  value: rank,
-                  child: Text(rank.label),
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppTheme.border),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      athlete.fullName,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Рейтинг: ${athlete.rating}',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                    ),
+                  ],
                 ),
+              ),
+              DropdownButton<AthleteRank?>(
+                value: athlete.rank,
+                dropdownColor: AppTheme.surfaceElevated,
+                underline: const SizedBox.shrink(),
+                hint: const Text('—', style: TextStyle(color: AppTheme.textTertiary)),
+                items: [
+                  const DropdownMenuItem<AthleteRank?>(
+                    value: null,
+                    child: Text('без разряда', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                  ),
+                  for (final rank in AthleteRank.values)
+                    DropdownMenuItem<AthleteRank?>(
+                      value: rank,
+                      child: Text(rank.label, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+                    ),
+                ],
+                onChanged: (rank) => _setRank(context, athlete, rank),
+              ),
             ],
-            onChanged: (rank) => _setRank(context, athlete, rank),
           ),
         );
       },
@@ -197,10 +233,6 @@ class _RanksTab extends StatelessWidget {
   }
 }
 
-/// Справочник дисциплин: добавление и переименование.
-///
-/// Переименование меняет ТОЛЬКО название: код — идентификатор, на который
-/// ссылаются турниры и анкеты, поэтому сервер и не позволяет его править.
 class _DisciplinesTab extends StatelessWidget {
   const _DisciplinesTab();
 
@@ -217,10 +249,14 @@ class _DisciplinesTab extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Отмена'),
+            child: const Text('Отмена', style: TextStyle(color: AppTheme.textTertiary)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.textPrimary,
+              foregroundColor: AppTheme.background,
+            ),
             child: const Text('Сохранить'),
           ),
         ],
@@ -228,13 +264,9 @@ class _DisciplinesTab extends StatelessWidget {
     );
     if (name == null || !context.mounted) return;
     final admin = context.read<AdminController>();
-    // Правила сервера (`disciplines.go`: название 3..120 байт) проверяем до
-    // запроса: отказ сервера выглядит как «Некорректные или несвязанные
-    // данные», и догадаться, какое именно поле виновато, по нему невозможно.
     final problem = disciplineError(name: name);
     if (problem != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(problem)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(problem)));
       return;
     }
     final updated = await admin.renameDiscipline(
@@ -268,6 +300,7 @@ class _DisciplinesTab extends StatelessWidget {
                 helperText: 'строчные буквы, цифры и _; код потом не изменить',
               ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: name,
               decoration: const InputDecoration(labelText: 'Название'),
@@ -277,10 +310,14 @@ class _DisciplinesTab extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Отмена'),
+            child: const Text('Отмена', style: TextStyle(color: AppTheme.textTertiary)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.textPrimary,
+              foregroundColor: AppTheme.background,
+            ),
             child: const Text('Создать'),
           ),
         ],
@@ -291,16 +328,11 @@ class _DisciplinesTab extends StatelessWidget {
     code.dispose();
     name.dispose();
     if (!(saved ?? false)) return;
-    // Текст полей прочитан и контроллеры закрыты ДО этой строки: дальше нужен
-    // живой `context`, а страница за время диалога могла закрыться.
     if (!context.mounted) return;
     final admin = context.read<AdminController>();
-    // Код проверяем по обрезанному значению — ровно потому, что обрезается он
-    // и в `DisciplineHttpService.create`.
     final problem = disciplineError(code: codeText.trim(), name: nameText);
     if (problem != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(problem)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(problem)));
       return;
     }
     final created = await admin.addDiscipline(code: codeText, name: nameText);
@@ -318,22 +350,53 @@ class _DisciplinesTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final disciplines = context.watch<AdminController>().disciplines;
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
       children: [
         for (final discipline in disciplines)
-          ListTile(
-            dense: true,
-            title: Text(discipline.name),
-            subtitle: Text(discipline.code),
-            trailing: IconButton(
-              tooltip: 'Переименовать',
-              icon: const Icon(Icons.drive_file_rename_outline),
-              onPressed: () => _rename(context, discipline),
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.border),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        discipline.name,
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        discipline.code,
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Переименовать',
+                  icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.textSecondary),
+                  onPressed: () => _rename(context, discipline),
+                ),
+              ],
             ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         AppButton(
           text: 'Добавить дисциплину',
+          icon: Icons.add_rounded,
+          color: AppTheme.surfaceElevated,
+          textColor: AppTheme.textPrimary,
           onPressed: () => _create(context),
         ),
       ],
