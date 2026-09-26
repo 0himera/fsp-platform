@@ -20,7 +20,6 @@ html[data-theme="dark"] {
   --paper: var(--background);
   --line: #303b4b;
 }
-
 html[data-theme="dark"] body,
 html[data-theme="dark"] main { background: var(--background); color: var(--foreground); }
 html[data-theme="dark"] .site-footer { color: var(--foreground); }
@@ -31,9 +30,11 @@ html[data-theme="dark"] main :is(input,textarea)::placeholder { color: var(--mut
 html[data-theme="dark"] main [class*="stage"] { background: var(--background); }
 html[data-theme="dark"] main [class*="caption"] { border-top: 1px solid var(--border); color: var(--foreground); }
 html[data-theme="dark"] main button[aria-pressed="true"],
-html[data-theme="dark"] main [class*="row"]:hover,
 html[data-theme="dark"] main [aria-pressed="true"] { background: var(--background); color: var(--foreground); box-shadow: none; }
-html[data-theme="dark"] main [class*="own"]:hover { background: var(--background)!important; }
+html[data-theme="dark"] main tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
+html[data-theme="dark"] main [class*="own"] { background: rgba(197, 22, 48, 0.22); }
+html[data-theme="dark"] main [class*="own"]:hover { background: rgba(197, 22, 48, 0.32)!important; }
+html[data-theme="dark"] main [class*="rank"] { background: rgba(197, 22, 48, 0.25); color: #ff94a6; }
 html[data-theme="dark"] main [class*="status"] { background: rgba(17,23,33,.9); color: var(--foreground); }
 html[data-theme="dark"] main table,
 html[data-theme="dark"] main tr,

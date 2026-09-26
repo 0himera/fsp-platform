@@ -7,6 +7,7 @@
 .list { display:grid; border-top:1px solid #e2ddd5; }
 .row { display:grid; grid-template-columns:32px minmax(0,1fr) 24px; align-items:center; gap:12px; min-height:101px; padding:14px 10px 14px 3px; border:0; border-bottom:1px solid #e2ddd5; border-radius:0; color:inherit; text-align:left; }
 .row:hover,.active { padding-left:10px; background:rgba(255,255,255,.7); }
+:global([data-theme="dark"]) .row:hover,:global([data-theme="dark"]) .active { background:rgba(255,255,255,.05); }
 .active { box-shadow:inset 2px 0 var(--wine); }
 .index { align-self:start; padding-top:2px; color:#92959a; font:13px "JetBrains Mono",monospace; }
 .active .index { color:var(--wine); }

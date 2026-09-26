@@ -21,5 +21,6 @@
 .featured { display:flex; align-items:center; gap:10px; padding:12px 18px; border-bottom:1px solid #eeeae5; color:#697586; font:11px "JetBrains Mono",monospace; }
 .featured select { max-width:100%; padding:8px 10px; border:1px solid #d9d6d2; border-radius:4px; color:#19263a; background:#fff; }
 .grid article[data-featured="true"] { background:#faf4f4; }
+:global([data-theme="dark"]) .grid article[data-featured="true"] { background:rgba(197,22,48,.15); }
 .grid em { color:var(--wine); font:10px "JetBrains Mono",monospace; }
 @media (max-width:600px) { .section header { align-items:start; padding:15px; } .grid { grid-template-columns:1fr; } .grid article,.grid article:nth-child(2n),.grid article:nth-last-child(-n+2) { min-height:85px; border-right:0; border-bottom:1px solid #eeeae5; } .grid article:last-child { border-bottom:0; } .icon { width:47px; height:47px; } }

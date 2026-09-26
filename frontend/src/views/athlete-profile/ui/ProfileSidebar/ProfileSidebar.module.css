@@ -3,6 +3,7 @@
 .next { padding:17px 18px 16px; }
 .next > span { color:var(--wine); font:700 9px "JetBrains Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
 .next > i { display:inline-block; margin-top:14px; padding:5px 7px; border-radius:4px; background:#f4ebed; color:#8c2b42; font:9px "JetBrains Mono",monospace; font-style:normal; }
+:global([data-theme="dark"]) .next > i { background:rgba(197,22,48,.2); color:#ff94a6; }
 .next h2 { margin:9px 0 12px; color:#18263a; font-size:20px; line-height:1.15; }
 .next p { display:flex; align-items:center; gap:7px; margin:7px 0; color:#647185; font:11px "JetBrains Mono",monospace; }
 .next p svg { width:15px; color:var(--wine); }
