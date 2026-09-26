@@ -36,10 +36,20 @@ export interface ContestSubmission {
   reviewed_at?: string;
 }
 
+export interface ContestTaskResult {
+  task_id: number;
+  title: string;
+  score: number;
+  attempts: number;
+}
+
 export interface ContestLeader {
   athlete_id: number;
   full_name: string;
   place: number;
   score: number;
   max_score: number;
+  total_attempts: number;
+  tasks: ContestTaskResult[];
 }
+

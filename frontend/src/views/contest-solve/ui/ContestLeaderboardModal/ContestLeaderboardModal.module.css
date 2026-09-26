@@ -5,7 +5,7 @@
 }
 .modal {
   background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-  width: 100%; max-width: 560px; display: flex; flex-direction: column; overflow: hidden;
+  width: 100%; max-width: 780px; display: flex; flex-direction: column; overflow: hidden;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 }
 .header {
@@ -15,10 +15,15 @@
 .title { margin: 0; font-size: 16px; font-weight: 700; color: #f8fafc; }
 .closeBtn { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; }
 .closeBtn:hover { color: #ffffff; }
-.body { padding: 16px 20px; max-height: 400px; overflow-y: auto; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.th { text-align: left; padding: 8px 12px; color: #64748b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-weight: 600; }
-.td { padding: 10px 12px; color: #cbd5e1; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.body { padding: 16px 20px; max-height: 440px; overflow-y: auto; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+.th { text-align: left; padding: 8px 10px; color: #64748b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); font-weight: 600; white-space: nowrap; }
+.td { padding: 8px 10px; color: #cbd5e1; border-bottom: 1px solid rgba(255, 255, 255, 0.04); white-space: nowrap; }
 .placeBadge { font-weight: 700; color: #fbbf24; }
 .score { font-weight: 700; color: #34d399; }
 .alignRight { text-align: right; }
+.alignCenter { text-align: center; }
+.taskSuccess { color: #34d399; font-weight: 600; }
+.taskFailed { color: #f87171; font-weight: 600; }
+.taskEmpty { color: #475569; }
+.attempts { font-size: 11px; opacity: 0.8; margin-left: 3px; }
