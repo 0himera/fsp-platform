@@ -219,17 +219,6 @@ func (s *Server) contestLeaderboard(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	competition, err := s.Competitions.Get(r.Context(), competitionID)
-	if err != nil {
-		handleError(w, err)
-		return
-	}
-	user, authErr := s.currentUser(r)
-	organizer := authErr == nil && user.Role == "organizer"
-	if competition.Status != "completed" && !organizer {
-		writeError(w, http.StatusForbidden, "Итоговая таблица появится после завершения контеста")
-		return
-	}
 	items, err := s.Contests.Leaderboard(r.Context(), competitionID)
 	if err != nil {
 		handleContestError(w, err)
