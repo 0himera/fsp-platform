@@ -4,6 +4,7 @@ import * as React from "react";
 import { Bot, Send, Sparkles, X } from "lucide-react";
 import { useAiChatMutation } from "@/entities/ai";
 import type { AiMessage, AiChatSource } from "@/shared/api";
+import { MarkdownText } from "./MarkdownText";
 import styles from "./AiAssistant.module.css";
 
 interface ChatMessage extends AiMessage {
@@ -44,8 +45,8 @@ export function AiAssistant() {
     setMessages(nextMessages);
     setInput("");
 
-    // Prepare history for API (filter out greeting model message)
-    const historyPayload = nextMessages.slice(1, -1);
+    // Prepare full conversation history for API (including initial greeting as model message)
+    const historyPayload = nextMessages.slice(0, -1);
 
     chatMutation.mutate(
       { message: text, history: historyPayload },
@@ -65,7 +66,7 @@ export function AiAssistant() {
             ...prev,
             {
               role: "model",
-              content: `Ошибка: ${err instanceof Error ? err.message : "Не удалось получить ответ"}. Проверьте соединение или настройки API.`,
+              content: `Ошибка: ${err instanceof Error ? err.message : "Не удалось получить ответ"}. Пожалуйста, попробуйте снова.`,
             },
           ]);
         },
@@ -108,7 +109,7 @@ export function AiAssistant() {
                 key={i}
                 className={`${styles.message} ${m.role === "user" ? styles.userMessage : styles.aiMessage}`}
               >
-                <div>{m.content}</div>
+                <MarkdownText text={m.content} />
                 {m.sources && m.sources.length > 0 && (
                   <div className={styles.sources}>
                     <span>Источники:</span>
