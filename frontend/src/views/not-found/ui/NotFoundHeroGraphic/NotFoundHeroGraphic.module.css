@@ -1,0 +1,51 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 24px);
+  margin: 1.5rem 0;
+  user-select: none;
+}
+
+.numberContainer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(80px, 15vw, 150px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  animation: floatNumber 3.6s ease-in-out infinite alternate;
+}
+
+.digit {
+  background: linear-gradient(135deg, #ffffff 30%, #7164ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 10px 20px rgba(64, 47, 255, 0.3));
+}
+
+.digitCenter {
+  background: linear-gradient(135deg, #ec1d35 0%, #7164ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 10px 25px rgba(236, 29, 53, 0.4));
+  margin: 0 4px;
+}
+
+.bracketLeft, .bracketRight {
+  position: relative;
+  z-index: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(40px, 8vw, 80px);
+  font-weight: 300;
+  color: rgba(113, 100, 255, 0.5);
+}
+
+@keyframes floatNumber {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-12px); }
+}

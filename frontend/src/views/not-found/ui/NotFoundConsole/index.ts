@@ -1,0 +1,1 @@
+export { NotFoundConsole } from "./NotFoundConsole";

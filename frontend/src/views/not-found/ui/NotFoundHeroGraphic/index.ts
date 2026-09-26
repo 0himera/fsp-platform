@@ -1,0 +1,1 @@
+export { NotFoundHeroGraphic } from "./NotFoundHeroGraphic";
