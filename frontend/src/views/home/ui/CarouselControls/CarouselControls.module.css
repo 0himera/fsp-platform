@@ -1,7 +1,11 @@
-.controls { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 16px 0; }
-.controls button { width:39px; height:39px; border-color:#d9d4cc; border-radius:50%; color:#3c4553; }
-.controls button:hover { border-color:var(--wine); color:var(--wine); }
-.steps { display:flex; gap:8px; width:min(420px,65%); }
-.steps .step { flex:1; min-width:20px; height:4px; min-height:4px; padding:0; border:0; border-radius:9px; background:#dcd8d1; }
-.steps .active { background:var(--wine); }
-@media (max-width:560px) { .controls { padding-inline:1px; } }
+.controls { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 16px 0; }
+.controls button { width: 39px; height: 39px; border-color: #d9d4cc; border-radius: 50%; color: #3c4553; transition: all .2s cubic-bezier(.16,1,.3,1); }
+.controls button:hover { border-color: var(--wine); color: var(--wine); transform: scale(1.08); box-shadow: 0 0 12px rgba(197, 22, 48, 0.3); }
+.controls button:active { transform: scale(0.92); }
+.steps { display: flex; gap: 8px; width: min(420px, 65%); }
+.steps .step { flex: 1; min-width: 20px; height: 4px; min-height: 4px; padding: 0; border: 0; border-radius: 9px; background: #dcd8d1; transition: background .3s ease, transform .2s ease; cursor: pointer; }
+.steps .step:hover { background: #bbb5ab; transform: scaleY(1.4); }
+.steps .active { position: relative; background: var(--wine); transform: scaleY(1.4); box-shadow: 0 0 10px rgba(197, 22, 48, 0.55); overflow: hidden; }
+.steps .active::after { position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent); animation: barShimmer 1.8s infinite ease-in-out; content: ""; }
+@keyframes barShimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+@media (max-width: 560px) { .controls { padding-inline: 1px; } }
