@@ -1,0 +1,31 @@
+.container { display: flex; flex-direction: column; gap: 20px; }
+.headerCard {
+  padding: 20px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px; display: flex; justify-content: space-between; align-items: center;
+}
+.cfTitle { font-size: 18px; font-weight: 700; color: #f8fafc; }
+.cfMeta { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.linkBtn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.linkBtn:hover { background: rgba(56, 189, 248, 0.2); }
+.actions { display: flex; gap: 10px; margin-top: 12px; }
+.actionBtn {
+  padding: 8px 16px; background: #2563eb; color: #fff; font-size: 13px;
+  font-weight: 600; border-radius: 6px; border: none; cursor: pointer;
+}
+.actionBtn:hover { background: #1d4ed8; }
+.actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.secondaryBtn {
+  padding: 8px 16px; background: rgba(255, 255, 255, 0.05); color: #cbd5e1;
+  font-size: 13px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+.secondaryBtn:hover { background: rgba(255, 255, 255, 0.1); }
+.section {
+  padding: 20px; background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.sectionTitle { font-size: 16px; font-weight: 700; color: #f8fafc; margin-bottom: 12px; }

@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/shared/ui";
 import styles from "./CompetitionDetailTabs.module.css";
 
-export type DetailTab = "registrations" | "teams" | "results" | "admin";
+export type DetailTab = "registrations" | "teams" | "results" | "codeforces" | "admin";
 
 interface CompetitionDetailTabsProps {
   currentTab: DetailTab;
@@ -14,12 +14,7 @@ interface CompetitionDetailTabsProps {
 }
 
 export const CompetitionDetailTabs: React.FC<CompetitionDetailTabsProps> = ({
-  currentTab,
-  onTabChange,
-  regCount,
-  teamsCount,
-  resultsCount,
-  isOrganizer,
+  currentTab, onTabChange, regCount, teamsCount, resultsCount, isOrganizer,
 }) => (
   <div className={styles.tabs}>
     <Button size="sm" variant={currentTab === "registrations" ? "default" : "outline"} onClick={() => onTabChange("registrations")}>
@@ -30,6 +25,9 @@ export const CompetitionDetailTabs: React.FC<CompetitionDetailTabsProps> = ({
     </Button>
     <Button size="sm" variant={currentTab === "results" ? "default" : "outline"} onClick={() => onTabChange("results")}>
       Протокол ({resultsCount})
+    </Button>
+    <Button size="sm" variant={currentTab === "codeforces" ? "default" : "outline"} onClick={() => onTabChange("codeforces")}>
+      Codeforces
     </Button>
     {isOrganizer && (
       <Button size="sm" variant={currentTab === "admin" ? "default" : "outline"} onClick={() => onTabChange("admin")}>

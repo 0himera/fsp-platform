@@ -1,0 +1,1 @@
+export { CodeforcesStandingsTable } from "./CodeforcesStandingsTable";

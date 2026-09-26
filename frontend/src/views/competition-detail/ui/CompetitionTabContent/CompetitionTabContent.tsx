@@ -5,6 +5,7 @@ import { CompetitionRegistrationsTab } from "../CompetitionRegistrationsTab";
 import { CompetitionTeamsTab } from "../CompetitionTeamsTab";
 import { CompetitionResultsTab } from "../CompetitionResultsTab";
 import { CompetitionAdminTab } from "../CompetitionAdminTab";
+import { CompetitionCodeforcesTab } from "../CompetitionCodeforcesTab";
 
 interface CompetitionTabContentProps {
   tab: DetailTab;
@@ -21,17 +22,8 @@ interface CompetitionTabContentProps {
 }
 
 export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
-  tab,
-  competition,
-  registrations,
-  participants,
-  teams,
-  results,
-  isOrganizer,
-  canRegister,
-  userTeam,
-  currentUserId,
-  onOpenCreateTeam,
+  tab, competition, registrations, participants, teams, results,
+  isOrganizer, canRegister, userTeam, currentUserId, onOpenCreateTeam,
 }) => {
   if (tab === "registrations") {
     return <CompetitionRegistrationsTab registrations={isOrganizer ? registrations : participants} />;
@@ -50,6 +42,9 @@ export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
     );
   }
   if (tab === "results") return <CompetitionResultsTab results={results} />;
+  if (tab === "codeforces") {
+    return <CompetitionCodeforcesTab competitionId={competition.id} organizer={isOrganizer} />;
+  }
   if (tab === "admin" && isOrganizer) {
     return <CompetitionAdminTab competition={competition} registrations={registrations} teams={teams} />;
   }
