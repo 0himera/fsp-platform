@@ -25,6 +25,10 @@ export function useCompetitionDetailQuery(id: string | number) {
     queryKey: competitionKeys.detail(id),
     queryFn: () => apiClient.get<CompetitionDetail>(`/api/competitions/${id}`),
     enabled: Boolean(id),
+    refetchInterval: (query) => {
+      const competition = query.state.data?.competition;
+      return competition?.status === "open" && new Date(competition.starts_at).getTime() > Date.now() ? 5000 : false;
+    },
   });
 }
 

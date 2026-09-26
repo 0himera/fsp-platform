@@ -2,11 +2,13 @@ package httpapi
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,6 +20,7 @@ import (
 	"github.com/0himera/fsp-platform/internal/athletes"
 	"github.com/0himera/fsp-platform/internal/auth"
 	"github.com/0himera/fsp-platform/internal/competitions"
+	"github.com/0himera/fsp-platform/internal/contest"
 	"github.com/0himera/fsp-platform/internal/rating"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -29,15 +32,21 @@ type Server struct {
 	Auth         auth.Service
 	Athletes     athletes.Service
 	Competitions competitions.Service
+	Contests     contest.Service
 	Rating       rating.Service
 	FrontendDir  string
 	Mailer       interface {
 		Send(context.Context, string, string, string) error
 	}
-	PublicURL   string
-	UploadDir   string
-	ExportToken string
-	AI          *ai.Service
+	PublicURL             string
+	UploadDir             string
+	ExportToken           string
+	AI                    *ai.Service
+	ContestEngineURL      string
+	ContestEngineToken    string
+	PlatformInternalURL   string
+	ContestResultsToken   string
+	TrustedContestHeaders bool
 }
 
 func New(db *pgxpool.Pool, frontendDir string, mailer interface {
@@ -48,6 +57,7 @@ func New(db *pgxpool.Pool, frontendDir string, mailer interface {
 		Auth:         auth.Service{DB: db},
 		Athletes:     athletes.Service{DB: db},
 		Competitions: competitions.Service{DB: db},
+		Contests:     contest.Service{DB: db},
 		Rating:       rating.Service{DB: db},
 		FrontendDir:  frontendDir,
 		Mailer:       mailer,
@@ -94,6 +104,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/competitions/{id}/documents", s.competitionDocuments)
 	mux.HandleFunc("POST /api/competitions/{id}/documents", s.uploadCompetitionDocument)
 	mux.HandleFunc("PUT /api/competitions/{id}", s.updateCompetition)
+	mux.HandleFunc("POST /api/competitions/{id}/close-early", s.closeCompetitionEarly)
+	mux.HandleFunc("POST /api/competitions/{id}/close-registration-early", s.closeRegistrationEarly)
+	mux.HandleFunc("POST /api/competitions/{id}/start-early", s.startCompetitionEarly)
 	mux.HandleFunc("POST /api/competitions/{id}/register", s.registerCompetition)
 	mux.HandleFunc("DELETE /api/competitions/{id}/register", s.unregisterCompetition)
 	mux.HandleFunc("POST /api/competitions/{id}/teams", s.createTeam)
@@ -107,6 +120,12 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/competitions/{id}/publications/{publication_id}/restore", s.restorePublication)
 	mux.HandleFunc("POST /api/team-invitations/{token}/accept", s.acceptTeamInvite)
 	mux.HandleFunc("PUT /api/competitions/{id}/results", s.publishResults)
+	if s.ContestEngineURL != "" {
+		s.registerContestProxyRoutes(mux)
+	} else {
+		s.registerContestRoutes(mux)
+	}
+	mux.HandleFunc("POST /internal/competitions/{id}/results", s.publishContestResultsInternal)
 	mux.HandleFunc("GET /api/competitions/{id}/export", s.exportCompetition)
 	mux.HandleFunc("GET /api/competitions/{id}/judges", s.competitionJudges)
 	mux.HandleFunc("POST /api/competitions/{id}/judges", s.addCompetitionJudge)
@@ -201,11 +220,96 @@ func pathID(r *http.Request, key string) (int64, error) {
 }
 
 func (s *Server) currentUser(r *http.Request) (auth.User, error) {
+	if s.TrustedContestHeaders {
+		id, err := strconv.ParseInt(r.Header.Get("X-Arena-User-ID"), 10, 64)
+		role := r.Header.Get("X-Arena-User-Role")
+		if err != nil || id < 1 || (role != "athlete" && role != "organizer" && role != "coach" && role != "judge") {
+			return auth.User{}, errors.New("missing authenticated platform user")
+		}
+		return auth.User{ID: id, Role: role, FullName: r.Header.Get("X-Arena-User-Name")}, nil
+	}
 	cookie, err := r.Cookie("arena_session")
 	if err != nil {
 		return auth.User{}, err
 	}
 	return s.Auth.Session(r.Context(), cookie.Value)
+}
+
+func (s *Server) registerContestRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("POST /api/competitions/{id}/contest", s.createContest)
+	mux.HandleFunc("GET /api/competitions/{id}/contest", s.getContest)
+	mux.HandleFunc("POST /api/competitions/{id}/contest/tasks", s.createContestTask)
+	mux.HandleFunc("POST /api/competitions/{id}/contest/tasks/{task_id}/submissions", s.submitContestCode)
+	mux.HandleFunc("POST /api/competitions/{id}/contest/tasks/{task_id}/csv-submissions", s.submitContestCSV)
+	mux.HandleFunc("GET /api/competitions/{id}/contest/submissions", s.listContestSubmissions)
+	mux.HandleFunc("PATCH /api/competitions/{id}/contest/submissions/{submission_id}/review", s.reviewContestSubmission)
+	mux.HandleFunc("GET /api/competitions/{id}/contest/leaderboard", s.contestLeaderboard)
+	mux.HandleFunc("POST /api/competitions/{id}/contest/finalize", s.finalizeContest)
+}
+
+func (s *Server) registerContestProxyRoutes(mux *http.ServeMux) {
+	proxy := s.contestProxy()
+	mux.Handle("POST /api/competitions/{id}/contest", proxy)
+	mux.Handle("GET /api/competitions/{id}/contest", proxy)
+	mux.Handle("POST /api/competitions/{id}/contest/tasks", proxy)
+	mux.Handle("POST /api/competitions/{id}/contest/tasks/{task_id}/submissions", proxy)
+	mux.Handle("POST /api/competitions/{id}/contest/tasks/{task_id}/csv-submissions", proxy)
+	mux.Handle("GET /api/competitions/{id}/contest/submissions", proxy)
+	mux.Handle("PATCH /api/competitions/{id}/contest/submissions/{submission_id}/review", proxy)
+	mux.Handle("GET /api/competitions/{id}/contest/leaderboard", proxy)
+	mux.Handle("POST /api/competitions/{id}/contest/finalize", proxy)
+}
+
+// ContestHandler is mounted only by the private contest-engine service.
+func (s *Server) ContestHandler() http.Handler {
+	mux := http.NewServeMux()
+	s.registerContestRoutes(mux)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authorization := r.Header.Get("Authorization")
+		const prefix = "Bearer "
+		if s.ContestEngineToken == "" {
+			writeError(w, http.StatusServiceUnavailable, "Contest Engine API token is not configured")
+			return
+		}
+		if !strings.HasPrefix(authorization, prefix) || subtle.ConstantTimeCompare([]byte(strings.TrimPrefix(authorization, prefix)), []byte(s.ContestEngineToken)) != 1 {
+			writeError(w, http.StatusUnauthorized, "Неверный токен сервиса платформы")
+			return
+		}
+		r.Header.Del("Cookie")
+		mux.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) contestProxy() http.Handler {
+	target, err := url.Parse(strings.TrimRight(s.ContestEngineURL, "/"))
+	if err != nil || target.Scheme == "" || target.Host == "" {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			writeError(w, http.StatusServiceUnavailable, "Contest Engine недоступен")
+		})
+	}
+	proxy := httputil.NewSingleHostReverseProxy(target)
+	proxy.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, err error) {
+		slog.Error("contest engine proxy failed", "error", err)
+		writeError(w, http.StatusBadGateway, "Contest Engine временно недоступен")
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if s.ContestEngineToken == "" {
+			writeError(w, http.StatusServiceUnavailable, "Contest Engine API token is not configured")
+			return
+		}
+		r.Header.Del("X-Arena-User-ID")
+		r.Header.Del("X-Arena-User-Role")
+		r.Header.Del("X-Arena-User-Name")
+		user, err := s.currentUser(r)
+		if err == nil {
+			r.Header.Set("X-Arena-User-ID", strconv.FormatInt(user.ID, 10))
+			r.Header.Set("X-Arena-User-Role", user.Role)
+			r.Header.Set("X-Arena-User-Name", user.FullName)
+		}
+		r.Header.Set("Authorization", "Bearer "+s.ContestEngineToken)
+		r.Header.Del("Cookie")
+		proxy.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) requireUser(w http.ResponseWriter, r *http.Request, role string) (auth.User, bool) {

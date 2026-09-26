@@ -34,6 +34,9 @@ services:
       SMTP_FROM: "Арена ФСП РД <noreply@arena.local>"
       PUBLIC_BASE_URL: https://psychaos.art
       EXPORT_API_TOKEN: ${EXPORT_API_TOKEN:-a0915aba3191bc0399466376ddcb88fe5e7146867537eccfae8828d1cfcec072}
+      CONTEST_ENGINE_URL: http://contest-engine:8081
+      CONTEST_ENGINE_TOKEN: ${CONTEST_ENGINE_TOKEN:-local-contest-engine-token-change-before-deploy}
+      CONTEST_RESULTS_TOKEN: ${CONTEST_RESULTS_TOKEN:-local-contest-results-token-change-before-deploy}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports: ["8080:8080"]
     volumes:
@@ -55,6 +58,34 @@ services:
     ports: ["3000:3000"]
     depends_on:
       - app
+  contest-worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["/app/contest-worker"]
+    environment:
+      DATABASE_URL: postgres://arena:arena@db:5432/arena?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+  contest-engine:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["/app/contest-engine"]
+    environment:
+      DATABASE_URL: postgres://arena:arena@db:5432/arena?sslmode=disable
+      CONTEST_ENGINE_TOKEN: ${CONTEST_ENGINE_TOKEN:-local-contest-engine-token-change-before-deploy}
+      CONTEST_RESULTS_TOKEN: ${CONTEST_RESULTS_TOKEN:-local-contest-results-token-change-before-deploy}
+      PLATFORM_INTERNAL_URL: http://app:8080
+      CONTEST_ENGINE_ADDR: :8081
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
 
 volumes:
   postgres_data:

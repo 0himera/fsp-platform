@@ -1,0 +1,1 @@
+export { CompetitionScheduleFields } from "./CompetitionScheduleFields";

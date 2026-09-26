@@ -32,3 +32,39 @@ export function useUpdateCompetitionMutation() {
     },
   });
 }
+
+export function useCloseCompetitionEarlyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => apiClient.post<Competition>(`/api/competitions/${id}/close-early`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: competitionKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.all });
+    },
+  });
+}
+
+export function useCloseRegistrationEarlyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => apiClient.post<Competition>(`/api/competitions/${id}/close-registration-early`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: competitionKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.all });
+    },
+  });
+}
+
+export function useStartCompetitionEarlyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => apiClient.post<Competition>(`/api/competitions/${id}/start-early`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: competitionKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.all });
+    },
+  });
+}

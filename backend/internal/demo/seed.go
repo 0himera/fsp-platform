@@ -2,6 +2,7 @@ package demo
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -207,5 +208,126 @@ func Seed(ctx context.Context, db *pgxpool.Pool, organizerEmail string) error {
 	if err != nil {
 		return err
 	}
-	return seedLargeEvents(ctx, db, organizerID, bulkIDs, create)
+	if err := seedLargeEvents(ctx, db, organizerID, bulkIDs, create); err != nil {
+		return err
+	}
+	return seedContestDemos(ctx, db, organizerID, ids, create)
+}
+
+func seedContestDemos(ctx context.Context, db *pgxpool.Pool, organizerID int64, athleteIDs []int64, create func(competitions.Input) (int64, bool, error)) error {
+	now := time.Now().UTC().Truncate(time.Minute)
+	service := competitions.Service{DB: db}
+	cases := []struct {
+		input   competitions.Input
+		mode    string
+		players []int
+	}{
+		{competitions.Input{Title: "Тестовый алгоритмический контест · Демо", LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", StartsAt: now.AddDate(0, 0, -2), EndsAt: now.AddDate(0, 0, -2).Add(4 * time.Hour), RegistrationDeadline: now.AddDate(0, 0, -3), Location: "Онлайн", Description: "Демонстрация алгоритмических задач и ручной проверки отправленных решений.", Status: "running"}, "algorithm", []int{0, 1, 2, 3}},
+		{competitions.Input{Title: "Тестовый CSV контест · Recall / Демо", LevelCode: "regional", DisciplineCode: "product", Format: "individual", StartsAt: now.AddDate(0, 0, -2), EndsAt: now.AddDate(0, 0, -2).Add(4 * time.Hour), RegistrationDeadline: now.AddDate(0, 0, -3), Location: "Онлайн", Description: "Демонстрация загрузки CSV и автоматического расчёта recall.", Status: "running"}, "csv_metric", []int{0, 2, 4, 6}},
+	}
+	for _, demo := range cases {
+		competitionID, _, err := create(demo.input)
+		if err != nil {
+			return err
+		}
+		for _, player := range demo.players {
+			if _, err := db.Exec(ctx, `INSERT INTO registrations(competition_id,athlete_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, competitionID, athleteIDs[player]); err != nil {
+				return err
+			}
+		}
+		var exists bool
+		if err := db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM contests WHERE competition_id=$1)`, competitionID).Scan(&exists); err != nil {
+			return err
+		}
+		if exists {
+			var resultCount int
+			if err := db.QueryRow(ctx, `SELECT count(*) FROM results WHERE competition_id=$1`, competitionID).Scan(&resultCount); err != nil {
+				return err
+			}
+			if resultCount > 0 {
+				if _, err := db.Exec(ctx, `UPDATE contests SET finalized_at=COALESCE(finalized_at,now()) WHERE competition_id=$1`, competitionID); err != nil {
+					return err
+				}
+				continue
+			}
+			if _, err := db.Exec(ctx, `DELETE FROM contests WHERE competition_id=$1`, competitionID); err != nil {
+				return err
+			}
+		}
+		instructions := "Откройте задания, отправьте решение и проверьте результат в таблице соревнования."
+		if _, err := db.Exec(ctx, `INSERT INTO contests(competition_id,mode,instructions) VALUES($1,$2,$3)`, competitionID, demo.mode, instructions); err != nil {
+			return err
+		}
+		if demo.mode == "algorithm" {
+			taskTitles := []string{"Сумма массива", "Палиндром", "Кратчайший путь"}
+			statements := []string{
+				"На вход подаются n и n целых чисел. Выведите сумму чисел. Первая строка содержит n, вторая — массив.",
+				"Дана строка из латинских букв в нижнем регистре. Выведите YES, если строка читается одинаково слева направо и справа налево, иначе NO.",
+				"Дан неориентированный граф с положительными весами. Найдите длину кратчайшего пути из вершины 1 в вершину n. Если пути нет, выведите -1.",
+			}
+			taskIDs := make([]int64, len(taskTitles))
+			for i, title := range taskTitles {
+				if err := db.QueryRow(ctx, `INSERT INTO contest_tasks(competition_id,title,statement,max_points,position) VALUES($1,$2,$3,100,$4) RETURNING id`, competitionID, title, statements[i], i+1).Scan(&taskIDs[i]); err != nil {
+					return err
+				}
+			}
+			points := [][]int{{100, 100, 100}, {100, 100, 50}, {100, 50, 50}, {50, 25, 25}}
+			for p, player := range demo.players {
+				for t, taskID := range taskIDs {
+					if _, err := db.Exec(ctx, `INSERT INTO contest_submissions(competition_id,task_id,athlete_id,language,source_code,status,score,verdict,reviewed_by,reviewed_at)
+						VALUES($1,$2,$3,'go',$4,'graded',$5,'Проверено организатором',$6,now())`, competitionID, taskID, athleteIDs[player], fmt.Sprintf("// Демонстрационное решение задания «%s»", taskTitles[t]), points[p][t], organizerID); err != nil {
+						return err
+					}
+				}
+			}
+			results := make([]competitions.Result, 0, len(demo.players))
+			totals := []int{300, 250, 200, 100}
+			for place, player := range demo.players {
+				results = append(results, competitions.Result{AthleteID: athleteIDs[player], Place: place + 1, ScoreText: fmt.Sprintf("%d / 300 баллов", totals[place])})
+			}
+			if err := service.PublishResults(ctx, competitionID, organizerID, results); err != nil {
+				return err
+			}
+			if _, err := db.Exec(ctx, `UPDATE contests SET finalized_at=now() WHERE competition_id=$1`, competitionID); err != nil {
+				return err
+			}
+			continue
+		}
+		labels := map[string]string{"row-1": "1", "row-2": "0", "row-3": "1", "row-4": "0"}
+		labelsJSON, err := json.Marshal(labels)
+		if err != nil {
+			return err
+		}
+		var taskID int64
+		publicCSV := "id,feature\nrow-1,0.91\nrow-2,0.12\nrow-3,0.76\nrow-4,0.34\n"
+		if err := db.QueryRow(ctx, `INSERT INTO contest_tasks(competition_id,title,statement,max_points,position,public_csv,expected_labels,positive_label)
+			VALUES($1,'Определите положительный класс','По открытым данным подготовьте predictions.csv с колонками id,prediction. Баллы зависят от recall положительного класса.',100,1,$2,$3,'1') RETURNING id`, competitionID, publicCSV, labelsJSON).Scan(&taskID); err != nil {
+			return err
+		}
+		predictions := []string{
+			"id,prediction\nrow-1,1\nrow-2,0\nrow-3,1\nrow-4,0\n",
+			"id,prediction\nrow-1,1\nrow-2,0\nrow-3,0\nrow-4,0\n",
+			"id,prediction\nrow-1,0\nrow-2,0\nrow-3,1\nrow-4,0\n",
+			"id,prediction\nrow-1,0\nrow-2,0\nrow-3,0\nrow-4,0\n",
+		}
+		scores := []int{100, 50, 50, 0}
+		for p, player := range demo.players {
+			if _, err := db.Exec(ctx, `INSERT INTO contest_submissions(competition_id,task_id,athlete_id,file_name,file_content,status,automatic_score,score,verdict,feedback)
+				VALUES($1,$2,$3,'predictions.csv',$4,'graded',$5,$5,'Проверено автоматически',$6)`, competitionID, taskID, athleteIDs[player], []byte(predictions[p]), scores[p], fmt.Sprintf("Recall: %.2f", float64(scores[p])/100)); err != nil {
+				return err
+			}
+		}
+		results := make([]competitions.Result, 0, len(demo.players))
+		places := []int{1, 2, 2, 4}
+		for i, player := range demo.players {
+			results = append(results, competitions.Result{AthleteID: athleteIDs[player], Place: places[i], ScoreText: fmt.Sprintf("%d / 100 баллов", scores[i])})
+		}
+		if err := service.PublishResults(ctx, competitionID, organizerID, results); err != nil {
+			return err
+		}
+		if _, err := db.Exec(ctx, `UPDATE contests SET finalized_at=now() WHERE competition_id=$1`, competitionID); err != nil {
+			return err
+		}
+	}
+	return nil
 }

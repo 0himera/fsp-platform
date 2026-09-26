@@ -68,7 +68,11 @@ func main() {
 		}
 		sender = configured
 	}
-	server := &http.Server{Addr: addr, Handler: httpapi.New(db, env("FRONTEND_DIR", "../frontend"), sender, env("PUBLIC_BASE_URL", "http://localhost:8080"), os.Getenv("EXPORT_API_TOKEN"), os.Getenv("GEMINI_API_KEY")).Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
+	api := httpapi.New(db, env("FRONTEND_DIR", "../frontend"), sender, env("PUBLIC_BASE_URL", "http://localhost:8080"), os.Getenv("EXPORT_API_TOKEN"), os.Getenv("GEMINI_API_KEY"))
+	api.ContestEngineURL = os.Getenv("CONTEST_ENGINE_URL")
+	api.ContestEngineToken = os.Getenv("CONTEST_ENGINE_TOKEN")
+	api.ContestResultsToken = os.Getenv("CONTEST_RESULTS_TOKEN")
+	server := &http.Server{Addr: addr, Handler: api.Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

@@ -8,3 +8,4 @@ export * from "./model/staff";
 export * from "./model/notifications";
 export * from "./model/documents";
 export * from "./model/ai";
+export * from "./model/contest";

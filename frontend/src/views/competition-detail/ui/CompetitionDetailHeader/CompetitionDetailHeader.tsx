@@ -7,6 +7,7 @@ import styles from "./CompetitionDetailHeader.module.css";
 
 interface CompetitionDetailHeaderProps {
   competition: Competition;
+  registrationOpen: boolean;
   isRegistered?: boolean;
   canRegister: boolean;
   userTeam?: Team;
@@ -37,16 +38,26 @@ export const CompetitionDetailHeader: React.FC<CompetitionDetailHeaderProps> = (
             </div>
             <h1 className={styles.title}>{competition.title}</h1>
           </div>
-          <HeaderActionButtons {...props} isTeam={isTeam} userTeamName={props.userTeam?.name} />
+          <HeaderActionButtons {...props} isTeam={isTeam} canUnregister={props.registrationOpen} userTeamName={props.userTeam?.name} />
         </div>
       </CardHeader>
       <CardContent>
         <div className={styles.metaGrid}>
           <div>Место: <strong>{competition.location}</strong></div>
-          <div>Даты: <strong>{new Date(competition.starts_at).toLocaleDateString("ru-RU")} — {new Date(competition.ends_at).toLocaleDateString("ru-RU")}</strong></div>
-          <div>Дедлайн: <strong>{new Date(competition.registration_deadline).toLocaleDateString("ru-RU")}</strong></div>
+          <div>Даты: <strong>{formatDateTime(competition.starts_at)} — {formatDateTime(competition.ends_at)}</strong></div>
+          <div>Дедлайн регистрации: <strong>{formatDateTime(competition.registration_deadline)}</strong></div>
         </div>
       </CardContent>
     </Card>
   );
 };
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

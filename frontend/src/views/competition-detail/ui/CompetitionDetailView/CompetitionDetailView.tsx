@@ -6,6 +6,7 @@ import { TeamRegistrationDialog } from "@/features/manage-teams";
 import { CompetitionDetailHeader } from "../CompetitionDetailHeader";
 import { CompetitionDetailTabs } from "../CompetitionDetailTabs";
 import { CompetitionTabContent } from "../CompetitionTabContent";
+import { ContestPanel } from "../ContestPanel";
 import { useCompetitionDetailView } from "../../model/useCompetitionDetailView";
 import styles from "./CompetitionDetailView.module.css";
 
@@ -24,6 +25,7 @@ export const CompetitionDetailView: React.FC = () => {
     <div className={styles.container}>
       <CompetitionDetailHeader
         competition={competition}
+        registrationOpen={vm.registrationOpen}
         isRegistered={registered}
         canRegister={vm.canRegister}
         userTeam={vm.userTeam}
@@ -35,7 +37,7 @@ export const CompetitionDetailView: React.FC = () => {
       <CompetitionDetailTabs
         currentTab={vm.tab}
         onTabChange={vm.setTab}
-        regCount={registrations.length}
+        regCount={vm.participants.length}
         teamsCount={teams.length}
         resultsCount={results.length}
         isOrganizer={vm.isOrganizer}
@@ -44,6 +46,7 @@ export const CompetitionDetailView: React.FC = () => {
         tab={vm.tab}
         competition={competition}
         registrations={registrations}
+        participants={vm.participants}
         teams={teams}
         results={results}
         isOrganizer={vm.isOrganizer}
@@ -52,6 +55,7 @@ export const CompetitionDetailView: React.FC = () => {
         currentUserId={vm.currentUserId}
         onOpenCreateTeam={vm.openCreateTeam}
       />
+      <ContestPanel competition={competition} isOrganizer={vm.isOrganizer} isRegistered={registered} />
       {vm.isCreateTeamOpen && <TeamRegistrationDialog competition={competition} onClose={vm.closeCreateTeam} />}
     </div>
   );

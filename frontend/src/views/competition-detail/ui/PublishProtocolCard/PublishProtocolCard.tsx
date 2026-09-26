@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, Button } from "@/shared/ui";
 import { usePublishResultsMutation } from "@/features/publish-results";
 import type { Competition, Registration, Team } from "@/shared/api";
 import styles from "./PublishProtocolCard.module.css";
+import { CloseEarlyButton } from "./CloseEarlyButton";
 
 interface PublishProtocolCardProps {
   competition: Competition;
@@ -18,7 +19,7 @@ export const PublishProtocolCard: React.FC<PublishProtocolCardProps> = ({
   const publishMutation = usePublishResultsMutation();
   const isTeam = competition.format === "team";
   const count = isTeam ? teams.length : registrations.length;
-  const isEnded = competition.status === "completed" || competition.phase === "completed";
+  const isEnded = competition.status === "completed" || competition.phase === "awaiting_results" || competition.phase === "completed";
 
   const handlePublish = () => {
     const results = isTeam
@@ -39,6 +40,7 @@ export const PublishProtocolCard: React.FC<PublishProtocolCardProps> = ({
             Турнир ещё не завершён (до {new Date(competition.ends_at).toLocaleDateString("ru-RU")}). Протокол публикуется по окончании состязаний.
           </p>
         )}
+        <CloseEarlyButton competition={competition} />
         <Button onClick={handlePublish} disabled={publishMutation.isPending || count === 0 || !isEnded}>
           {publishMutation.isPending ? "Публикуем протокол..." : `Опубликовать протокол (${count} ${isTeam ? "команд" : "участников"})`}
         </Button>

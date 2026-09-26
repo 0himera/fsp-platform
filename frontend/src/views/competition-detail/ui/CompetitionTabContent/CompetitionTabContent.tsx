@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { DetailTab } from "../CompetitionDetailTabs";
-import type { Competition, Registration, Team, CompetitionResult } from "@/shared/api";
+import type { Competition, Registration, CompetitionParticipant, Team, CompetitionResult } from "@/shared/api";
 import { CompetitionRegistrationsTab } from "../CompetitionRegistrationsTab";
 import { CompetitionTeamsTab } from "../CompetitionTeamsTab";
 import { CompetitionResultsTab } from "../CompetitionResultsTab";
@@ -10,6 +10,7 @@ interface CompetitionTabContentProps {
   tab: DetailTab;
   competition: Competition;
   registrations: Registration[];
+  participants: CompetitionParticipant[];
   teams: Team[];
   results: CompetitionResult[];
   isOrganizer: boolean;
@@ -23,6 +24,7 @@ export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
   tab,
   competition,
   registrations,
+  participants,
   teams,
   results,
   isOrganizer,
@@ -32,7 +34,7 @@ export const CompetitionTabContent: React.FC<CompetitionTabContentProps> = ({
   onOpenCreateTeam,
 }) => {
   if (tab === "registrations") {
-    return <CompetitionRegistrationsTab registrations={registrations} />;
+    return <CompetitionRegistrationsTab registrations={isOrganizer ? registrations : participants} />;
   }
   if (tab === "teams") {
     return (

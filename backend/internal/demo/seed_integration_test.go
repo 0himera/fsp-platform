@@ -71,7 +71,7 @@ func TestSeedAndMainFlow(t *testing.T) {
 		if err := db.QueryRow(ctx, `SELECT (SELECT count(*) FROM athletes), (SELECT count(*) FROM competitions), (SELECT count(*) FROM results), (SELECT count(*) FROM teams)`).Scan(&athletes, &events, &results, &teams); err != nil {
 			t.Fatal(err)
 		}
-		if athletes != 524 || events != 19 || results != 794 || teams != 6 {
+		if athletes != 524 || events != 21 || results != 802 || teams != 6 {
 			t.Fatalf("seed pass %d changed counts: athletes=%d events=%d results=%d teams=%d", i+1, athletes, events, results, teams)
 		}
 	}

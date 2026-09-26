@@ -112,7 +112,7 @@ func scanCompetition(row scanner, now time.Time) (Competition, error) {
 }
 
 func withPhase(c Competition, now time.Time) Competition {
-	c.RegistrationOpen = c.Status == "open" && now.Before(c.RegistrationDeadline) && now.Before(c.EndsAt)
+	c.RegistrationOpen = registrationOpen(c.Status, c.RegistrationDeadline, c.EndsAt, now)
 	switch {
 	case c.Status == "draft":
 		c.Phase = "draft"
@@ -126,6 +126,10 @@ func withPhase(c Competition, now time.Time) Competition {
 		c.Phase = "current"
 	}
 	return c
+}
+
+func registrationOpen(status string, deadline, endsAt, now time.Time) bool {
+	return status == "open" && now.Before(deadline) && now.Before(endsAt)
 }
 
 func (s Service) List(ctx context.Context, status, phase, query string) ([]Competition, error) {
@@ -166,7 +170,7 @@ func validInput(in Input) bool {
 		(in.Format == "individual" || in.Format == "team") && (in.Status == "draft" || in.Status == "open" || in.Status == "running" || in.Status == "completed") &&
 		(in.Stage == "standalone" || in.Stage == "qualification" || in.Stage == "final") && ((in.Stage == "final") == (in.QualifyingID != nil)) &&
 		((in.Stage == "final") == (in.QualifyingPlaceLimit != nil)) && (in.QualifyingPlaceLimit == nil || (*in.QualifyingPlaceLimit > 0 && *in.QualifyingPlaceLimit <= 10000)) &&
-		!in.StartsAt.IsZero() && !in.EndsAt.IsZero() && !in.RegistrationDeadline.IsZero() && !in.EndsAt.Before(in.StartsAt) && !in.RegistrationDeadline.After(in.EndsAt)
+		!in.StartsAt.IsZero() && !in.EndsAt.IsZero() && !in.RegistrationDeadline.IsZero() && in.EndsAt.After(in.StartsAt) && !in.RegistrationDeadline.After(in.EndsAt)
 }
 
 func normalizeInput(in *Input) {
@@ -260,6 +264,102 @@ func (s Service) Update(ctx context.Context, id int64, in Input) (Competition, e
 	return s.Get(ctx, id)
 }
 
+func canCloseEarly(status string, startsAt, endsAt, now time.Time) bool {
+	return (status == "open" || status == "running") && !startsAt.After(now) && endsAt.After(now)
+}
+
+func (s Service) CloseEarly(ctx context.Context, id int64) (Competition, error) {
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return Competition{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var status string
+	var startsAt, endsAt time.Time
+	err = tx.QueryRow(ctx, `SELECT status,starts_at,ends_at FROM competitions WHERE id=$1 FOR UPDATE`, id).Scan(&status, &startsAt, &endsAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Competition{}, ErrNotFound
+	}
+	if err != nil {
+		return Competition{}, err
+	}
+	now := time.Now().UTC()
+	if !canCloseEarly(status, startsAt, endsAt, now) {
+		return Competition{}, ErrClosed
+	}
+	if _, err := tx.Exec(ctx, `UPDATE competitions SET status='running',ends_at=$2,registration_deadline=LEAST(registration_deadline,$2),updated_at=now() WHERE id=$1`, id, now); err != nil {
+		return Competition{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Competition{}, err
+	}
+	return s.Get(ctx, id)
+}
+
+// CloseRegistrationEarly stops new applications without changing the contest schedule.
+func (s Service) CloseRegistrationEarly(ctx context.Context, id int64) (Competition, error) {
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return Competition{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var status string
+	var deadline, endsAt time.Time
+	if err := tx.QueryRow(ctx, `SELECT status,registration_deadline,ends_at FROM competitions WHERE id=$1 FOR UPDATE`, id).Scan(&status, &deadline, &endsAt); errors.Is(err, pgx.ErrNoRows) {
+		return Competition{}, ErrNotFound
+	} else if err != nil {
+		return Competition{}, err
+	}
+	now := time.Now().UTC()
+	if status != "open" || !deadline.After(now) || !endsAt.After(now) {
+		return Competition{}, ErrClosed
+	}
+	if _, err := tx.Exec(ctx, `UPDATE competitions SET registration_deadline=$2,updated_at=now() WHERE id=$1`, id, now); err != nil {
+		return Competition{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Competition{}, err
+	}
+	return s.Get(ctx, id)
+}
+
+// StartEarly opens the solving window immediately and closes registration at the same time.
+func (s Service) StartEarly(ctx context.Context, id int64) (Competition, error) {
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return Competition{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	var status string
+	var startsAt, endsAt time.Time
+	if err := tx.QueryRow(ctx, `SELECT status,starts_at,ends_at FROM competitions WHERE id=$1 FOR UPDATE`, id).Scan(&status, &startsAt, &endsAt); errors.Is(err, pgx.ErrNoRows) {
+		return Competition{}, ErrNotFound
+	} else if err != nil {
+		return Competition{}, err
+	}
+	now := time.Now().UTC()
+	if status != "open" || !startsAt.After(now) || !endsAt.After(now) {
+		return Competition{}, ErrClosed
+	}
+	var ready bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM contests x JOIN contest_tasks t ON t.competition_id=x.competition_id WHERE x.competition_id=$1)`, id).Scan(&ready); err != nil {
+		return Competition{}, err
+	}
+	if !ready {
+		return Competition{}, ErrInvalid
+	}
+	if _, err := tx.Exec(ctx, `UPDATE competitions SET status='running',starts_at=$2,registration_deadline=LEAST(registration_deadline,$2),updated_at=now() WHERE id=$1`, id, now); err != nil {
+		return Competition{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Competition{}, err
+	}
+	return s.Get(ctx, id)
+}
+
 func equalID(a, b *int64) bool {
 	return (a == nil && b == nil) || (a != nil && b != nil && *a == *b)
 }
@@ -278,14 +378,15 @@ func (s Service) Register(ctx context.Context, competitionID, athleteID int64) e
 	var deadline time.Time
 	var qualifierID *int64
 	var placeLimit *int
-	err = tx.QueryRow(ctx, `SELECT status,registration_deadline,stage,qualifying_competition_id,qualifying_place_limit,format FROM competitions WHERE id=$1 FOR SHARE`, competitionID).Scan(&status, &deadline, &stage, &qualifierID, &placeLimit, &format)
+	var endsAt time.Time
+	err = tx.QueryRow(ctx, `SELECT status,registration_deadline,ends_at,stage,qualifying_competition_id,qualifying_place_limit,format FROM competitions WHERE id=$1 FOR SHARE`, competitionID).Scan(&status, &deadline, &endsAt, &stage, &qualifierID, &placeLimit, &format)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrNotFound
 	}
 	if err != nil {
 		return err
 	}
-	if status != "open" || time.Now().After(deadline) {
+	if !registrationOpen(status, deadline, endsAt, time.Now()) {
 		return ErrClosed
 	}
 	if format == "team" {
@@ -317,7 +418,7 @@ func (s Service) Register(ctx context.Context, competitionID, athleteID int64) e
 }
 
 func (s Service) Unregister(ctx context.Context, competitionID, athleteID int64) error {
-	command, err := s.DB.Exec(ctx, `DELETE FROM registrations r USING competitions c WHERE r.competition_id=$1 AND r.athlete_id=$2 AND c.id=r.competition_id AND c.status='open' AND c.registration_deadline>now() AND NOT EXISTS (SELECT 1 FROM team_members m WHERE m.competition_id=$1 AND m.athlete_id=$2)`, competitionID, athleteID)
+	command, err := s.DB.Exec(ctx, `DELETE FROM registrations r USING competitions c WHERE r.competition_id=$1 AND r.athlete_id=$2 AND c.id=r.competition_id AND c.status='open' AND c.registration_deadline>now() AND c.ends_at>now() AND NOT EXISTS (SELECT 1 FROM team_members m WHERE m.competition_id=$1 AND m.athlete_id=$2)`, competitionID, athleteID)
 	if err != nil {
 		return err
 	}

@@ -191,6 +191,57 @@ func (s *Server) updateCompetition(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, item)
 }
 
+func (s *Server) closeCompetitionEarly(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireUser(w, r, "organizer"); !ok {
+		return
+	}
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	item, err := s.Competitions.CloseEarly(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
+}
+
+func (s *Server) closeRegistrationEarly(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireUser(w, r, "organizer"); !ok {
+		return
+	}
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	item, err := s.Competitions.CloseRegistrationEarly(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
+}
+
+func (s *Server) startCompetitionEarly(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireUser(w, r, "organizer"); !ok {
+		return
+	}
+	id, err := pathID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	item, err := s.Competitions.StartEarly(r.Context(), id)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, item)
+}
+
 func (s *Server) registerCompetition(w http.ResponseWriter, r *http.Request) {
 	user, ok := s.requireUser(w, r, "athlete")
 	if !ok {
@@ -497,4 +548,3 @@ func (s *Server) exportCompetition(w http.ResponseWriter, r *http.Request) {
 		"results":       results,
 	})
 }
-

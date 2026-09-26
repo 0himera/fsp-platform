@@ -3,11 +3,15 @@ WORKDIR /src/backend
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ .
-RUN CGO_ENABLED=0 go build -o /arena ./cmd/server
+RUN CGO_ENABLED=0 go build -o /arena ./cmd/server \
+    && CGO_ENABLED=0 go build -o /contest-engine ./cmd/contest-engine \
+    && CGO_ENABLED=0 go build -o /contest-worker ./cmd/contest-worker
 
 FROM alpine:3.21
 WORKDIR /app
 COPY --from=build /arena /app/arena
+COPY --from=build /contest-worker /app/contest-worker
+COPY --from=build /contest-engine /app/contest-engine
 COPY --from=build /src/backend/migrations /app/migrations
 COPY frontend/ /app/frontend/
 EXPOSE 8080

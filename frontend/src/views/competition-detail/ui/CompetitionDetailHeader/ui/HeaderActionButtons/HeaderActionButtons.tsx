@@ -6,6 +6,7 @@ interface Props {
   isTeam: boolean;
   isRegistered?: boolean;
   canRegister: boolean;
+  canUnregister: boolean;
   userTeamName?: string;
   isPending: boolean;
   onRegister: () => void;
@@ -18,6 +19,7 @@ export const HeaderActionButtons: React.FC<Props> = ({
   isTeam,
   isRegistered,
   canRegister,
+  canUnregister,
   userTeamName,
   isPending,
   onRegister,
@@ -37,8 +39,8 @@ export const HeaderActionButtons: React.FC<Props> = ({
   }
   if (!isTeam && isRegistered) {
     return (
-      <Button variant="outline" onClick={onUnregister} disabled={isPending}>
-        Отозвать заявку
+      <Button variant="outline" onClick={onUnregister} disabled={isPending || !canUnregister}>
+        {canUnregister ? "Отозвать заявку" : "Заявка подана · приём закрыт"}
       </Button>
     );
   }

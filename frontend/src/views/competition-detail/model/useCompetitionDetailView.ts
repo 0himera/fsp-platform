@@ -1,21 +1,24 @@
 import * as React from "react";
-import { useCompetitionDetailQuery } from "@/entities/competition";
+import { useCompetitionDetailQuery, useCompetitionParticipantsQuery } from "@/entities/competition";
 import { useMeQuery } from "@/entities/user";
 import { useCompetitionDetailActions } from "./useCompetitionDetailActions";
 import type { DetailTab } from "../ui/CompetitionDetailTabs";
+import { useRegistrationWindow } from "./useRegistrationWindow";
 
 export function useCompetitionDetailView(id: string) {
   const { data, isLoading, error } = useCompetitionDetailQuery(id);
+  const { data: participants } = useCompetitionParticipantsQuery(id);
   const { data: me } = useMeQuery();
   const [tab, setTab] = React.useState<DetailTab>("registrations");
   const [isCreateTeamOpen, setIsCreateTeamOpen] = React.useState(false);
   const actions = useCompetitionDetailActions(Number(id));
+  const registrationOpen = useRegistrationWindow(data?.competition);
 
   const isOrganizer = me?.user?.role === "organizer";
   const userId = me?.user?.id;
   const canRegister = Boolean(
     me?.user?.role === "athlete" &&
-    data?.competition.registration_open &&
+    registrationOpen &&
     !data?.registered
   );
 
@@ -25,6 +28,7 @@ export function useCompetitionDetailView(id: string) {
 
   return {
     data,
+    participants: participants ?? [],
     isLoading,
     error,
     tab,
@@ -32,6 +36,7 @@ export function useCompetitionDetailView(id: string) {
     actions,
     isOrganizer: Boolean(isOrganizer),
     canRegister,
+    registrationOpen,
     currentUserId: userId,
     userTeam,
     isCreateTeamOpen,
