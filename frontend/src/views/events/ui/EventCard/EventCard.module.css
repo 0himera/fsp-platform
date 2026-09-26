@@ -10,7 +10,7 @@
 .body { display:flex; flex-direction:column; min-width:0; padding:18px 22px 16px; }
 .topMeta { display:flex; gap:14px; color:#89909a; font:10px "JetBrains Mono",monospace; }
 .topMeta span+span { padding-left:14px; border-left:1px solid #e9e4de; }
-.body h2 { margin:8px 0 7px; color:#18263a; font-size:22px; line-height:1.16; }
+.body h2 { margin:8px 0 7px; color:#18263a; font-size:22px; line-height:1.16; overflow-wrap:break-word; word-break:break-word; }
 .body h2 a:hover { color:var(--wine); }
 .description { display:-webkit-box; overflow:hidden; margin:0 0 10px; color:#7b8490; font:12px/1.5 "JetBrains Mono",monospace; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
 .meta { display:flex; flex-wrap:wrap; gap:9px 19px; color:#747d89; font:11px "JetBrains Mono",monospace; }
