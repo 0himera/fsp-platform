@@ -1,10 +1,10 @@
 .main {
   position: relative;
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - 120px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(2rem, 5vw, 4rem) 1rem;
+  padding: clamp(80px, 8vw, 110px) 1.5rem clamp(2rem, 3vw, 3.5rem);
   overflow: hidden;
   background: var(--background);
 }

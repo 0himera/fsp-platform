@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
 }
 
 .link {
@@ -31,15 +31,17 @@
 }
 
 .outlineBtn {
-  border-color: rgba(113, 100, 255, 0.35);
-  background: rgba(17, 23, 33, 0.4);
+  border: 1px solid var(--border);
+  background: var(--card);
   color: var(--foreground);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
 
 .outlineBtn:hover {
   border-color: #7164ff;
-  background: rgba(64, 47, 255, 0.12);
+  background: rgba(64, 47, 255, 0.08);
+  color: #402fff;
 }
 
 .arrow {
