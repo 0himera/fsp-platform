@@ -28,3 +28,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Skills & Prompt guidelines
+code-style-gide*.md
+module-styles*.md
+new-technology.md
+no-comments.md
+tanstack-query.md
