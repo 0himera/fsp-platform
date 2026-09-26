@@ -1,0 +1,19 @@
+.row { display: grid; grid-template-columns: 32px minmax(0, 1fr) 32px; align-items: center; gap: 12px; width: 100%; height: auto; min-height: 101px; padding: 14px 10px 14px 3px; border: 0; border-bottom: 1px solid #e2ddd5; border-radius: 0; color: inherit; text-align: left; white-space: normal; cursor: pointer; box-sizing: border-box; transition: background-color 350ms ease, padding-left 350ms cubic-bezier(.25,1,.5,1), box-shadow 350ms ease; }
+.row:hover, .active { padding-left: 10px; background: rgba(255, 255, 255, .7); }
+:global([data-theme="dark"]) .row:hover, :global([data-theme="dark"]) .active { background: rgba(255, 255, 255, .05); }
+.active { box-shadow: inset 3px 0 var(--wine); }
+.active .arrow { transform: translateX(3px); color: var(--wine); }
+.active .arrowLink { color: var(--wine); }
+.index { align-self: start; padding-top: 2px; color: #92959a; font: 13px "JetBrains Mono", monospace; transition: color 350ms ease; }
+.active .index { color: var(--wine); font-weight: 700; }
+.content { display: grid; gap: 8px; min-width: 0; width: 100%; overflow: hidden; }
+.content strong { display: block; color: #17243a; font-size: 14px; line-height: 1.35; white-space: normal; word-break: normal; overflow-wrap: break-word; }
+.content small { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; color: #7f8792; font: 10px "JetBrains Mono", monospace; }
+.content small svg { width: 13px; height: 13px; flex-shrink: 0; }
+.content small i { font-style: normal; }
+.arrowLink { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; color: #858b95; justify-self: end; flex-shrink: 0; transition: transform 350ms ease, color 350ms ease, background-color 200ms ease; }
+.arrowLink:hover { color: var(--wine); background-color: rgba(197, 22, 48, .08); }
+.arrowLink:hover .arrow, .row:hover .arrow { color: var(--wine); transform: translateX(3px); }
+.arrow { width: 17px; color: inherit; transition: transform 350ms ease, color 350ms ease; }
+@media (max-width: 1050px) { .row { min-height: 95px; } .content strong { font-size: 13px; } }
+@media (max-width: 780px) { .row { min-height: 84px; } }
