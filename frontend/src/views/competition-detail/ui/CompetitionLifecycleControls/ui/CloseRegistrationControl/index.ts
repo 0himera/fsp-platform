@@ -1,0 +1,1 @@
+export { CloseRegistrationControl } from "./CloseRegistrationControl";

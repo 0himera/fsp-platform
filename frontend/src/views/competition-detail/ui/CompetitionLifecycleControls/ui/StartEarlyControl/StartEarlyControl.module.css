@@ -1,0 +1,13 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary, #666);
+}

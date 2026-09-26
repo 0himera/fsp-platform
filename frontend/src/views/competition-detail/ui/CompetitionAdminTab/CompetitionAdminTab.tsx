@@ -6,7 +6,7 @@ import { PublicationHistory } from "@/features/manage-publications";
 import { CompetitionDocuments } from "@/features/manage-documents";
 import { PublishProtocolCard } from "../PublishProtocolCard";
 import { CompetitionJudges } from "../CompetitionJudges";
-import { CompetitionLifecycleControls } from "./CompetitionLifecycleControls";
+import { CompetitionLifecycleControls } from "../CompetitionLifecycleControls";
 
 interface CompetitionAdminTabProps {
   competition: Competition;

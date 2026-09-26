@@ -15,6 +15,11 @@ export function useContestQuery(id: number) {
     queryFn: () => apiClient.get<Contest>(`/api/competitions/${id}/contest`),
     enabled: id > 0,
     retry: false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.finalized) return false;
+      return 5000;
+    },
   });
 }
 
