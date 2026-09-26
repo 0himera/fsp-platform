@@ -49,11 +49,7 @@ export function CodeSubmitBox({ competitionId, taskId }: Props) {
         value={sourceCode}
         onChange={(e) => setSourceCode(e.target.value)}
       />
-      <Button
-        size="sm"
-        disabled={submitCode.isPending || !sourceCode.trim()}
-        onClick={handleSubmit}
-      >
+      <Button size="sm" disabled={submitCode.isPending || !sourceCode.trim()} onClick={handleSubmit}>
         {submitCode.isPending ? "Отправка…" : "Отправить решение"}
       </Button>
     </div>

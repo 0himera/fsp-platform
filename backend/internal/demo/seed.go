@@ -216,14 +216,13 @@ func Seed(ctx context.Context, db *pgxpool.Pool, organizerEmail string) error {
 
 func seedContestDemos(ctx context.Context, db *pgxpool.Pool, organizerID int64, athleteIDs []int64, create func(competitions.Input) (int64, bool, error)) error {
 	now := time.Now().UTC().Truncate(time.Minute)
-	service := competitions.Service{DB: db}
 	cases := []struct {
 		input   competitions.Input
 		mode    string
 		players []int
 	}{
-		{competitions.Input{Title: "Тестовый алгоритмический контест · Демо", LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", StartsAt: now.AddDate(0, 0, -2), EndsAt: now.AddDate(0, 0, -2).Add(4 * time.Hour), RegistrationDeadline: now.AddDate(0, 0, -3), Location: "Онлайн", Description: "Демонстрация алгоритмических задач и ручной проверки отправленных решений.", Status: "running"}, "algorithm", []int{0, 1, 2, 3}},
-		{competitions.Input{Title: "Тестовый CSV контест · Recall / Демо", LevelCode: "regional", DisciplineCode: "product", Format: "individual", StartsAt: now.AddDate(0, 0, -2), EndsAt: now.AddDate(0, 0, -2).Add(4 * time.Hour), RegistrationDeadline: now.AddDate(0, 0, -3), Location: "Онлайн", Description: "Демонстрация загрузки CSV и автоматического расчёта recall.", Status: "running"}, "csv_metric", []int{0, 2, 4, 6}},
+		{competitions.Input{Title: "Тестовый алгоритмический контест · Демо", LevelCode: "regional", DisciplineCode: "algorithmic", Format: "individual", StartsAt: now.Add(-time.Hour), EndsAt: now.Add(72 * time.Hour), RegistrationDeadline: now.Add(48 * time.Hour), Location: "Онлайн", Description: "Демонстрация алгоритмических задач и ручной проверки отправленных решений.", Status: "open"}, "algorithm", []int{0, 1, 2, 3}},
+		{competitions.Input{Title: "Тестовый CSV контест · Recall / Демо", LevelCode: "regional", DisciplineCode: "product", Format: "individual", StartsAt: now.Add(-time.Hour), EndsAt: now.Add(72 * time.Hour), RegistrationDeadline: now.Add(48 * time.Hour), Location: "Онлайн", Description: "Демонстрация загрузки CSV и автоматического расчёта recall.", Status: "open"}, "csv_metric", []int{0, 2, 4, 6}},
 	}
 	for _, demo := range cases {
 		competitionID, _, err := create(demo.input)
@@ -280,17 +279,6 @@ func seedContestDemos(ctx context.Context, db *pgxpool.Pool, organizerID int64, 
 					}
 				}
 			}
-			results := make([]competitions.Result, 0, len(demo.players))
-			totals := []int{300, 250, 200, 100}
-			for place, player := range demo.players {
-				results = append(results, competitions.Result{AthleteID: athleteIDs[player], Place: place + 1, ScoreText: fmt.Sprintf("%d / 300 баллов", totals[place])})
-			}
-			if err := service.PublishResults(ctx, competitionID, organizerID, results); err != nil {
-				return err
-			}
-			if _, err := db.Exec(ctx, `UPDATE contests SET finalized_at=now() WHERE competition_id=$1`, competitionID); err != nil {
-				return err
-			}
 			continue
 		}
 		labels := map[string]string{"row-1": "1", "row-2": "0", "row-3": "1", "row-4": "0"}
@@ -316,17 +304,6 @@ func seedContestDemos(ctx context.Context, db *pgxpool.Pool, organizerID int64, 
 				VALUES($1,$2,$3,'predictions.csv',$4,'graded',$5,$5,'Проверено автоматически',$6)`, competitionID, taskID, athleteIDs[player], []byte(predictions[p]), scores[p], fmt.Sprintf("Recall: %.2f", float64(scores[p])/100)); err != nil {
 				return err
 			}
-		}
-		results := make([]competitions.Result, 0, len(demo.players))
-		places := []int{1, 2, 2, 4}
-		for i, player := range demo.players {
-			results = append(results, competitions.Result{AthleteID: athleteIDs[player], Place: places[i], ScoreText: fmt.Sprintf("%d / 100 баллов", scores[i])})
-		}
-		if err := service.PublishResults(ctx, competitionID, organizerID, results); err != nil {
-			return err
-		}
-		if _, err := db.Exec(ctx, `UPDATE contests SET finalized_at=now() WHERE competition_id=$1`, competitionID); err != nil {
-			return err
 		}
 	}
 	return nil

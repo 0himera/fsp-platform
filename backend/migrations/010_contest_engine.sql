@@ -1,4 +1,4 @@
-CREATE TABLE contests (
+CREATE TABLE IF NOT EXISTS contests (
     competition_id bigint PRIMARY KEY REFERENCES competitions(id) ON DELETE CASCADE,
     mode text NOT NULL CHECK (mode IN ('algorithm', 'csv_metric')),
     instructions text NOT NULL DEFAULT '',
@@ -6,7 +6,7 @@ CREATE TABLE contests (
     finalized_at timestamptz
 );
 
-CREATE TABLE contest_tasks (
+CREATE TABLE IF NOT EXISTS contest_tasks (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     competition_id bigint NOT NULL REFERENCES contests(competition_id) ON DELETE CASCADE,
     title text NOT NULL CHECK (length(title) BETWEEN 1 AND 160),
@@ -20,9 +20,9 @@ CREATE TABLE contest_tasks (
     UNIQUE (competition_id, position),
     UNIQUE (competition_id, id)
 );
-CREATE INDEX contest_tasks_competition_idx ON contest_tasks(competition_id, position, id);
+CREATE INDEX IF NOT EXISTS contest_tasks_competition_idx ON contest_tasks(competition_id, position, id);
 
-CREATE TABLE contest_submissions (
+CREATE TABLE IF NOT EXISTS contest_submissions (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     competition_id bigint NOT NULL REFERENCES contests(competition_id) ON DELETE CASCADE,
     task_id bigint NOT NULL REFERENCES contest_tasks(id) ON DELETE CASCADE,
@@ -41,10 +41,10 @@ CREATE TABLE contest_submissions (
     submitted_at timestamptz NOT NULL DEFAULT now(),
     FOREIGN KEY (competition_id, task_id) REFERENCES contest_tasks(competition_id, id) ON DELETE CASCADE
 );
-CREATE INDEX contest_submissions_athlete_idx ON contest_submissions(competition_id, athlete_id, submitted_at DESC);
-CREATE INDEX contest_submissions_task_idx ON contest_submissions(task_id, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS contest_submissions_athlete_idx ON contest_submissions(competition_id, athlete_id, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS contest_submissions_task_idx ON contest_submissions(task_id, submitted_at DESC);
 
-CREATE TABLE contest_jobs (
+CREATE TABLE IF NOT EXISTS contest_jobs (
     submission_id bigint PRIMARY KEY REFERENCES contest_submissions(id) ON DELETE CASCADE,
     state text NOT NULL CHECK (state IN ('queued', 'running', 'done')) DEFAULT 'queued',
     attempts integer NOT NULL DEFAULT 0,
@@ -53,4 +53,4 @@ CREATE TABLE contest_jobs (
     last_error text NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX contest_jobs_queue_idx ON contest_jobs(state, available_at, created_at);
+CREATE INDEX IF NOT EXISTS contest_jobs_queue_idx ON contest_jobs(state, available_at, created_at);
