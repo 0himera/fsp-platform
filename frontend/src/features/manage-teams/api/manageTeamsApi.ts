@@ -10,22 +10,19 @@ export function useCreateTeamMutation() {
       competitionId,
       name,
       description,
-      memberIds,
     }: {
       competitionId: string | number;
       name: string;
       description?: string;
-      memberIds?: number[];
     }) =>
       apiClient.post<CreateTeamResponse>(`/api/competitions/${competitionId}/teams`, {
         name,
         description,
-        member_ids: memberIds,
       }),
     onSuccess: (_, { competitionId }) => {
-      queryClient.invalidateQueries({
-        queryKey: competitionKeys.detail(competitionId),
-      });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.all });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.myRegistrations() });
     },
   });
 }
@@ -42,9 +39,9 @@ export function useDeleteTeamMutation() {
       teamId: number;
     }) => apiClient.delete(`/api/competitions/${competitionId}/teams/${teamId}`),
     onSuccess: (_, { competitionId }) => {
-      queryClient.invalidateQueries({
-        queryKey: competitionKeys.detail(competitionId),
-      });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.all });
+      queryClient.invalidateQueries({ queryKey: competitionKeys.myRegistrations() });
     },
   });
 }

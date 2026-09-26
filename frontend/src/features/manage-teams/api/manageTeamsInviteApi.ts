@@ -32,7 +32,11 @@ export function useRemoveTeamMemberMutation() {
   return useMutation({
     mutationFn: ({ competitionId, teamId, athleteId }: { competitionId: number; teamId: number; athleteId: number }) =>
       apiClient.delete(`/api/competitions/${competitionId}/teams/${teamId}/members/${athleteId}`),
-    onSuccess: (_, { competitionId }) => client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) }),
+    onSuccess: (_, { competitionId }) => {
+      client.invalidateQueries({ queryKey: competitionKeys.detail(competitionId) });
+      client.invalidateQueries({ queryKey: competitionKeys.all });
+      client.invalidateQueries({ queryKey: competitionKeys.myRegistrations() });
+    },
   });
 }
 
